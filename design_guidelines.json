@@ -1,0 +1,138 @@
+{
+  "identity": {
+    "persona": "E1",
+    "role": "Creative Designer",
+    "principles": [
+      "Fusion over Imitation: Mix organic textures with clean tech utility.",
+      "Emotion First: Every screen must feel 'safe' and 'welcoming'.",
+      "Content is King: The lesson content (video/text) is the hero.",
+      "Zoom In: Use close-ups of people/hands to create intimacy.",
+      "Negative Space: Generous breathing room to prevent cognitive overload."
+    ]
+  },
+  "design_system": {
+    "theme": "light",
+    "typography": {
+      "font_family": {
+        "headings": "Merriweather, serif",
+        "body": "Nunito, sans-serif"
+      },
+      "scale": {
+        "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+        "h2": "text-3xl md:text-4xl font-semibold",
+        "h3": "text-2xl font-medium",
+        "body": "text-base md:text-lg leading-relaxed",
+        "caption": "text-sm text-muted-foreground"
+      },
+      "instructions": "Import 'Merriweather' (400, 700, 900) and 'Nunito' (400, 600, 700) from Google Fonts. Apply 'font-serif' to all Headings and 'font-sans' to body text."
+    },
+    "colors": {
+      "palette_name": "Organic & Earthy (Calming Sage)",
+      "primary": {
+        "hex": "#4A6741",
+        "name": "Deep Sage",
+        "usage": "Primary buttons, active states, key icons"
+      },
+      "secondary": {
+        "hex": "#F2F0E9",
+        "name": "Warm Bone",
+        "usage": "Page backgrounds, secondary containers"
+      },
+      "accent": {
+        "hex": "#D48C70",
+        "name": "Terracotta",
+        "usage": "Call to actions (secondary), highlights, notifications"
+      },
+      "neutral": {
+        "hex": "#2C332B",
+        "name": "Forest Charcoal",
+        "usage": "Main text"
+      },
+      "muted": {
+        "hex": "#E8E4D9",
+        "name": "Soft Beige",
+        "usage": "Card backgrounds, inputs"
+      },
+      "background": "#F9F8F6",
+      "foreground": "#2C332B"
+    },
+    "spacing": {
+      "base_unit": "4px",
+      "container_padding": "p-6 md:p-12",
+      "section_gap": "gap-8 md:gap-16",
+      "card_padding": "p-6"
+    },
+    "radius": {
+      "default": "0.75rem",
+      "button": "9999px",
+      "card": "1rem"
+    },
+    "shadows": {
+      "card": "0 4px 20px -2px rgba(74, 103, 65, 0.08)",
+      "hover": "0 10px 25px -5px rgba(74, 103, 65, 0.15)"
+    }
+  },
+  "components": {
+    "buttons": {
+      "style": "pill-shaped",
+      "classes": "rounded-full px-8 py-6 font-semibold shadow-sm hover:shadow-md transition-all duration-300",
+      "variants": {
+        "primary": "bg-[#4A6741] text-white hover:bg-[#3A5233]",
+        "secondary": "bg-[#E8E4D9] text-[#2C332B] hover:bg-[#Dcd8cd]",
+        "ghost": "hover:bg-[#E8E4D9]/50 text-[#4A6741]"
+      }
+    },
+    "cards": {
+      "style": "soft-organic",
+      "classes": "bg-white rounded-2xl border border-[#E8E4D9] shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300"
+    },
+    "inputs": {
+      "style": "clean-soft",
+      "classes": "rounded-xl border-[#E8E4D9] bg-[#F9F8F6] focus:ring-[#4A6741] focus:border-[#4A6741] h-12"
+    },
+    "navigation": {
+      "mobile": "Bottom tab bar with soft blur backdrop-blur-lg bg-white/90 border-t border-[#E8E4D9]",
+      "desktop": "Clean top bar with generous spacing"
+    }
+  },
+  "assets": {
+    "images": [
+      {
+        "category": "hero_community",
+        "url": "https://images.unsplash.com/photo-1610070835951-156b6921281d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwxfHxkaXZlcnNlJTIwZ3JvdXAlMjBzdHVkeWluZyUyMGJpYmxlJTIwZGlzY3Vzc2lvbnxlbnwwfHx8fDE3Njk5NjU0MjR8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Diverse group sitting on grass, used for Landing Page Hero or Community section."
+      },
+      {
+        "category": "teaching_class",
+        "url": "https://images.unsplash.com/photo-1574130303188-31a915382726?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwzfHxzdW5kYXklMjBzY2hvb2wlMjB0ZWFjaGVyJTIwd2l0aCUyMGNoaWxkcmVuJTIwY2xhc3Nyb29tfGVufDB8fHx8MTc2OTk2NTQyOXww&ixlib=rb-4.1.0&q=85",
+        "description": "Indoor classroom setting, used for Courses List or Teacher Dashboard."
+      },
+      {
+        "category": "quiet_study",
+        "url": "https://images.unsplash.com/photo-1766364984475-53b7cf4d33fe?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjd8MHwxfHNlYXJjaHwxfHxvcGVuJTIwYmlibGUlMjBvbiUyMHdvb2RlbiUyMHRhYmxlJTIwY29mZmVlfGVufDB8fHx8MTc2OTk2NTQzM3ww&ixlib=rb-4.1.0&q=85",
+        "description": "Bible and coffee on table, used for Lesson Detail or Resources section."
+      },
+      {
+        "category": "large_gathering",
+        "url": "https://images.unsplash.com/photo-1765947382559-93260e5d6c89?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDB8MHwxfHNlYXJjaHwxfHxjaHVyY2glMjBjb21tdW5pdHklMjBnYXRoZXJpbmclMjBoYXBweXxlbnwwfHx8fDE3Njk5NjU0MzR8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Large congregation, used for Events or About page."
+      }
+    ],
+    "icons": "Use 'lucide-react' with soft stroke width (1.5px or 2px). Avoid sharp edges."
+  },
+  "layout_strategies": {
+    "mobile_first": true,
+    "grid_system": "Simple 1-col mobile, 3-col desktop. Use 'max-w-md mx-auto' for mobile-centric flows like Auth.",
+    "containers": "Use 'container mx-auto px-4 md:px-8' for main content wrappers."
+  },
+  "universal_guidelines": [
+    "Avoid 'AI Slop': Do not use generic gradients or default Shadcn styles without customization.",
+    "Micro-interactions: Add 'active:scale-95' to all buttons for tactile feel.",
+    "Accessibility: Ensure text contrast is high (Forest Charcoal on Warm Bone).",
+    "Data-TestID: All interactive elements MUST have 'data-testid' attributes.",
+    "Toasts: Use 'sonner' for notifications.",
+    "Empty States: Never leave a list empty. Use a friendly illustration or icon with encouraging text.",
+    "Loading States: Use skeletons with a 'shimmer' effect, not just spinners."
+  ],
+  "instructions_to_main_agent": "1. Install 'Merriweather' and 'Nunito' fonts immediately. 2. Update 'tailwind.config.js' with the 'Organic & Earthy' color palette. 3. Customize Shadcn components (Button, Card, Input) to match the 'pill-shaped' and 'soft-organic' styles defined above. 4. Build the Mobile Navigation Bar first as it is the core of the mobile-first experience."
+}
