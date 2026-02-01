@@ -76,7 +76,7 @@ export const Layout = ({ children }) => {
     return (
         <div className="min-h-screen bg-background">
             {/* Desktop Header */}
-            <header className="hidden md:block sticky top-0 z-40 glass border-b border-border">
+            <header className="hidden md:block sticky top-0 z-40 bg-white/90 backdrop-blur-lg border-b border-border">
                 <div className="container mx-auto px-8">
                     <div className="flex items-center justify-between h-16">
                         {/* Logo */}
@@ -143,7 +143,7 @@ export const Layout = ({ children }) => {
             </header>
 
             {/* Mobile Header */}
-            <header className="md:hidden sticky top-0 z-40 glass border-b border-border">
+            <header className="md:hidden sticky top-0 z-40 bg-white/90 backdrop-blur-lg border-b border-border">
                 <div className="flex items-center justify-between px-4 h-14">
                     <Link to="/" className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
