@@ -6,43 +6,31 @@ import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Badge } from '../components/ui/badge';
 import { usersAPI, analyticsAPI, seedAPI } from '../lib/api';
 import { formatDate, getInitials, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { 
-    Shield, 
-    Users, 
-    BookOpen, 
-    MessageSquare, 
-    CheckCircle,
-    XCircle,
-    UserCheck,
-    UserX,
-    BarChart3,
-    Clock,
-    Volume2,
-    VolumeX,
-    Trash2,
-    Database
+    Shield, Users, BookOpen, MessageSquare, CheckCircle,
+    UserCheck, UserX, Clock, Volume2, VolumeX, Trash2, Database
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '../components/ui/select';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '../components/ui/alert-dialog';
+
+const getRoleBadge = (role) => {
+    const classes = {
+        admin: 'bg-red-100 text-red-800',
+        teacher: 'bg-blue-100 text-blue-800',
+        member: 'bg-green-100 text-green-800'
+    };
+    return (
+        <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium capitalize", classes[role])}>
+            {role}
+        </span>
+    );
+};
 
 export const Admin = () => {
     const { user, isAdmin } = useAuth();
@@ -59,12 +47,10 @@ export const Admin = () => {
 
     const fetchData = async () => {
         try {
-            const [usersRes, pendingRes, analyticsRes, participationRes] = await Promise.all([
-                usersAPI.getAll(),
-                usersAPI.getPending(),
-                analyticsAPI.getOverview(),
-                analyticsAPI.getParticipation()
-            ]);
+            const usersRes = await usersAPI.getAll();
+            const pendingRes = await usersAPI.getPending();
+            const analyticsRes = await analyticsAPI.getOverview();
+            const participationRes = await analyticsAPI.getParticipation();
             setUsers(usersRes.data);
             setPendingUsers(pendingRes.data);
             setAnalytics(analyticsRes.data);
@@ -79,10 +65,10 @@ export const Admin = () => {
     const handleApproveUser = async (userId) => {
         try {
             await usersAPI.approve(userId);
-            setPendingUsers(pendingUsers.filter(u => u.id !== userId));
-            setUsers(users.map(u => u.id === userId ? { ...u, is_approved: true } : u));
+            setPendingUsers(prev => prev.filter(u => u.id !== userId));
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_approved: true } : u));
             toast.success('User approved!');
-            fetchData(); // Refresh analytics
+            fetchData();
         } catch (error) {
             toast.error('Failed to approve user');
         }
@@ -91,7 +77,7 @@ export const Admin = () => {
     const handleUpdateRole = async (userId, role) => {
         try {
             await usersAPI.updateRole(userId, role);
-            setUsers(users.map(u => u.id === userId ? { ...u, role } : u));
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u));
             toast.success(`Role updated to ${role}`);
         } catch (error) {
             toast.error('Failed to update role');
@@ -101,7 +87,7 @@ export const Admin = () => {
     const handleMuteUser = async (userId, muted) => {
         try {
             await usersAPI.mute(userId, muted);
-            setUsers(users.map(u => u.id === userId ? { ...u, is_muted: muted } : u));
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_muted: muted } : u));
             toast.success(muted ? 'User muted' : 'User unmuted');
         } catch (error) {
             toast.error('Failed to update user');
@@ -112,8 +98,8 @@ export const Admin = () => {
         if (!deleteUserId) return;
         try {
             await usersAPI.delete(deleteUserId);
-            setUsers(users.filter(u => u.id !== deleteUserId));
-            setPendingUsers(pendingUsers.filter(u => u.id !== deleteUserId));
+            setUsers(prev => prev.filter(u => u.id !== deleteUserId));
+            setPendingUsers(prev => prev.filter(u => u.id !== deleteUserId));
             toast.success('User deleted');
             fetchData();
         } catch (error) {
@@ -124,25 +110,12 @@ export const Admin = () => {
 
     const handleSeedData = async () => {
         try {
-            const response = await seedAPI.seed();
+            await seedAPI.seed();
             toast.success('Sample data created!');
             fetchData();
         } catch (error) {
             toast.error('Failed to seed data');
         }
-    };
-
-    const getRoleBadge = (role) => {
-        const classes = {
-            admin: 'bg-red-100 text-red-800',
-            teacher: 'bg-blue-100 text-blue-800',
-            member: 'bg-green-100 text-green-800'
-        };
-        return (
-            <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium capitalize", classes[role])}>
-                {role}
-            </span>
-        );
     };
 
     if (loading) {
@@ -151,45 +124,41 @@ export const Admin = () => {
                 <div className="page-container py-6">
                     <Skeleton className="h-8 w-48 mb-6" />
                     <div className="grid md:grid-cols-4 gap-4 mb-6">
-                        {[1, 2, 3, 4].map(i => (
-                            <Skeleton key={i} className="h-24 rounded-xl" />
-                        ))}
+                        <Skeleton className="h-24 rounded-xl" />
+                        <Skeleton className="h-24 rounded-xl" />
+                        <Skeleton className="h-24 rounded-xl" />
+                        <Skeleton className="h-24 rounded-xl" />
                     </div>
-                    <Skeleton className="h-64 rounded-xl" />
                 </div>
             </Layout>
         );
     }
 
+    const otherUsers = users.filter(u => u.id !== user?.id);
+    const topCommenters = participation?.top_commenters || [];
+    const topChatters = participation?.top_chatters || [];
+
     return (
         <Layout>
             <div className="page-container py-6 space-y-6">
-                {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-serif font-bold flex items-center gap-2">
-                            <Shield className="w-6 h-6 text-primary" />
-                            Admin Panel
+                            <Shield className="w-6 h-6 text-primary" />Admin Panel
                         </h1>
-                        <p className="text-muted-foreground text-sm">
-                            Manage users, moderate content, and view analytics
-                        </p>
+                        <p className="text-muted-foreground text-sm">Manage users, moderate content, and view analytics</p>
                     </div>
                     <Button onClick={handleSeedData} variant="outline" data-testid="seed-data-btn">
-                        <Database className="w-4 h-4 mr-2" />
-                        Seed Sample Data
+                        <Database className="w-4 h-4 mr-2" />Seed Sample Data
                     </Button>
                 </div>
 
-                {/* Analytics Cards */}
                 {analytics && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <Card className="card-organic">
                             <CardContent className="p-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-blue-100 rounded-xl">
-                                        <Users className="w-5 h-5 text-blue-600" />
-                                    </div>
+                                    <div className="p-2 bg-blue-100 rounded-xl"><Users className="w-5 h-5 text-blue-600" /></div>
                                     <div>
                                         <p className="text-2xl font-bold">{analytics.total_users}</p>
                                         <p className="text-xs text-muted-foreground">Total Users</p>
@@ -200,9 +169,7 @@ export const Admin = () => {
                         <Card className="card-organic">
                             <CardContent className="p-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-yellow-100 rounded-xl">
-                                        <Clock className="w-5 h-5 text-yellow-600" />
-                                    </div>
+                                    <div className="p-2 bg-yellow-100 rounded-xl"><Clock className="w-5 h-5 text-yellow-600" /></div>
                                     <div>
                                         <p className="text-2xl font-bold">{analytics.pending_users}</p>
                                         <p className="text-xs text-muted-foreground">Pending</p>
@@ -213,9 +180,7 @@ export const Admin = () => {
                         <Card className="card-organic">
                             <CardContent className="p-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-green-100 rounded-xl">
-                                        <BookOpen className="w-5 h-5 text-green-600" />
-                                    </div>
+                                    <div className="p-2 bg-green-100 rounded-xl"><BookOpen className="w-5 h-5 text-green-600" /></div>
                                     <div>
                                         <p className="text-2xl font-bold">{analytics.total_courses}</p>
                                         <p className="text-xs text-muted-foreground">Courses</p>
@@ -226,9 +191,7 @@ export const Admin = () => {
                         <Card className="card-organic">
                             <CardContent className="p-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-purple-100 rounded-xl">
-                                        <MessageSquare className="w-5 h-5 text-purple-600" />
-                                    </div>
+                                    <div className="p-2 bg-purple-100 rounded-xl"><MessageSquare className="w-5 h-5 text-purple-600" /></div>
                                     <div>
                                         <p className="text-2xl font-bold">{analytics.total_comments + analytics.total_chat_messages}</p>
                                         <p className="text-xs text-muted-foreground">Messages</p>
@@ -239,51 +202,30 @@ export const Admin = () => {
                     </div>
                 )}
 
-                {/* Tabs */}
                 <Tabs defaultValue="pending" className="space-y-4">
                     <TabsList className="grid w-full grid-cols-3 max-w-md">
-                        <TabsTrigger value="pending" data-testid="pending-tab">
-                            Pending ({pendingUsers.length})
-                        </TabsTrigger>
+                        <TabsTrigger value="pending" data-testid="pending-tab">Pending ({pendingUsers.length})</TabsTrigger>
                         <TabsTrigger value="users" data-testid="users-tab">All Users</TabsTrigger>
                         <TabsTrigger value="stats" data-testid="stats-tab">Stats</TabsTrigger>
                     </TabsList>
 
-                    {/* Pending Users Tab */}
                     <TabsContent value="pending" className="space-y-4">
                         {pendingUsers.length > 0 ? (
                             <div className="space-y-3">
                                 {pendingUsers.map(u => (
                                     <Card key={u.id} className="card-organic" data-testid={`pending-user-${u.id}`}>
                                         <CardContent className="p-4 flex items-center gap-4">
-                                            <Avatar>
-                                                <AvatarFallback className="bg-primary/10 text-primary">
-                                                    {getInitials(u.name)}
-                                                </AvatarFallback>
-                                            </Avatar>
+                                            <Avatar><AvatarFallback className="bg-primary/10 text-primary">{getInitials(u.name)}</AvatarFallback></Avatar>
                                             <div className="flex-grow min-w-0">
                                                 <p className="font-medium truncate">{u.name}</p>
                                                 <p className="text-sm text-muted-foreground truncate">{u.email}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Registered: {formatDate(u.created_at)}
-                                                </p>
+                                                <p className="text-xs text-muted-foreground">Registered: {formatDate(u.created_at)}</p>
                                             </div>
                                             <div className="flex gap-2">
-                                                <Button
-                                                    onClick={() => handleApproveUser(u.id)}
-                                                    size="sm"
-                                                    className="bg-green-500 hover:bg-green-600 text-white"
-                                                    data-testid={`approve-${u.id}`}
-                                                >
+                                                <Button onClick={() => handleApproveUser(u.id)} size="sm" className="bg-green-500 hover:bg-green-600 text-white" data-testid={`approve-${u.id}`}>
                                                     <UserCheck className="w-4 h-4" />
                                                 </Button>
-                                                <Button
-                                                    onClick={() => setDeleteUserId(u.id)}
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="text-destructive"
-                                                    data-testid={`reject-${u.id}`}
-                                                >
+                                                <Button onClick={() => setDeleteUserId(u.id)} size="sm" variant="outline" className="text-destructive" data-testid={`reject-${u.id}`}>
                                                     <UserX className="w-4 h-4" />
                                                 </Button>
                                             </div>
@@ -299,43 +241,25 @@ export const Admin = () => {
                         )}
                     </TabsContent>
 
-                    {/* All Users Tab */}
                     <TabsContent value="users" className="space-y-4">
                         <div className="space-y-3">
-                            {users.filter(u => u.id !== user?.id).map(u => (
+                            {otherUsers.map(u => (
                                 <Card key={u.id} className="card-organic" data-testid={`user-${u.id}`}>
                                     <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-4">
-                                        <Avatar>
-                                            <AvatarFallback className="bg-primary/10 text-primary">
-                                                {getInitials(u.name)}
-                                            </AvatarFallback>
-                                        </Avatar>
+                                        <Avatar><AvatarFallback className="bg-primary/10 text-primary">{getInitials(u.name)}</AvatarFallback></Avatar>
                                         <div className="flex-grow min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <p className="font-medium">{u.name}</p>
                                                 {getRoleBadge(u.role)}
-                                                {!u.is_approved && (
-                                                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                        Pending
-                                                    </span>
-                                                )}
-                                                {u.is_muted && (
-                                                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                        Muted
-                                                    </span>
-                                                )}
+                                                {!u.is_approved && <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>}
+                                                {u.is_muted && <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Muted</span>}
                                             </div>
                                             <p className="text-sm text-muted-foreground truncate">{u.email}</p>
                                         </div>
                                         <div className="flex items-center gap-2 flex-wrap">
                                             {isAdmin && (
-                                                <Select
-                                                    value={u.role}
-                                                    onValueChange={(value) => handleUpdateRole(u.id, value)}
-                                                >
-                                                    <SelectTrigger className="w-28" data-testid={`role-select-${u.id}`}>
-                                                        <SelectValue />
-                                                    </SelectTrigger>
+                                                <Select value={u.role} onValueChange={(value) => handleUpdateRole(u.id, value)}>
+                                                    <SelectTrigger className="w-28" data-testid={`role-select-${u.id}`}><SelectValue /></SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="member">Member</SelectItem>
                                                         <SelectItem value="teacher">Teacher</SelectItem>
@@ -343,26 +267,11 @@ export const Admin = () => {
                                                     </SelectContent>
                                                 </Select>
                                             )}
-                                            <Button
-                                                onClick={() => handleMuteUser(u.id, !u.is_muted)}
-                                                variant="outline"
-                                                size="sm"
-                                                data-testid={`mute-${u.id}`}
-                                            >
-                                                {u.is_muted ? (
-                                                    <Volume2 className="w-4 h-4" />
-                                                ) : (
-                                                    <VolumeX className="w-4 h-4" />
-                                                )}
+                                            <Button onClick={() => handleMuteUser(u.id, !u.is_muted)} variant="outline" size="sm" data-testid={`mute-${u.id}`}>
+                                                {u.is_muted ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                                             </Button>
                                             {isAdmin && (
-                                                <Button
-                                                    onClick={() => setDeleteUserId(u.id)}
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="text-destructive"
-                                                    data-testid={`delete-${u.id}`}
-                                                >
+                                                <Button onClick={() => setDeleteUserId(u.id)} variant="outline" size="sm" className="text-destructive" data-testid={`delete-${u.id}`}>
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             )}
@@ -373,92 +282,54 @@ export const Admin = () => {
                         </div>
                     </TabsContent>
 
-                    {/* Stats Tab */}
                     <TabsContent value="stats" className="space-y-4">
                         <div className="grid md:grid-cols-2 gap-6">
-                            {/* Top Commenters */}
                             <Card className="card-organic">
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Top Discussion Participants</CardTitle>
-                                </CardHeader>
+                                <CardHeader><CardTitle className="text-lg">Top Discussion Participants</CardTitle></CardHeader>
                                 <CardContent>
-                                    {participation?.top_commenters?.length > 0 ? (
+                                    {topCommenters.length > 0 ? (
                                         <div className="space-y-3">
-                                            {participation.top_commenters.map((item, index) => (
+                                            {topCommenters.map((item, index) => (
                                                 <div key={item.user_id} className="flex items-center gap-3">
-                                                    <span className="text-lg font-bold text-muted-foreground w-6">
-                                                        {index + 1}
-                                                    </span>
-                                                    <Avatar className="w-8 h-8">
-                                                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                                            {getInitials(item.user_name)}
-                                                        </AvatarFallback>
-                                                    </Avatar>
+                                                    <span className="text-lg font-bold text-muted-foreground w-6">{index + 1}</span>
+                                                    <Avatar className="w-8 h-8"><AvatarFallback className="bg-primary/10 text-primary text-xs">{getInitials(item.user_name)}</AvatarFallback></Avatar>
                                                     <span className="flex-grow truncate">{item.user_name}</span>
                                                     <span className="text-sm text-muted-foreground">{item.count} posts</span>
                                                 </div>
                                             ))}
                                         </div>
-                                    ) : (
-                                        <p className="text-muted-foreground text-center py-4">No data yet</p>
-                                    )}
+                                    ) : <p className="text-muted-foreground text-center py-4">No data yet</p>}
                                 </CardContent>
                             </Card>
 
-                            {/* Top Chatters */}
                             <Card className="card-organic">
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Top Chat Participants</CardTitle>
-                                </CardHeader>
+                                <CardHeader><CardTitle className="text-lg">Top Chat Participants</CardTitle></CardHeader>
                                 <CardContent>
-                                    {participation?.top_chatters?.length > 0 ? (
+                                    {topChatters.length > 0 ? (
                                         <div className="space-y-3">
-                                            {participation.top_chatters.map((item, index) => (
+                                            {topChatters.map((item, index) => (
                                                 <div key={item.user_id} className="flex items-center gap-3">
-                                                    <span className="text-lg font-bold text-muted-foreground w-6">
-                                                        {index + 1}
-                                                    </span>
-                                                    <Avatar className="w-8 h-8">
-                                                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                                            {getInitials(item.user_name)}
-                                                        </AvatarFallback>
-                                                    </Avatar>
+                                                    <span className="text-lg font-bold text-muted-foreground w-6">{index + 1}</span>
+                                                    <Avatar className="w-8 h-8"><AvatarFallback className="bg-primary/10 text-primary text-xs">{getInitials(item.user_name)}</AvatarFallback></Avatar>
                                                     <span className="flex-grow truncate">{item.user_name}</span>
                                                     <span className="text-sm text-muted-foreground">{item.count} msgs</span>
                                                 </div>
                                             ))}
                                         </div>
-                                    ) : (
-                                        <p className="text-muted-foreground text-center py-4">No data yet</p>
-                                    )}
+                                    ) : <p className="text-muted-foreground text-center py-4">No data yet</p>}
                                 </CardContent>
                             </Card>
                         </div>
 
-                        {/* Summary Stats */}
                         {analytics && (
                             <Card className="card-organic">
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Platform Summary</CardTitle>
-                                </CardHeader>
+                                <CardHeader><CardTitle className="text-lg">Platform Summary</CardTitle></CardHeader>
                                 <CardContent>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                                        <div>
-                                            <p className="text-3xl font-bold text-primary">{analytics.total_lessons}</p>
-                                            <p className="text-sm text-muted-foreground">Total Lessons</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-3xl font-bold text-primary">{analytics.total_comments}</p>
-                                            <p className="text-sm text-muted-foreground">Discussion Posts</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-3xl font-bold text-primary">{analytics.total_chat_messages}</p>
-                                            <p className="text-sm text-muted-foreground">Chat Messages</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-3xl font-bold text-primary">{analytics.attendance_records}</p>
-                                            <p className="text-sm text-muted-foreground">Attendance Records</p>
-                                        </div>
+                                        <div><p className="text-3xl font-bold text-primary">{analytics.total_lessons}</p><p className="text-sm text-muted-foreground">Total Lessons</p></div>
+                                        <div><p className="text-3xl font-bold text-primary">{analytics.total_comments}</p><p className="text-sm text-muted-foreground">Discussion Posts</p></div>
+                                        <div><p className="text-3xl font-bold text-primary">{analytics.total_chat_messages}</p><p className="text-sm text-muted-foreground">Chat Messages</p></div>
+                                        <div><p className="text-3xl font-bold text-primary">{analytics.attendance_records}</p><p className="text-sm text-muted-foreground">Attendance Records</p></div>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -466,20 +337,15 @@ export const Admin = () => {
                     </TabsContent>
                 </Tabs>
 
-                {/* Delete User Dialog */}
                 <AlertDialog open={!!deleteUserId} onOpenChange={() => setDeleteUserId(null)}>
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>Delete User?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This will permanently remove this user. This action cannot be undone.
-                            </AlertDialogDescription>
+                            <AlertDialogDescription>This will permanently remove this user. This action cannot be undone.</AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground">
-                                Delete
-                            </AlertDialogAction>
+                            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
