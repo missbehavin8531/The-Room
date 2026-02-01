@@ -25,7 +25,10 @@
 
 /* Mobile navigation */
 .mobile-nav {
-    @apply fixed bottom-0 left-0 right-0 glass border-t border-border z-50;
+    @apply fixed bottom-0 left-0 right-0 border-t border-border z-50;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
