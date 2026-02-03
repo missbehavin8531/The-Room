@@ -88,6 +88,8 @@ class CourseResponse(BaseModel):
     teacher_name: str
     created_at: str
     lesson_count: int = 0
+    enrollment_count: int = 0
+    is_enrolled: bool = False
 
 class LessonBase(BaseModel):
     title: str
