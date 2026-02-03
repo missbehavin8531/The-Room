@@ -4,26 +4,20 @@ import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Skeleton } from '../components/ui/skeleton';
-import { lessonsAPI, coursesAPI, commentsAPI, attendanceAPI } from '../lib/api';
+import { lessonsAPI, coursesAPI, commentsAPI, attendanceAPI, enrollmentsAPI } from '../lib/api';
 import { formatDate, getYouTubeEmbedUrl } from '../lib/utils';
 import { toast } from 'sonner';
+import { LoadingSkeleton } from '../components/LoadingSkeleton';
 import { 
-    Calendar, 
-    Video, 
-    BookOpen, 
-    MessageSquare, 
-    ArrowRight,
-    Play,
-    Users,
-    Clock,
-    CheckCircle
+    Calendar, Video, BookOpen, MessageSquare, ArrowRight,
+    Play, Users, CheckCircle, Sparkles
 } from 'lucide-react';
 
 export const Dashboard = () => {
     const { user } = useAuth();
     const [nextLesson, setNextLesson] = useState(null);
     const [courses, setCourses] = useState([]);
+    const [enrolledCourses, setEnrolledCourses] = useState([]);
     const [recentComments, setRecentComments] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -33,13 +27,18 @@ export const Dashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
-            const [lessonRes, coursesRes] = await Promise.all([
+            const [lessonRes, coursesRes, enrollmentsRes] = await Promise.all([
                 lessonsAPI.getNext(),
                 coursesAPI.getAll(),
+                enrollmentsAPI.getMy(),
             ]);
             
             setNextLesson(lessonRes.data);
-            setCourses(coursesRes.data.slice(0, 3));
+            setCourses(coursesRes.data);
+            
+            // Get enrolled course IDs and filter courses
+            const enrolledIds = new Set(enrollmentsRes.data.map(e => e.course_id));
+            setEnrolledCourses(coursesRes.data.filter(c => enrolledIds.has(c.id)));
             
             // Fetch comments for the next lesson if available
             if (lessonRes.data?.id) {
@@ -55,7 +54,6 @@ export const Dashboard = () => {
 
     const handleJoinLive = async () => {
         if (nextLesson?.zoom_link) {
-            // Record attendance
             try {
                 await attendanceAPI.record(nextLesson.id, 'joined_live');
                 toast.success('Attendance recorded!');
@@ -64,7 +62,6 @@ export const Dashboard = () => {
             }
             window.open(nextLesson.zoom_link, '_blank');
         } else if (nextLesson) {
-            // Get course zoom link
             const course = courses.find(c => c.id === nextLesson.course_id);
             if (course?.zoom_link) {
                 try {
@@ -95,15 +92,7 @@ export const Dashboard = () => {
         return (
             <Layout>
                 <div className="page-container py-6">
-                    <Skeleton className="h-8 w-48 mb-6" />
-                    <div className="grid gap-6">
-                        <Skeleton className="h-64 rounded-2xl" />
-                        <div className="grid md:grid-cols-3 gap-4">
-                            <Skeleton className="h-40 rounded-xl" />
-                            <Skeleton className="h-40 rounded-xl" />
-                            <Skeleton className="h-40 rounded-xl" />
-                        </div>
-                    </div>
+                    <LoadingSkeleton variant="dashboard" />
                 </div>
             </Layout>
         );
@@ -161,7 +150,7 @@ export const Dashboard = () => {
                                 <div className="flex flex-wrap gap-3">
                                     <Button 
                                         onClick={handleJoinLive}
-                                        className="zoom-button flex-1 md:flex-none"
+                                        className="zoom-button flex-1 md:flex-none active:scale-95 transition-transform"
                                         data-testid="join-live-btn"
                                     >
                                         <Video className="w-4 h-4" />
@@ -170,14 +159,14 @@ export const Dashboard = () => {
                                     <Button 
                                         onClick={handleMarkAttended}
                                         variant="outline"
-                                        className="flex-1 md:flex-none rounded-full"
+                                        className="flex-1 md:flex-none rounded-full active:scale-95 transition-transform"
                                         data-testid="mark-attended-btn"
                                     >
                                         <CheckCircle className="w-4 h-4 mr-2" />
                                         I Attended
                                     </Button>
                                     <Link to={`/lessons/${nextLesson.id}`} className="flex-1 md:flex-none">
-                                        <Button variant="ghost" className="w-full rounded-full" data-testid="view-lesson-btn">
+                                        <Button variant="ghost" className="w-full rounded-full active:scale-95 transition-transform" data-testid="view-lesson-btn">
                                             View Details
                                             <ArrowRight className="w-4 h-4 ml-2" />
                                         </Button>
@@ -192,15 +181,56 @@ export const Dashboard = () => {
                         <h3 className="text-lg font-semibold mb-2">No upcoming lessons</h3>
                         <p className="text-muted-foreground mb-4">Check back soon for new content!</p>
                         <Link to="/courses">
-                            <Button className="btn-primary">Browse Courses</Button>
+                            <Button className="btn-primary active:scale-95 transition-transform">Browse Courses</Button>
                         </Link>
                     </Card>
                 )}
 
+                {/* Enrolled Courses Section */}
+                {enrolledCourses.length > 0 && (
+                    <div className="animate-fade-in" style={{ animationDelay: '0.15s' }}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-serif font-semibold flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-primary" />
+                                My Courses
+                            </h2>
+                            <Link to="/courses">
+                                <Button variant="ghost" size="sm" className="active:scale-95 transition-transform">
+                                    View All <ArrowRight className="w-4 h-4 ml-1" />
+                                </Button>
+                            </Link>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {enrolledCourses.slice(0, 4).map((course, index) => (
+                                <Link key={course.id} to={`/courses/${course.id}`}>
+                                    <Card 
+                                        className="card-organic card-hover overflow-hidden animate-fade-in"
+                                        style={{ animationDelay: `${0.2 + index * 0.05}s` }}
+                                    >
+                                        <div className="aspect-video bg-muted relative">
+                                            {course.thumbnail_url ? (
+                                                <img src={course.thumbnail_url} alt={course.title} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-primary/5">
+                                                    <BookOpen className="w-8 h-8 text-primary/30" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <CardContent className="p-3">
+                                            <h3 className="font-medium text-sm line-clamp-1">{course.title}</h3>
+                                            <p className="text-xs text-muted-foreground">{course.lesson_count} lessons</p>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Quick Actions Grid */}
-                <div className="grid md:grid-cols-3 gap-4 stagger-children">
+                <div className="grid md:grid-cols-3 gap-4">
                     {/* Courses Preview */}
-                    <Card className="card-organic card-hover">
+                    <Card className="card-organic card-hover animate-fade-in" style={{ animationDelay: '0.25s' }}>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-lg flex items-center gap-2">
                                 <BookOpen className="w-5 h-5 text-primary" />
@@ -211,7 +241,7 @@ export const Dashboard = () => {
                             <p className="text-3xl font-bold text-primary mb-1">{courses.length}</p>
                             <p className="text-sm text-muted-foreground mb-4">courses available</p>
                             <Link to="/courses">
-                                <Button variant="ghost" className="w-full justify-between" data-testid="view-courses-btn">
+                                <Button variant="ghost" className="w-full justify-between active:scale-95 transition-transform" data-testid="view-courses-btn">
                                     View All
                                     <ArrowRight className="w-4 h-4" />
                                 </Button>
@@ -220,7 +250,7 @@ export const Dashboard = () => {
                     </Card>
 
                     {/* Chat Preview */}
-                    <Card className="card-organic card-hover">
+                    <Card className="card-organic card-hover animate-fade-in" style={{ animationDelay: '0.3s' }}>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-lg flex items-center gap-2">
                                 <MessageSquare className="w-5 h-5 text-primary" />
@@ -232,7 +262,7 @@ export const Dashboard = () => {
                                 Connect with fellow members and share your thoughts
                             </p>
                             <Link to="/chat">
-                                <Button variant="ghost" className="w-full justify-between" data-testid="open-chat-btn">
+                                <Button variant="ghost" className="w-full justify-between active:scale-95 transition-transform" data-testid="open-chat-btn">
                                     Open Chat
                                     <ArrowRight className="w-4 h-4" />
                                 </Button>
@@ -241,7 +271,7 @@ export const Dashboard = () => {
                     </Card>
 
                     {/* Discussion Preview */}
-                    <Card className="card-organic card-hover">
+                    <Card className="card-organic card-hover animate-fade-in" style={{ animationDelay: '0.35s' }}>
                         <CardHeader className="pb-2">
                             <CardTitle className="text-lg flex items-center gap-2">
                                 <Users className="w-5 h-5 text-primary" />
@@ -267,7 +297,7 @@ export const Dashboard = () => {
                             )}
                             {nextLesson && (
                                 <Link to={`/lessons/${nextLesson.id}`}>
-                                    <Button variant="ghost" className="w-full justify-between" data-testid="join-discussion-btn">
+                                    <Button variant="ghost" className="w-full justify-between active:scale-95 transition-transform" data-testid="join-discussion-btn">
                                         Join Discussion
                                         <ArrowRight className="w-4 h-4" />
                                     </Button>
@@ -278,7 +308,7 @@ export const Dashboard = () => {
                 </div>
 
                 {/* Hero Image */}
-                <div className="relative rounded-2xl overflow-hidden h-48 md:h-64 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                <div className="relative rounded-2xl overflow-hidden h-48 md:h-64 animate-fade-in" style={{ animationDelay: '0.4s' }}>
                     <img
                         src="https://images.unsplash.com/photo-1610070835951-156b6921281d?w=1200"
                         alt="Sunday School Community"
