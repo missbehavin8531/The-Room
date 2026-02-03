@@ -5,37 +5,21 @@ import { Layout } from '../components/Layout';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Skeleton } from '../components/ui/skeleton';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { lessonsAPI, commentsAPI, resourcesAPI, attendanceAPI, coursesAPI } from '../lib/api';
 import { formatDate, formatRelativeTime, getYouTubeEmbedUrl, getInitials, formatFileSize } from '../lib/utils';
 import { toast } from 'sonner';
+import { EmptyState } from '../components/EmptyState';
+import { LoadingSkeleton } from '../components/LoadingSkeleton';
+import { FilePreview } from '../components/FilePreview';
 import { 
-    ArrowLeft,
-    Video,
-    Calendar,
-    FileText,
-    Image,
-    Presentation,
-    Download,
-    Upload,
-    Send,
-    Trash2,
-    Eye,
-    EyeOff,
-    CheckCircle,
-    ExternalLink,
-    Loader2
+    ArrowLeft, Video, Calendar, FileText, Image, Presentation,
+    Download, Upload, Send, Trash2, Eye, EyeOff, CheckCircle,
+    ExternalLink, Loader2
 } from 'lucide-react';
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '../components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
@@ -62,6 +46,7 @@ export const LessonDetail = () => {
     const [submitting, setSubmitting] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [deleteCommentId, setDeleteCommentId] = useState(null);
+    const [previewResource, setPreviewResource] = useState(null);
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -116,7 +101,7 @@ export const LessonDetail = () => {
         setSubmitting(true);
         try {
             const response = await commentsAPI.create(lessonId, newComment.trim());
-            setComments(prevComments => [...prevComments, response.data]);
+            setComments(prev => [...prev, response.data]);
             setNewComment('');
             toast.success('Comment posted!');
         } catch (error) {
@@ -131,7 +116,7 @@ export const LessonDetail = () => {
         if (!deleteCommentId) return;
         try {
             await commentsAPI.delete(deleteCommentId);
-            setComments(prevComments => prevComments.filter(c => c.id !== deleteCommentId));
+            setComments(prev => prev.filter(c => c.id !== deleteCommentId));
             toast.success('Comment deleted');
         } catch (error) {
             toast.error('Failed to delete comment');
@@ -142,7 +127,7 @@ export const LessonDetail = () => {
     const handleHideComment = async (commentId, hidden) => {
         try {
             await commentsAPI.hide(commentId, hidden);
-            setComments(prevComments => prevComments.map(c => 
+            setComments(prev => prev.map(c => 
                 c.id === commentId ? { ...c, is_hidden: hidden } : c
             ));
             toast.success(hidden ? 'Comment hidden' : 'Comment visible');
@@ -163,9 +148,9 @@ export const LessonDetail = () => {
         setUploading(true);
         try {
             const response = await resourcesAPI.upload(lessonId, file);
-            setLesson(prevLesson => ({
-                ...prevLesson,
-                resources: [...(prevLesson.resources || []), response.data]
+            setLesson(prev => ({
+                ...prev,
+                resources: [...(prev.resources || []), response.data]
             }));
             toast.success('File uploaded!');
         } catch (error) {
@@ -173,18 +158,16 @@ export const LessonDetail = () => {
             toast.error(message);
         } finally {
             setUploading(false);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
     const handleDeleteResource = async (resourceId) => {
         try {
             await resourcesAPI.delete(resourceId);
-            setLesson(prevLesson => ({
-                ...prevLesson,
-                resources: prevLesson.resources.filter(r => r.id !== resourceId)
+            setLesson(prev => ({
+                ...prev,
+                resources: prev.resources.filter(r => r.id !== resourceId)
             }));
             toast.success('Resource deleted');
         } catch (error) {
@@ -195,10 +178,11 @@ export const LessonDetail = () => {
     if (loading) {
         return (
             <Layout>
-                <div className="page-container py-6">
-                    <Skeleton className="h-8 w-24 mb-4" />
-                    <Skeleton className="h-12 w-64 mb-4" />
-                    <Skeleton className="aspect-video rounded-xl mb-6" />
+                <div className="page-container py-6 space-y-6">
+                    <LoadingSkeleton className="h-8 w-24" />
+                    <LoadingSkeleton className="h-12 w-64" />
+                    <LoadingSkeleton className="aspect-video rounded-xl" />
+                    <LoadingSkeleton className="h-40 rounded-xl" />
                 </div>
             </Layout>
         );
@@ -213,13 +197,13 @@ export const LessonDetail = () => {
         <Layout>
             <div className="page-container py-6 space-y-6">
                 <Link to={`/courses/${lesson.course_id}`}>
-                    <Button variant="ghost" className="gap-2 -ml-2" data-testid="back-to-course-btn">
+                    <Button variant="ghost" className="gap-2 -ml-2 active:scale-95 transition-transform" data-testid="back-to-course-btn">
                         <ArrowLeft className="w-4 h-4" />
                         Back to Course
                     </Button>
                 </Link>
 
-                <div>
+                <div className="animate-fade-in">
                     {lesson.lesson_date && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                             <Calendar className="w-4 h-4" />
@@ -230,21 +214,21 @@ export const LessonDetail = () => {
                     <p className="text-muted-foreground">{lesson.description}</p>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-3 animate-fade-in" style={{ animationDelay: '0.1s' }}>
                     {zoomLink && (
-                        <Button onClick={handleJoinLive} className="zoom-button" data-testid="join-live-btn">
+                        <Button onClick={handleJoinLive} className="zoom-button active:scale-95 transition-transform" data-testid="join-live-btn">
                             <Video className="w-4 h-4" />
                             Join Live Session
                         </Button>
                     )}
-                    <Button onClick={handleMarkAttended} variant="outline" className="rounded-full" data-testid="mark-attended-btn">
+                    <Button onClick={handleMarkAttended} variant="outline" className="rounded-full active:scale-95 transition-transform" data-testid="mark-attended-btn">
                         <CheckCircle className="w-4 h-4 mr-2" />
                         I Attended
                     </Button>
                 </div>
 
                 {lesson.youtube_url && (
-                    <Card className="card-organic overflow-hidden">
+                    <Card className="card-organic overflow-hidden animate-fade-in" style={{ animationDelay: '0.15s' }}>
                         <div className="youtube-wrapper">
                             <iframe
                                 src={getYouTubeEmbedUrl(lesson.youtube_url)}
@@ -256,10 +240,14 @@ export const LessonDetail = () => {
                     </Card>
                 )}
 
-                <Tabs defaultValue="discussion" className="space-y-4">
+                <Tabs defaultValue="discussion" className="space-y-4 animate-fade-in" style={{ animationDelay: '0.2s' }}>
                     <TabsList className="grid w-full grid-cols-2 max-w-md">
-                        <TabsTrigger value="discussion" data-testid="discussion-tab">Discussion</TabsTrigger>
-                        <TabsTrigger value="resources" data-testid="resources-tab">Resources</TabsTrigger>
+                        <TabsTrigger value="discussion" data-testid="discussion-tab">
+                            Discussion ({comments.length})
+                        </TabsTrigger>
+                        <TabsTrigger value="resources" data-testid="resources-tab">
+                            Resources ({resources.length})
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="discussion" className="space-y-4">
@@ -279,7 +267,7 @@ export const LessonDetail = () => {
                                             className="flex-grow"
                                             data-testid="comment-input"
                                         />
-                                        <Button type="submit" disabled={submitting || !newComment.trim()} className="btn-primary" data-testid="submit-comment-btn">
+                                        <Button type="submit" disabled={submitting || !newComment.trim()} className="btn-primary active:scale-95 transition-transform" data-testid="submit-comment-btn">
                                             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                         </Button>
                                     </div>
@@ -288,8 +276,13 @@ export const LessonDetail = () => {
                         </Card>
 
                         <div className="space-y-3">
-                            {comments.length > 0 ? comments.map((comment) => (
-                                <Card key={comment.id} className={`card-organic ${comment.is_hidden ? 'opacity-50' : ''}`} data-testid={`comment-${comment.id}`}>
+                            {comments.length > 0 ? comments.map((comment, index) => (
+                                <Card 
+                                    key={comment.id} 
+                                    className={`card-organic animate-fade-in ${comment.is_hidden ? 'opacity-50' : ''}`}
+                                    style={{ animationDelay: `${index * 0.05}s` }}
+                                    data-testid={`comment-${comment.id}`}
+                                >
                                     <CardContent className="p-4">
                                         <div className="flex gap-3">
                                             <Avatar className="w-10 h-10 flex-shrink-0">
@@ -299,17 +292,17 @@ export const LessonDetail = () => {
                                             </Avatar>
                                             <div className="flex-grow min-w-0">
                                                 <div className="flex items-center justify-between gap-2 mb-1">
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2 flex-wrap">
                                                         <span className="font-semibold">{comment.user_name}</span>
                                                         <span className="text-xs text-muted-foreground">{formatRelativeTime(comment.created_at)}</span>
                                                         {comment.is_hidden && <span className="text-xs bg-muted px-2 py-0.5 rounded">Hidden</span>}
                                                     </div>
                                                     {isTeacherOrAdmin && (
                                                         <div className="flex gap-1">
-                                                            <Button variant="ghost" size="sm" onClick={() => handleHideComment(comment.id, !comment.is_hidden)} className="p-1 h-auto">
+                                                            <Button variant="ghost" size="sm" onClick={() => handleHideComment(comment.id, !comment.is_hidden)} className="p-1 h-auto hover:bg-muted">
                                                                 {comment.is_hidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                                                             </Button>
-                                                            <Button variant="ghost" size="sm" onClick={() => setDeleteCommentId(comment.id)} className="p-1 h-auto text-destructive">
+                                                            <Button variant="ghost" size="sm" onClick={() => setDeleteCommentId(comment.id)} className="p-1 h-auto text-destructive hover:bg-destructive/10">
                                                                 <Trash2 className="w-4 h-4" />
                                                             </Button>
                                                         </div>
@@ -321,8 +314,12 @@ export const LessonDetail = () => {
                                     </CardContent>
                                 </Card>
                             )) : (
-                                <Card className="card-organic p-8 text-center">
-                                    <p className="text-muted-foreground">No comments yet. Be the first to share your thoughts!</p>
+                                <Card className="card-organic">
+                                    <EmptyState
+                                        icon="chat"
+                                        title="No comments yet"
+                                        description="Be the first to share your thoughts on this lesson!"
+                                    />
                                 </Card>
                             )}
                         </div>
@@ -333,7 +330,7 @@ export const LessonDetail = () => {
                             <Card className="card-organic">
                                 <CardContent className="p-4">
                                     <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".pdf,.ppt,.pptx,.jpg,.jpeg,.png,.gif" className="hidden" />
-                                    <Button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="w-full btn-secondary" data-testid="upload-resource-btn">
+                                    <Button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="w-full btn-secondary active:scale-[0.98] transition-transform" data-testid="upload-resource-btn">
                                         {uploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading...</> : <><Upload className="w-4 h-4 mr-2" />Upload Resource (PDF, PPT, Images - Max 25MB)</>}
                                     </Button>
                                 </CardContent>
@@ -341,10 +338,16 @@ export const LessonDetail = () => {
                         )}
 
                         <div className="space-y-3">
-                            {resources.length > 0 ? resources.map((resource) => {
+                            {resources.length > 0 ? resources.map((resource, index) => {
                                 const Icon = getResourceIcon(resource.file_type);
                                 return (
-                                    <Card key={resource.id} className="card-organic" data-testid={`resource-${resource.id}`}>
+                                    <Card 
+                                        key={resource.id} 
+                                        className="card-organic card-hover cursor-pointer animate-fade-in" 
+                                        style={{ animationDelay: `${index * 0.05}s` }}
+                                        onClick={() => setPreviewResource(resource)}
+                                        data-testid={`resource-${resource.id}`}
+                                    >
                                         <CardContent className="p-4 flex items-center gap-4">
                                             <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
                                                 <Icon className="w-6 h-6 text-primary" />
@@ -353,13 +356,11 @@ export const LessonDetail = () => {
                                                 <p className="font-medium truncate">{resource.original_filename}</p>
                                                 <p className="text-sm text-muted-foreground">{formatFileSize(resource.file_size)} • {resource.file_type.toUpperCase()}</p>
                                             </div>
-                                            <div className="flex gap-2 flex-shrink-0">
-                                                {resource.file_type === 'pdf' && (
-                                                    <a href={`${BACKEND_URL}/api/resources/${resource.id}/download`} target="_blank" rel="noopener noreferrer">
-                                                        <Button variant="ghost" size="sm" data-testid={`preview-${resource.id}`}><ExternalLink className="w-4 h-4" /></Button>
-                                                    </a>
-                                                )}
-                                                <a href={`${BACKEND_URL}/api/resources/${resource.id}/download`} download>
+                                            <div className="flex gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                                <Button variant="ghost" size="sm" onClick={() => setPreviewResource(resource)} data-testid={`preview-${resource.id}`}>
+                                                    <Eye className="w-4 h-4" />
+                                                </Button>
+                                                <a href={`${BACKEND_URL}/api/resources/${resource.id}/download`} download onClick={(e) => e.stopPropagation()}>
                                                     <Button variant="ghost" size="sm" data-testid={`download-${resource.id}`}><Download className="w-4 h-4" /></Button>
                                                 </a>
                                                 {isTeacherOrAdmin && (
@@ -372,9 +373,12 @@ export const LessonDetail = () => {
                                     </Card>
                                 );
                             }) : (
-                                <Card className="card-organic p-8 text-center">
-                                    <FileText className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                                    <p className="text-muted-foreground">{isTeacherOrAdmin ? 'No resources yet. Upload files for this lesson.' : 'No resources available for this lesson.'}</p>
+                                <Card className="card-organic">
+                                    <EmptyState
+                                        icon="files"
+                                        title="No resources yet"
+                                        description={isTeacherOrAdmin ? 'Upload files for this lesson above.' : 'No resources available for this lesson.'}
+                                    />
                                 </Card>
                             )}
                         </div>
@@ -393,6 +397,12 @@ export const LessonDetail = () => {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+
+                <FilePreview
+                    resource={previewResource}
+                    open={!!previewResource}
+                    onClose={() => setPreviewResource(null)}
+                />
             </div>
         </Layout>
     );
