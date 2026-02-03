@@ -58,16 +58,25 @@ export const coursesAPI = {
     create: (data) => api.post('/courses', data),
     update: (id, data) => api.put(`/courses/${id}`, data),
     delete: (id) => api.delete(`/courses/${id}`),
+    enroll: (id) => api.post(`/courses/${id}/enroll`),
+    unenroll: (id) => api.delete(`/courses/${id}/enroll`),
+    getEnrollments: (id) => api.get(`/courses/${id}/enrollments`),
 };
 
 // Lessons API
 export const lessonsAPI = {
     getByCourse: (courseId) => api.get(`/courses/${courseId}/lessons`),
+    getAll: () => api.get('/lessons/all'),
     getOne: (id) => api.get(`/lessons/${id}`),
     getNext: () => api.get('/lessons/next/upcoming'),
     create: (data) => api.post('/lessons', data),
     update: (id, data) => api.put(`/lessons/${id}`, data),
     delete: (id) => api.delete(`/lessons/${id}`),
+};
+
+// Enrollments API
+export const enrollmentsAPI = {
+    getMy: () => api.get('/enrollments/my'),
 };
 
 // Comments API
