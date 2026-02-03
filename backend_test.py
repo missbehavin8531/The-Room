@@ -381,6 +381,44 @@ class SundaySchoolAPITester:
             attendance_data
         )
 
+    def test_enrollment_system(self):
+        """Test course enrollment/unenrollment functionality"""
+        self.log("=== Testing Enrollment System ===")
+        
+        if not self.course_id:
+            self.log("⚠️ No course ID available, skipping enrollment tests")
+            return
+        
+        # Test enrollment
+        success, enroll_response = self.run_test(
+            "Enroll in Course",
+            "POST",
+            f"courses/{self.course_id}/enroll",
+            200
+        )
+        
+        if success:
+            self.log(f"✅ Successfully enrolled in course {self.course_id}")
+        
+        # Get my enrollments
+        self.run_test(
+            "Get My Enrollments",
+            "GET",
+            "enrollments/my",
+            200
+        )
+        
+        # Test unenrollment
+        success, unenroll_response = self.run_test(
+            "Unenroll from Course",
+            "DELETE",
+            f"courses/{self.course_id}/enroll",
+            200
+        )
+        
+        if success:
+            self.log(f"✅ Successfully unenrolled from course {self.course_id}")
+
     def test_analytics(self):
         """Test analytics endpoints"""
         self.log("=== Testing Analytics ===")
