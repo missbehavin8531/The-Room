@@ -467,6 +467,16 @@ async def get_course_lessons(course_id: str, user: dict = Depends(require_approv
         result.append(LessonResponse(**lesson, resources=resources))
     return result
 
+@api_router.get("/lessons/all", response_model=List[LessonResponse])
+async def get_all_lessons(user: dict = Depends(require_approved)):
+    """Get all lessons across all courses (for calendar view)"""
+    lessons = await db.lessons.find({}, {'_id': 0}).sort('lesson_date', 1).to_list(1000)
+    result = []
+    for lesson in lessons:
+        resources = await db.resources.find({'lesson_id': lesson['id']}, {'_id': 0}).to_list(100)
+        result.append(LessonResponse(**lesson, resources=resources))
+    return result
+
 @api_router.get("/lessons/{lesson_id}", response_model=LessonResponse)
 async def get_lesson(lesson_id: str, user: dict = Depends(require_approved)):
     lesson = await db.lessons.find_one({'id': lesson_id}, {'_id': 0})
