@@ -187,6 +187,15 @@ class AnalyticsResponse(BaseModel):
     total_chat_messages: int
     attendance_records: int
 
+class EnrollmentResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: str
+    user_name: str
+    course_id: str
+    enrolled_at: str
+    progress: int = 0  # percentage of lessons completed
+
 # ============== AUTH HELPERS ==============
 
 def hash_password(password: str) -> str:
