@@ -391,7 +391,49 @@ async def delete_course(course_id: str, user: dict = Depends(require_teacher_or_
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Course not found")
     await db.lessons.delete_many({'course_id': course_id})
+    await db.enrollments.delete_many({'course_id': course_id})
     return {'message': 'Course and associated lessons deleted'}
+
+# ============== ENROLLMENTS ==============
+
+@api_router.post("/courses/{course_id}/enroll", response_model=EnrollmentResponse)
+async def enroll_in_course(course_id: str, user: dict = Depends(require_approved)):
+    course = await db.courses.find_one({'id': course_id})
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    existing = await db.enrollments.find_one({'course_id': course_id, 'user_id': user['id']})
+    if existing:
+        raise HTTPException(status_code=400, detail="Already enrolled in this course")
+    
+    enrollment_id = str(uuid.uuid4())
+    enrollment = {
+        'id': enrollment_id,
+        'user_id': user['id'],
+        'user_name': user['name'],
+        'course_id': course_id,
+        'enrolled_at': datetime.now(timezone.utc).isoformat(),
+        'progress': 0
+    }
+    await db.enrollments.insert_one(enrollment)
+    return EnrollmentResponse(**enrollment)
+
+@api_router.delete("/courses/{course_id}/enroll")
+async def unenroll_from_course(course_id: str, user: dict = Depends(require_approved)):
+    result = await db.enrollments.delete_one({'course_id': course_id, 'user_id': user['id']})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+    return {'message': 'Unenrolled from course'}
+
+@api_router.get("/enrollments/my", response_model=List[EnrollmentResponse])
+async def get_my_enrollments(user: dict = Depends(require_approved)):
+    enrollments = await db.enrollments.find({'user_id': user['id']}, {'_id': 0}).to_list(1000)
+    return [EnrollmentResponse(**e) for e in enrollments]
+
+@api_router.get("/courses/{course_id}/enrollments", response_model=List[EnrollmentResponse])
+async def get_course_enrollments(course_id: str, user: dict = Depends(require_teacher_or_admin)):
+    enrollments = await db.enrollments.find({'course_id': course_id}, {'_id': 0}).to_list(1000)
+    return [EnrollmentResponse(**e) for e in enrollments]
 
 # ============== LESSONS ==============
 
