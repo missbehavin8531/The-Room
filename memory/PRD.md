@@ -25,7 +25,7 @@ Mobile-first Sunday School education app for one church (v1) with:
 - Moderation tools (hide/delete content, mute users)
 - Basic analytics (participation stats)
 
-## What's Been Implemented (Jan 2026)
+## What's Been Implemented (Jan-Feb 2026)
 
 ### Backend (FastAPI + MongoDB)
 - [x] User authentication (register/login/JWT)
@@ -40,6 +40,8 @@ Mobile-first Sunday School education app for one church (v1) with:
 - [x] Attendance recording
 - [x] Analytics endpoints
 - [x] Seed data endpoint
+- [x] **NEW: Course enrollment/unenrollment APIs**
+- [x] **NEW: Get all lessons API (for calendar)**
 
 ### Frontend (React + Tailwind + Shadcn)
 - [x] Login/Register pages with demo credentials
@@ -53,6 +55,14 @@ Mobile-first Sunday School education app for one church (v1) with:
 - [x] Admin panel with user approval, role management, analytics
 - [x] Mobile-first responsive design
 - [x] Calming sage green theme (Merriweather + Nunito fonts)
+- [x] **NEW: Course enrollment tracking with enroll/unenroll buttons**
+- [x] **NEW: Lesson calendar view with month navigation**
+- [x] **NEW: File preview modal (PDF, PPT via Office viewer, images)**
+- [x] **NEW: Enhanced loading skeletons with shimmer effect**
+- [x] **NEW: Beautiful empty states with icons**
+- [x] **NEW: Smooth fade-in animations on page load**
+- [x] **NEW: "My Courses" section on dashboard**
+- [x] **NEW: Mobile bottom navigation bar**
 
 ## Demo Credentials
 - **Admin**: admin@sundayschool.com / admin123
