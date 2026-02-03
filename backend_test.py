@@ -474,6 +474,7 @@ class SundaySchoolAPITester:
         self.test_seed_data()
         self.test_user_management()
         self.test_courses_and_lessons()
+        self.test_enrollment_system()
         self.test_comments_and_discussions()
         self.test_chat_system()
         self.test_private_messaging()
