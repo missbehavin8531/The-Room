@@ -352,7 +352,7 @@ async def create_course(data: CourseCreate, user: dict = Depends(require_teacher
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.courses.insert_one(course)
-    return CourseResponse(**course, lesson_count=0)
+    return CourseResponse(**course, lesson_count=0, enrollment_count=0, is_enrolled=False)
 
 @api_router.get("/courses", response_model=List[CourseResponse])
 async def get_courses(user: dict = Depends(require_approved)):
@@ -360,7 +360,9 @@ async def get_courses(user: dict = Depends(require_approved)):
     result = []
     for c in courses:
         lesson_count = await db.lessons.count_documents({'course_id': c['id']})
-        result.append(CourseResponse(**c, lesson_count=lesson_count))
+        enrollment_count = await db.enrollments.count_documents({'course_id': c['id']})
+        is_enrolled = await db.enrollments.find_one({'course_id': c['id'], 'user_id': user['id']}) is not None
+        result.append(CourseResponse(**c, lesson_count=lesson_count, enrollment_count=enrollment_count, is_enrolled=is_enrolled))
     return result
 
 @api_router.get("/courses/{course_id}", response_model=CourseResponse)
@@ -369,7 +371,9 @@ async def get_course(course_id: str, user: dict = Depends(require_approved)):
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     lesson_count = await db.lessons.count_documents({'course_id': course_id})
-    return CourseResponse(**course, lesson_count=lesson_count)
+    enrollment_count = await db.enrollments.count_documents({'course_id': course_id})
+    is_enrolled = await db.enrollments.find_one({'course_id': course_id, 'user_id': user['id']}) is not None
+    return CourseResponse(**course, lesson_count=lesson_count, enrollment_count=enrollment_count, is_enrolled=is_enrolled)
 
 @api_router.put("/courses/{course_id}")
 async def update_course(course_id: str, data: CourseCreate, user: dict = Depends(require_teacher_or_admin)):
