@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '../../lib/utils';
+import { cn } from '../lib/utils';
 import { BookOpen, MessageSquare, FileText, Users, Inbox } from 'lucide-react';
 
 const icons = {

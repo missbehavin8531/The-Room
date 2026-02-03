@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '../../lib/utils';
+import { cn } from '../lib/utils';
 
 export const LoadingSkeleton = ({ className, variant = 'default' }) => {
     const baseClass = "bg-muted rounded animate-pulse relative overflow-hidden";
