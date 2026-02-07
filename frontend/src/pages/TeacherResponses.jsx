@@ -229,8 +229,8 @@ export const TeacherResponses = () => {
 
                 {/* Prompts with Replies */}
                 <div className="space-y-4">
-                    {data.prompts_with_replies.length > 0 ? (
-                        data.prompts_with_replies.map((item, index) => (
+                    {prompts.length > 0 ? (
+                        prompts.map((item, index) => (
                             <PromptCard
                                 key={item.prompt.id}
                                 item={item}
