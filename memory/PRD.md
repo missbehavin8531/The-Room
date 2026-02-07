@@ -30,52 +30,46 @@ A **narrow-wedge mobile-first** "Sunday School Classroom" web app for one church
 - **Discussion** - Teacher-defined prompts with member replies
   - Multiple prompts per lesson (tabs)
   - Pin important replies (teacher)
-  - Reply status tracking
+  - Reply status tracking (pending/answered/needs_followup)
 - **Reading Plan** - Weekly scripture reading schedule
 - **Mark Attendance** - Manual attendance confirmation
 
-## What's Been Implemented (Feb 2026)
+## What's Been Implemented
 
-### ✅ Lesson-Centric Flow (NEW)
+### ✅ Phase 1: Core Lesson-Centric Flow (Feb 2026)
 - [x] **Now/Next/After tabs** - Three-tab navigation for lesson content
-- [x] **Teacher Prompts** - Multiple discussion prompts per lesson
+- [x] **Teacher Prompts** - Multiple discussion prompts per lesson (max 3)
 - [x] **Prompt Replies** - Members respond to specific prompts
 - [x] **Pin Replies** - Teachers can pin important responses
 - [x] **Teacher Notes** - Markdown-rendered notes in NEXT tab
 - [x] **Reading Plan** - Weekly scripture schedule in AFTER tab
-- [x] **Resource Management** - Order, mark primary deck
+- [x] **Resource Management** - Upload, download, set primary deck
 - [x] **Multi-action Attendance** - Tracks joined_live, watched_replay, viewed_slides, responded, marked_attended
 
-### ✅ Backend (FastAPI + MongoDB)
+### ✅ Phase 2: Teacher Management Features (Feb 2026)
+- [x] **Lesson Editor** - Edit all lesson content including:
+  - Basic info (title, description, date, zoom link, youtube URL)
+  - Teacher Notes (markdown)
+  - Reading Plan (markdown)
+  - Discussion Prompts (create, edit, delete, max 3 per lesson)
+- [x] **Teacher Responses Dashboard** - View all student responses:
+  - Stats overview (Total, Pending, Answered, Follow-up)
+  - Prompt selector dropdown
+  - Reply list with user info and timestamps
+  - Status management (Pending → Answered → Needs Follow-up)
+  - Pin/Unpin replies
+  - Delete replies with confirmation
+- [x] **Teacher UI Access** - Edit/Responses buttons on lesson page (teacher-only)
+
+### ✅ Foundation Features
 - [x] User authentication with approval workflow
 - [x] Role-based access control (Admin/Teacher/Member)
 - [x] Courses & Lessons with full metadata
-- [x] Teacher Prompts API (create, list, delete)
-- [x] Prompt Replies API (reply, pin, status, delete)
-- [x] Resource Management API (upload, order, primary, replace)
-- [x] Multi-action attendance tracking
 - [x] Discussion comments per lesson
 - [x] Global chat
 - [x] Private messages (Member→Teacher inbox)
 - [x] File upload/download (local storage)
 - [x] Analytics endpoints
-- [x] Comprehensive seed data with prompts, replies, teacher notes, reading plans
-
-### ✅ Frontend (React + Tailwind + Shadcn)
-- [x] Login page with demo accounts
-- [x] First-time welcome screen with redirect to lesson
-- [x] Dashboard with current lesson card and progress indicator
-- [x] **Lesson Detail page with Now/Next/After tabs**
-- [x] YouTube video embedding
-- [x] Markdown rendering for teacher notes and reading plan
-- [x] Discussion with prompt tabs
-- [x] Reply submission form
-- [x] Pinned reply indicators
-- [x] Reading plan display
-- [x] Mark attendance button
-- [x] File preview modal (PDF, PPT, images)
-- [x] Mobile-first responsive design
-- [x] Bottom navigation on mobile
 
 ## Demo Credentials
 - **Admin**: admin@sundayschool.com / admin123
@@ -84,17 +78,17 @@ A **narrow-wedge mobile-first** "Sunday School Classroom" web app for one church
 
 ## Prioritized Backlog
 
-### P0 - Done in MVP
-All core requirements implemented including lesson-centric flow
+### P0 - Done (MVP + Teacher Features)
+All core lesson-centric flow and teacher management features implemented.
 
-### P1 - Next Priorities
-- [ ] Teacher UI to create/edit prompts within lesson editor
-- [ ] Teacher view of all responses grouped by prompt
-- [ ] Email notifications for upcoming lessons
-- [ ] Reply status management UI (pending/answered/needs_followup)
-- [ ] Resource reordering drag-and-drop
+### P1 - Next Priorities (Done ✅)
+- [x] Teacher UI to create/edit prompts within lesson editor
+- [x] Teacher view of all responses grouped by prompt
+- [x] Reply status management UI (pending/answered/needs_followup)
 
 ### P2 - Future Enhancements
+- [ ] Email notifications for upcoming lessons
+- [ ] Resource reordering with drag-and-drop
 - [ ] Real-time WebSocket for chat
 - [ ] PPT preview via online viewer
 - [ ] Push notifications (mobile PWA)
@@ -118,16 +112,19 @@ All core requirements implemented including lesson-centric flow
 
 ### Lessons
 - `GET /api/lessons/{id}` - Get lesson with prompts, resources, attendance
+- `PUT /api/lessons/{id}` - Update lesson content (teacher)
 - `GET /api/lessons/next/upcoming` - Get next/current lesson
 - `GET /api/courses/{id}/lessons` - Get all lessons for course
 
 ### Teacher Prompts
 - `GET /api/lessons/{id}/prompts` - Get prompts for lesson
-- `POST /api/lessons/{id}/prompts` - Create prompt (teacher)
+- `POST /api/lessons/{id}/prompts` - Create prompt (teacher, max 3)
+- `PUT /api/prompts/{id}` - Update prompt question (teacher)
 - `DELETE /api/prompts/{id}` - Delete prompt (teacher)
 
 ### Prompt Replies
 - `GET /api/prompts/{id}/replies` - Get replies for prompt
+- `GET /api/lessons/{id}/all-replies` - Get all replies grouped by prompt (teacher)
 - `POST /api/prompts/{id}/reply` - Submit reply
 - `PUT /api/replies/{id}/pin` - Pin/unpin reply (teacher)
 - `PUT /api/replies/{id}/status` - Update status (teacher)
@@ -157,6 +154,8 @@ All core requirements implemented including lesson-centric flow
 │   │   ├── pages/        # Page components
 │   │   │   ├── Dashboard.jsx
 │   │   │   ├── LessonDetail.jsx  # Main lesson-centric page
+│   │   │   ├── LessonEditor.jsx  # Teacher editing page
+│   │   │   ├── TeacherResponses.jsx  # Teacher responses dashboard
 │   │   │   └── ...
 │   │   └── lib/
 │   │       └── api.js    # API client
@@ -215,3 +214,8 @@ All core requirements implemented including lesson-centric flow
   "action": "joined_live|watched_replay|viewed_slides|responded|marked_attended"
 }
 ```
+
+## Test Reports
+- `/app/test_reports/iteration_4.json` - Lesson-centric flow tests (100% pass)
+- `/app/test_reports/iteration_5.json` - P1 teacher features tests (95% backend, 100% frontend)
+- `/app/backend/tests/test_p1_features.py` - Comprehensive P1 API tests
