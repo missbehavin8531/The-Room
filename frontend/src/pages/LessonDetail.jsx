@@ -218,6 +218,21 @@ export const LessonDetail = () => {
         }
     };
 
+    const handleStatusChange = async (replyId, status) => {
+        try {
+            await teacherPromptsAPI.updateReplyStatus(replyId, status);
+            setPromptReplies(prev => ({
+                ...prev,
+                [activePromptId]: prev[activePromptId].map(r =>
+                    r.id === replyId ? { ...r, status } : r
+                )
+            }));
+            toast.success('Status updated');
+        } catch (error) {
+            toast.error('Failed to update status');
+        }
+    };
+
     const handleDeleteReply = async () => {
         if (!deleteItem) return;
         try {
