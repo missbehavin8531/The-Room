@@ -49,7 +49,14 @@
 
 /* Page container */
 .page-container {
-    @apply container mx-auto px-4 md:px-8 pb-24 md:pb-8;
+    @apply container mx-auto px-4 md:px-8;
+    padding-bottom: 140px; /* Extra space for mobile nav + Emergent badge */
+}
+
+@media (min-width: 768px) {
+    .page-container {
+        padding-bottom: 2rem;
+    }
 }
 
 /* Section spacing */
