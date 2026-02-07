@@ -113,6 +113,15 @@ export const resourcesAPI = {
     },
     download: (resourceId) => `${API_URL}/resources/${resourceId}/download`,
     delete: (resourceId) => api.delete(`/resources/${resourceId}`),
+    setPrimary: (resourceId) => api.put(`/resources/${resourceId}/primary`),
+    updateOrder: (resourceId, order) => api.put(`/resources/${resourceId}/order?order=${order}`),
+    replace: (resourceId, file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.put(`/resources/${resourceId}/replace`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    },
 };
 
 // Attendance API
