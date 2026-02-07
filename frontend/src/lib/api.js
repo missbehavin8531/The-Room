@@ -122,10 +122,23 @@ export const attendanceAPI = {
     getMy: (lessonId) => api.get(`/attendance/my/${lessonId}`),
 };
 
-// Prompt Responses API
+// Prompt Responses API (legacy)
 export const promptAPI = {
     respond: (lessonId, content) => api.post(`/lessons/${lessonId}/respond`, { content }),
     getResponses: (lessonId) => api.get(`/lessons/${lessonId}/responses`),
+};
+
+// Teacher Prompts API (new lesson-centric)
+export const teacherPromptsAPI = {
+    getByLesson: (lessonId) => api.get(`/lessons/${lessonId}/prompts`),
+    create: (lessonId, question, order = 0) => api.post(`/lessons/${lessonId}/prompts`, { question, order }),
+    delete: (promptId) => api.delete(`/prompts/${promptId}`),
+    // Replies
+    getReplies: (promptId) => api.get(`/prompts/${promptId}/replies`),
+    reply: (promptId, content) => api.post(`/prompts/${promptId}/reply`, { content }),
+    pinReply: (replyId, pinned) => api.put(`/replies/${replyId}/pin?pinned=${pinned}`),
+    updateReplyStatus: (replyId, status) => api.put(`/replies/${replyId}/status?status=${status}`),
+    deleteReply: (replyId) => api.delete(`/replies/${replyId}`),
 };
 
 // Analytics API
