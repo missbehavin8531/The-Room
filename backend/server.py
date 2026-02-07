@@ -938,22 +938,25 @@ async def seed_data():
             'title': 'The Good News',
             'description': 'Understanding the meaning and significance of the Gospel message.',
             'youtube_url': 'https://www.youtube.com/watch?v=cgn6bjRo1Lg',
-            'lesson_date': '2026-01-12',
-            'order': 1
+            'lesson_date': '2026-02-09',
+            'order': 1,
+            'prompt': 'What does the Gospel mean to you personally? Share one way it has impacted your life.'
         },
         {
             'title': 'Faith and Grace',
             'description': 'Exploring the relationship between faith and grace in salvation.',
             'youtube_url': 'https://www.youtube.com/watch?v=cgn6bjRo1Lg',
-            'lesson_date': '2026-01-19',
-            'order': 2
+            'lesson_date': '2026-02-16',
+            'order': 2,
+            'prompt': 'How do you experience God\'s grace in your daily life? Give a specific example.'
         },
         {
             'title': 'Living in Christ',
             'description': 'Practical guidance for daily living as followers of Christ.',
             'youtube_url': 'https://www.youtube.com/watch?v=cgn6bjRo1Lg',
-            'lesson_date': '2026-01-26',
-            'order': 3
+            'lesson_date': '2026-02-23',
+            'order': 3,
+            'prompt': 'What is one practical way you can live out your faith this week?'
         }
     ]
     
