@@ -11,6 +11,8 @@ import Dashboard from './pages/Dashboard';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import LessonDetail from './pages/LessonDetail';
+import LessonEditor from './pages/LessonEditor';
+import TeacherResponses from './pages/TeacherResponses';
 import Chat from './pages/Chat';
 import Messages from './pages/Messages';
 import Admin from './pages/Admin';
