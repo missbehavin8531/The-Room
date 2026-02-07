@@ -1,0 +1,150 @@
+<analysis>**original_problem_statement:**
+Project: Mobile-first Sunday School education app for one church (v1).
+This is NOT a full church management system, not a giving/events platform, and not a generic group-chat app. It's a narrow-wedge product: a mobile-first “Sunday School Classroom” web app optimized for mixed ages and teacher workflows.
+
+**Core User Flow:**
+The app must be lesson-centric, revolving around a Now / Next / After experience on a Lesson page.
+- **NOW:** Join Live (Zoom link) + Live Chat.
+- **NEXT:** Watch Replay (YouTube embed) + Teacher Notes.
+- **AFTER:** Slides/Resources + Discussion prompt + Reading plan + Attendance tracking.
+
+**PRODUCT REQUIREMENTS:**
+- **Users & Roles:** Admin, Teacher, Member. Admins approve users. Teachers manage content. Members participate.
+- **Onboarding & Auth:** Email/password signup with admin approval required for access.
+- **Lesson-Centric Flow:** Everything revolves around the lesson page. The dashboard should direct users to the current lesson.
+- **Slide/Resource Workflow:** Teachers upload PPT/PDFs. Members can preview in-app or download. Teachers can reorder resources and mark one as the primary deck.
+- **Discipleship Discussion:** Each lesson has structured teacher prompts. Members respond under each prompt. Teachers can pin responses and mark them with a status (e.g., answered).
+- **Attendance:** Members can manually mark I attended. Teachers can view attendance reports per lesson/course.
+- **Safety & Privacy:** No member-to-member DMs. A private Message Teacher feature is allowed. Content is only visible to approved members of the church.
+
+**User's preferred language**: English
+
+**what currently exists?**
+A full-stack application with a FastAPI backend, MongoDB database, and a React frontend. The application supports user registration (with admin approval), login, and role-based access (Admin, Teacher, Member). It has features for course and lesson management, resource uploads, a global chat, and a member-to-teacher messaging system.
+
+The most recent implementation created a 5-step action dashboard. However, the latest user request deprecates this in favor of a new lesson-centric flow. The backend refactoring for this new flow has been started, but the frontend has not yet been updated.
+
+**Last working item**:
+- **Last item agent was working:** The agent was performing a major refactoring of the backend to support the new lesson-centric product direction. This involved modifying the data models in  to include features like teacher-defined prompts, statuses for prompt replies, teacher notes, reading plans, and the ability to order and prioritize lesson resources. The agent had just finished adding the API endpoints for managing these new features.
+- **Status:** IN PROGRESS
+- **Agent Testing Done:** N
+- **Which testing method agent to use?** both
+- **User Testing Done:** N
+
+**All Pending/In progress Issue list**:
+- **Issue 1:** The mobile navigation bar was reported as missing by the testing agent in a previous iteration. The main agent concluded it was a test timing issue after a manual screenshot showed it was working. This could be a recurring or flaky issue.
+  - **Status:** USER VERIFICATION PENDING
+  - **Is recurring issue?** Y
+
+**In progress Task List**:
+- **Task 1: Complete Backend Refactoring for Lesson-Centric Flow (P0)**
+  - **Where to resume:** The agent has added the new models and API endpoints to . The next step is to update the seed data function () to include the new fields (, , structured , etc.) to allow for effective testing of the new structure.
+  - **What will be achieved with this?** The backend will fully support the data requirements for the Now/Next/After lesson experience, teacher prompt management, and advanced resource handling.
+  - **Status:** IN PROGRESS
+  - **Should Test frontend/backend/both after fix?** backend
+
+**Upcoming and Future Tasks**
+- **Upcoming Tasks:**
+  - **P0: Frontend Refactoring for Lesson-Centric Flow:**
+    - Redesign the  page to be the central hub of the application, implementing the Now / Next / After layout.
+    - Deprecate or redesign the current  to simply guide users to the relevant lesson page.
+    - Implement the UI for the structured discussion based on teacher prompts.
+    - Build the teacher/admin interface to manage prompts (pin, set status) and resources (reorder, mark as primary).
+  - **P1: Implement Teacher View of Prompt Responses:**
+    - Create a view for teachers to see all student responses to a specific prompt.
+- **Future Tasks:**
+  - Implement email notifications (currently stubbed).
+  - Add course completion certificates.
+
+**Completed work in this session**
+- **Recently completed:**
+  - **Narrow Wedge Refinement:** Created a streamlined 5-step action dashboard and improved the user onboarding flow (Login/Register pages). (Note: This dashboard is now being replaced by the new lesson-centric flow).
+  - **UI/UX Enhancements:** Implemented course enrollment, a calendar view for lessons, skeleton loaders, and empty state components.
+  - **Foundation:** Built the initial full-stack application with user authentication, roles, course/lesson CRUD, file uploads, chat, and discussions.
+  - **Debugging:** Resolved multiple frontend compilation errors, including CSS issues and component recursion problems.
+
+**Earlier issues found/mentioned but not fixed**
+   - **Issue 1: Flaky Mobile Navigation Test**
+     - **Debug checklist:** The testing agent reported the mobile nav was missing, but a manual screenshot showed it. This could be a race condition or a flaw in the testing script's ability to wait for authentication/rendering.
+     - **Why to solve this issue and what will be achieved with this?** Ensures automated tests are reliable and that the mobile experience is consistently correct.
+     - **Should Test frontend/backend/both after fix:** frontend
+     - **Is recurring issue?** Y
+
+**Known issue recurrence from previous fork**
+  - **Issue recurrence in previous fork**: None
+  - **Recurrence count**: 0
+  - **Status**: NONE
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+- **Backend:** FastAPI, Pydantic for data modeling, MongoDB (via  async driver).
+- **Frontend:** React, React Router, Tailwind CSS, Shadcn UI components.
+- **Authentication:** JWT (JSON Web Tokens) with email/password. User state is managed via React Context.
+- **Architecture:** Single Page Application (SPA) with a RESTful API backend.
+
+**key DB schema**
+- **users:** 
+- **courses:** 
+- **lessons:** 
+- **enrollments:** 
+- **attendance:**  (type: live or manual)
+- **prompt_responses:** 
+- **resources:** 
+- **messages:** 
+- **chats:**  (Global chat)
+
+**All files of reference**
+- : The single source of truth for all backend logic, API endpoints, and database models. It's being actively modified for the new lesson-centric flow.
+- : Currently implements the 5-step action flow, but needs to be redesigned or deprecated.
+- : The page that will become the new heart of the application, needs a complete overhaul.
+- : The frontend API client, needs to be updated with all new endpoints from the backend refactoring.
+- : Contains the evolving product requirements and should be consulted for the new feature implementation.
+
+**Critical Info for New Agent**
+The most critical task is to pivot from the recently completed dashboard-centric UI to the new lesson-centric flow as mandated by the user. The previous work on the 5-step dashboard should now be considered obsolete. Your primary focus is to:
+1.  Finish the backend refactoring currently in progress in  by updating the seed data.
+2.  Completely redesign the frontend, making  the main user experience, structured around the Now / Next / After concept.
+3.  Update all related components and API calls to support this new flow. Do not continue building on the old dashboard UI.
+
+**documents and test reports created in this job**
+- 
+- 
+- 
+- 
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User:** Requests a major refactor to a lesson-centric flow with a Now/Next/After experience, improved slide workflow, and structured discussions.
+2.  **Agent:** Acknowledges the request and starts backend changes.
+3.  **Agent:** Views  to identify where to add new models.
+4.  **Agent:** Adds , , and  to the models in .
+5.  **Agent:** Views  again to update the resource model.
+6.  **Agent:** Adds  and  fields to the  model.
+7.  **Agent:** Views  to update the lesson endpoints.
+8.  **Agent:** Updates lesson endpoints to include the new data models.
+9.  **Agent:** Views  to find a place for new prompt management endpoints.
+10. **Agent:** Adds endpoints for teacher prompt management (creating, replying, updating status).
+
+**Project Health Check:**
+- **Broken:** The application is in a transitional state. The backend is being refactored, making it incompatible with the current frontend. The UI does not reflect the latest user requirements.
+- **Mocked:** N/A
+
+**3rd Party Integrations**
+- **Zoom:** Stores a URL per lesson. No API integration.
+- **YouTube:** Stores a video URL per lesson for embedding. No API integration.
+
+**Testing status**
+- **Testing agent used after significant changes:** YES
+- **Troubleshoot agent used after agent stuck in loop:** NO
+- **Test files created:** None
+- **Known regressions:** The entire UI is now a regression as it doesn't match the new user requirements.
+
+**Credentials to test flow:**
+Seed data is created automatically. Credentials are provided in the output of the seed command. The default credentials are:
+- **Admin:**  / 
+- **Teacher:**  / 
+- **Member:**  / 
+
+**What agent forgot to execute**
+The agent has correctly identified the next steps but has not yet completed the backend refactoring. The seed data in  still needs to be updated to include the new fields (, , etc.) before the backend changes can be properly tested and before frontend development can begin.</analysis>
