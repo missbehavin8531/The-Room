@@ -4,34 +4,35 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { toast } from 'sonner';
-import { BookOpen, Loader2, CheckCircle } from 'lucide-react';
+import { BookOpen, Loader2, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export const Register = () => {
+    const [step, setStep] = useState(1);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const { register } = useAuth();
-    const navigate = useNavigate();
+
+    const handleNext = () => {
+        if (step === 1 && !name.trim()) {
+            toast.error('Please enter your name');
+            return;
+        }
+        if (step === 2 && !email.trim()) {
+            toast.error('Please enter your email');
+            return;
+        }
+        setStep(step + 1);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (!name || !email || !password || !confirmPassword) {
-            toast.error('Please fill in all fields');
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            toast.error('Passwords do not match');
-            return;
-        }
-
-        if (password.length < 6) {
+        if (!password || password.length < 6) {
             toast.error('Password must be at least 6 characters');
             return;
         }
@@ -40,7 +41,7 @@ export const Register = () => {
         try {
             await register(name, email, password);
             setSuccess(true);
-            toast.success('Registration successful!');
+            toast.success('Welcome to Sunday School!');
         } catch (error) {
             const message = error.response?.data?.detail || 'Registration failed';
             toast.error(message);
@@ -53,19 +54,22 @@ export const Register = () => {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center p-4">
                 <div className="w-full max-w-md">
-                    <Card className="card-organic text-center">
-                        <CardContent className="pt-8 pb-8">
-                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <CheckCircle className="w-8 h-8 text-green-600" />
+                    <Card className="card-organic text-center animate-fade-in">
+                        <CardContent className="pt-10 pb-10">
+                            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <CheckCircle className="w-10 h-10 text-green-600" />
                             </div>
-                            <h2 className="text-2xl font-serif font-bold mb-2">Registration Complete!</h2>
-                            <p className="text-muted-foreground mb-6">
-                                Your account has been created successfully. 
-                                Please wait for an administrator to approve your account before you can access the content.
+                            <h2 className="text-2xl font-serif font-bold mb-3">You're Almost There!</h2>
+                            <p className="text-muted-foreground mb-2">
+                                Welcome, <strong>{name.split(' ')[0]}</strong>! 👋
+                            </p>
+                            <p className="text-muted-foreground mb-8">
+                                An admin will approve your account shortly. You'll get access to lessons, discussions, and more!
                             </p>
                             <Link to="/login">
-                                <Button className="btn-primary" data-testid="go-to-login-btn">
+                                <Button className="btn-primary w-full py-6 text-lg" data-testid="go-to-login-btn">
                                     Go to Sign In
+                                    <ArrowRight className="w-5 h-5 ml-2" />
                                 </Button>
                             </Link>
                         </CardContent>
@@ -79,7 +83,7 @@ export const Register = () => {
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Logo */}
-                <div className="text-center mb-8">
+                <div className="text-center mb-8 animate-fade-in">
                     <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <BookOpen className="w-8 h-8 text-primary-foreground" />
                     </div>
@@ -87,88 +91,119 @@ export const Register = () => {
                     <p className="text-muted-foreground mt-2">Join our learning community</p>
                 </div>
 
-                <Card className="card-organic">
-                    <CardHeader className="space-y-1">
-                        <CardTitle className="text-2xl font-serif">Create Account</CardTitle>
-                        <CardDescription>
-                            Fill in your details to register. Approval required for access.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="name">Full Name</Label>
-                                <Input
-                                    id="name"
-                                    type="text"
-                                    placeholder="John Smith"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="input-clean"
-                                    data-testid="register-name-input"
-                                />
+                {/* Progress Indicator */}
+                <div className="flex items-center justify-center gap-2 mb-8">
+                    {[1, 2, 3].map((s) => (
+                        <div
+                            key={s}
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                                s === step ? 'w-8 bg-primary' : s < step ? 'w-8 bg-primary/50' : 'w-2 bg-muted'
+                            }`}
+                        />
+                    ))}
+                </div>
+
+                <Card className="card-organic animate-fade-in">
+                    <CardContent className="p-6">
+                        {/* Step 1: Name */}
+                        {step === 1 && (
+                            <div className="space-y-6">
+                                <div className="text-center">
+                                    <h2 className="text-xl font-serif font-bold mb-2">What's your name?</h2>
+                                    <p className="text-muted-foreground text-sm">We'd love to know who's joining us</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Input
+                                        type="text"
+                                        placeholder="Your full name"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="input-clean text-center text-lg py-6"
+                                        autoFocus
+                                        data-testid="register-name-input"
+                                        onKeyDown={(e) => e.key === 'Enter' && handleNext()}
+                                    />
+                                </div>
+                                <Button onClick={handleNext} className="w-full btn-primary py-6 text-lg">
+                                    Continue
+                                    <ArrowRight className="w-5 h-5 ml-2" />
+                                </Button>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder="you@example.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="input-clean"
-                                    data-testid="register-email-input"
-                                />
+                        )}
+
+                        {/* Step 2: Email */}
+                        {step === 2 && (
+                            <div className="space-y-6">
+                                <div className="text-center">
+                                    <h2 className="text-xl font-serif font-bold mb-2">Hi {name.split(' ')[0]}! 👋</h2>
+                                    <p className="text-muted-foreground text-sm">What's your email address?</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Input
+                                        type="email"
+                                        placeholder="you@example.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="input-clean text-center text-lg py-6"
+                                        autoFocus
+                                        data-testid="register-email-input"
+                                        onKeyDown={(e) => e.key === 'Enter' && handleNext()}
+                                    />
+                                </div>
+                                <div className="flex gap-3">
+                                    <Button variant="outline" onClick={() => setStep(1)} className="flex-1 py-6">
+                                        <ArrowLeft className="w-4 h-4 mr-2" />
+                                        Back
+                                    </Button>
+                                    <Button onClick={handleNext} className="flex-1 btn-primary py-6">
+                                        Continue
+                                        <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="password">Password</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="input-clean"
-                                    data-testid="register-password-input"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                                <Input
-                                    id="confirmPassword"
-                                    type="password"
-                                    placeholder="••••••••"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="input-clean"
-                                    data-testid="register-confirm-password-input"
-                                />
-                            </div>
-                            <Button
-                                type="submit"
-                                className="w-full btn-primary"
-                                disabled={loading}
-                                data-testid="register-submit-btn"
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        Creating account...
-                                    </>
-                                ) : (
-                                    'Create Account'
-                                )}
-                            </Button>
-                        </form>
+                        )}
+
+                        {/* Step 3: Password */}
+                        {step === 3 && (
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="text-center">
+                                    <h2 className="text-xl font-serif font-bold mb-2">Almost done!</h2>
+                                    <p className="text-muted-foreground text-sm">Create a password to secure your account</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Input
+                                        type="password"
+                                        placeholder="At least 6 characters"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="input-clean text-center text-lg py-6"
+                                        autoFocus
+                                        data-testid="register-password-input"
+                                    />
+                                </div>
+                                <div className="flex gap-3">
+                                    <Button type="button" variant="outline" onClick={() => setStep(2)} className="flex-1 py-6">
+                                        <ArrowLeft className="w-4 h-4 mr-2" />
+                                        Back
+                                    </Button>
+                                    <Button type="submit" className="flex-1 btn-primary py-6" disabled={loading} data-testid="register-submit-btn">
+                                        {loading ? (
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                        ) : (
+                                            <>
+                                                Join Now
+                                                <ArrowRight className="w-4 h-4 ml-2" />
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </form>
+                        )}
 
                         <div className="mt-6 text-center">
                             <p className="text-sm text-muted-foreground">
                                 Already have an account?{' '}
-                                <Link 
-                                    to="/login" 
-                                    className="text-primary hover:underline font-medium"
-                                    data-testid="login-link"
-                                >
+                                <Link to="/login" className="text-primary hover:underline font-medium" data-testid="login-link">
                                     Sign in
                                 </Link>
                             </p>
