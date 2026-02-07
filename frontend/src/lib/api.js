@@ -141,9 +141,11 @@ export const promptAPI = {
 export const teacherPromptsAPI = {
     getByLesson: (lessonId) => api.get(`/lessons/${lessonId}/prompts`),
     create: (lessonId, question, order = 0) => api.post(`/lessons/${lessonId}/prompts`, { question, order }),
+    update: (promptId, question, order) => api.put(`/prompts/${promptId}`, { question, order }),
     delete: (promptId) => api.delete(`/prompts/${promptId}`),
     // Replies
     getReplies: (promptId) => api.get(`/prompts/${promptId}/replies`),
+    getAllReplies: (lessonId) => api.get(`/lessons/${lessonId}/all-replies`),
     reply: (promptId, content) => api.post(`/prompts/${promptId}/reply`, { content }),
     pinReply: (replyId, pinned) => api.put(`/replies/${replyId}/pin?pinned=${pinned}`),
     updateReplyStatus: (replyId, status) => api.put(`/replies/${replyId}/status?status=${status}`),
