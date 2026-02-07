@@ -176,7 +176,7 @@ export const TeacherResponses = () => {
                     <h1 className="text-2xl md:text-3xl font-serif font-bold mb-1">
                         Student Responses
                     </h1>
-                    <p className="text-muted-foreground">{data.lesson.title}</p>
+                    <p className="text-muted-foreground">{lesson.title}</p>
                 </div>
 
                 {/* Stats Overview */}
