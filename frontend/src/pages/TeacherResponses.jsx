@@ -327,9 +327,7 @@ export const TeacherResponses = () => {
                                         {/* Replies List */}
                                         {item.replies.length > 0 ? (
                                             <div className="divide-y">
-                                                {item.replies.map((reply) => {
-                                                    const StatusIcon = STATUS_CONFIG[reply.status]?.icon || Clock;
-                                                    return (
+                                                {item.replies.map((reply) => (
                                                         <div 
                                                             key={reply.id}
                                                             className={cn(
