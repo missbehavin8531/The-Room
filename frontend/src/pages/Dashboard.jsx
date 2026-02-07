@@ -4,25 +4,15 @@ import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Textarea } from '../components/ui/textarea';
-import { lessonsAPI, coursesAPI, attendanceAPI, promptAPI } from '../lib/api';
-import { formatDate, getYouTubeEmbedUrl } from '../lib/utils';
+import { lessonsAPI, coursesAPI, attendanceAPI } from '../lib/api';
+import { formatDate } from '../lib/utils';
 import { toast } from 'sonner';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
 import { cn } from '../lib/utils';
 import { 
     Video, Play, FileText, MessageSquare, CheckCircle,
-    ArrowRight, BookOpen, Loader2, Check, Sparkles
+    ArrowRight, BookOpen, Sparkles, Calendar
 } from 'lucide-react';
-
-// The 5 core actions
-const ACTIONS = [
-    { key: 'joined_live', label: 'Join Live', icon: Video, color: 'bg-blue-500' },
-    { key: 'watched_replay', label: 'Watch Replay', icon: Play, color: 'bg-purple-500' },
-    { key: 'viewed_slides', label: 'View Slides', icon: FileText, color: 'bg-amber-500' },
-    { key: 'responded', label: 'Respond', icon: MessageSquare, color: 'bg-green-500' },
-    { key: 'marked_attended', label: 'Mark Attendance', icon: CheckCircle, color: 'bg-primary' },
-];
 
 export const Dashboard = () => {
     const { user } = useAuth();
@@ -31,10 +21,6 @@ export const Dashboard = () => {
     const [course, setCourse] = useState(null);
     const [completedActions, setCompletedActions] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showVideo, setShowVideo] = useState(false);
-    const [promptResponse, setPromptResponse] = useState('');
-    const [submittingPrompt, setSubmittingPrompt] = useState(false);
-    const [showPromptInput, setShowPromptInput] = useState(false);
     const [isFirstVisit, setIsFirstVisit] = useState(false);
 
     useEffect(() => {
@@ -59,15 +45,7 @@ export const Dashboard = () => {
                 
                 // Get user's completed actions
                 const attendanceRes = await attendanceAPI.getMy(lessonRes.data.id);
-                const actions = attendanceRes.data.actions || [];
-                
-                // Check if user has responded to prompt
-                if (lessonRes.data.user_response) {
-                    actions.push('responded');
-                    setPromptResponse(lessonRes.data.user_response.content);
-                }
-                
-                setCompletedActions(actions);
+                setCompletedActions(attendanceRes.data.actions || []);
             }
         } catch (error) {
             console.error('Failed to fetch data:', error);
@@ -76,94 +54,19 @@ export const Dashboard = () => {
         }
     };
 
-    const handleAction = async (actionKey) => {
-        if (!lesson) return;
-        
-        const zoomLink = lesson.zoom_link || course?.zoom_link;
-        
-        switch (actionKey) {
-            case 'joined_live':
-                if (zoomLink) {
-                    await recordAction('joined_live');
-                    window.open(zoomLink, '_blank');
-                } else {
-                    toast.info('No live session link available');
-                }
-                break;
-            case 'watched_replay':
-                if (lesson.youtube_url) {
-                    setShowVideo(true);
-                    await recordAction('watched_replay');
-                } else {
-                    toast.info('No replay available');
-                }
-                break;
-            case 'viewed_slides':
-                if (lesson.resources?.length > 0) {
-                    await recordAction('viewed_slides');
-                    navigate(`/lessons/${lesson.id}?tab=resources`);
-                } else {
-                    toast.info('No slides available');
-                }
-                break;
-            case 'responded':
-                if (lesson.prompt) {
-                    setShowPromptInput(true);
-                } else {
-                    toast.info('No prompt for this lesson');
-                }
-                break;
-            case 'marked_attended':
-                await recordAction('marked_attended');
-                break;
+    const goToLesson = () => {
+        if (lesson) {
+            navigate(`/lessons/${lesson.id}`);
+        } else {
+            navigate('/courses');
         }
     };
 
-    const recordAction = async (action) => {
-        try {
-            await attendanceAPI.record(lesson.id, action);
-            if (!completedActions.includes(action)) {
-                setCompletedActions([...completedActions, action]);
-            }
-            toast.success(getActionMessage(action));
-        } catch (error) {
-            console.error('Failed to record action:', error);
-        }
-    };
-
-    const getActionMessage = (action) => {
-        switch (action) {
-            case 'joined_live': return 'Joined live session!';
-            case 'watched_replay': return 'Watching replay...';
-            case 'viewed_slides': return 'Viewing slides...';
-            case 'marked_attended': return 'Attendance marked! ✓';
-            default: return 'Done!';
-        }
-    };
-
-    const handleSubmitPrompt = async () => {
-        if (!promptResponse.trim()) {
-            toast.error('Please write a response');
-            return;
-        }
-        
-        setSubmittingPrompt(true);
-        try {
-            await promptAPI.respond(lesson.id, promptResponse.trim());
-            if (!completedActions.includes('responded')) {
-                setCompletedActions([...completedActions, 'responded']);
-            }
-            setShowPromptInput(false);
-            toast.success('Response submitted! ✓');
-        } catch (error) {
-            toast.error('Failed to submit response');
-        } finally {
-            setSubmittingPrompt(false);
-        }
-    };
-
-    const isActionCompleted = (key) => completedActions.includes(key);
-    const completionPercent = Math.round((completedActions.length / 5) * 100);
+    const completionCount = completedActions.length;
+    const hasZoom = lesson?.zoom_link || course?.zoom_link;
+    const hasVideo = lesson?.youtube_url;
+    const hasResources = lesson?.resources?.length > 0;
+    const hasPrompts = lesson?.prompts?.length > 0;
 
     if (loading) {
         return (
@@ -191,7 +94,7 @@ export const Dashboard = () => {
                             Ready to start your Sunday School journey? Let's go to today's lesson.
                         </p>
                         <Button 
-                            onClick={() => setIsFirstVisit(false)} 
+                            onClick={goToLesson} 
                             className="btn-primary w-full text-lg py-6"
                             data-testid="start-lesson-btn"
                         >
@@ -224,138 +127,119 @@ export const Dashboard = () => {
     return (
         <Layout>
             <div className="page-container py-4 md:py-6 space-y-6">
-                {/* Lesson Header */}
+                {/* Welcome Header */}
                 <div className="animate-fade-in">
                     <p className="text-sm text-muted-foreground mb-1">
-                        {lesson.lesson_date ? formatDate(lesson.lesson_date) : "Today's Lesson"}
+                        Welcome back, {user?.name?.split(' ')[0]}
                     </p>
-                    <h1 className="text-2xl md:text-3xl font-serif font-bold mb-1">
-                        {lesson.title}
+                    <h1 className="text-2xl md:text-3xl font-serif font-bold">
+                        Today's Lesson
                     </h1>
-                    <p className="text-muted-foreground text-sm md:text-base line-clamp-2">
-                        {lesson.description}
-                    </p>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="animate-fade-in" style={{ animationDelay: '0.05s' }}>
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Your Progress</span>
-                        <span className="text-sm text-muted-foreground">{completedActions.length}/5 complete</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                            className="h-full bg-primary transition-all duration-500 rounded-full"
-                            style={{ width: `${completionPercent}%` }}
-                        />
-                    </div>
-                </div>
-
-                {/* 5-Step Action Buttons */}
-                <div className="grid grid-cols-5 gap-2 md:gap-3 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                    {ACTIONS.map((action, index) => {
-                        const completed = isActionCompleted(action.key);
-                        const Icon = action.icon;
-                        return (
-                            <button
-                                key={action.key}
-                                onClick={() => handleAction(action.key)}
-                                className={cn(
-                                    "flex flex-col items-center justify-center p-3 md:p-4 rounded-xl transition-all duration-200",
-                                    "active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary/50",
-                                    completed 
-                                        ? "bg-primary/10 text-primary border-2 border-primary/30" 
-                                        : "bg-muted hover:bg-muted/80 text-foreground border-2 border-transparent"
+                {/* Current Lesson Card */}
+                <Card 
+                    className="card-organic card-hover cursor-pointer animate-fade-in" 
+                    onClick={goToLesson}
+                    style={{ animationDelay: '0.05s' }}
+                    data-testid="current-lesson-card"
+                >
+                    <CardContent className="p-5">
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                            <div>
+                                {lesson.lesson_date && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                                        <Calendar className="w-4 h-4" />
+                                        {formatDate(lesson.lesson_date)}
+                                    </div>
                                 )}
-                                data-testid={`action-${action.key}`}
-                            >
-                                <div className={cn(
-                                    "w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-2",
-                                    completed ? "bg-primary text-primary-foreground" : action.color + " text-white"
-                                )}>
-                                    {completed ? <Check className="w-5 h-5 md:w-6 md:h-6" /> : <Icon className="w-5 h-5 md:w-6 md:h-6" />}
+                                <h2 className="text-xl font-serif font-bold mb-1">{lesson.title}</h2>
+                                <p className="text-muted-foreground text-sm line-clamp-2">{lesson.description}</p>
+                            </div>
+                            <div className="flex-shrink-0">
+                                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                                    <ArrowRight className="w-6 h-6 text-primary-foreground" />
                                 </div>
-                                <span className="text-xs md:text-sm font-medium text-center leading-tight">
-                                    {action.label}
-                                </span>
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Video Player (expandable) */}
-                {showVideo && lesson.youtube_url && (
-                    <Card className="card-organic overflow-hidden animate-fade-in">
-                        <div className="youtube-wrapper">
-                            <iframe
-                                src={getYouTubeEmbedUrl(lesson.youtube_url)}
-                                title={lesson.title}
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            />
+                            </div>
                         </div>
-                    </Card>
-                )}
 
-                {/* Prompt Response Section */}
-                {showPromptInput && lesson.prompt && (
-                    <Card className="card-organic animate-fade-in">
-                        <CardContent className="p-4 md:p-6">
-                            <div className="flex items-start gap-3 mb-4">
-                                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <MessageSquare className="w-5 h-5 text-white" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold mb-1">This Week's Prompt</h3>
-                                    <p className="text-muted-foreground">{lesson.prompt}</p>
-                                </div>
+                        {/* Progress Indicator */}
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="flex-grow h-2 bg-muted rounded-full overflow-hidden">
+                                <div 
+                                    className="h-full bg-primary transition-all duration-500 rounded-full"
+                                    style={{ width: `${(completionCount / 5) * 100}%` }}
+                                />
                             </div>
-                            <Textarea
-                                placeholder="Share your thoughts..."
-                                value={promptResponse}
-                                onChange={(e) => setPromptResponse(e.target.value)}
-                                rows={3}
-                                className="mb-3"
-                                data-testid="prompt-response-input"
-                            />
-                            <div className="flex gap-2">
-                                <Button 
-                                    onClick={handleSubmitPrompt}
-                                    disabled={submittingPrompt}
-                                    className="btn-primary flex-1"
-                                    data-testid="submit-prompt-btn"
-                                >
-                                    {submittingPrompt ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <Check className="w-4 h-4 mr-2" />
-                                            Submit Response
-                                        </>
-                                    )}
-                                </Button>
-                                <Button 
-                                    variant="outline"
-                                    onClick={() => setShowPromptInput(false)}
-                                >
-                                    Cancel
-                                </Button>
+                            <span className="text-sm text-muted-foreground font-medium">{completionCount}/5</span>
+                        </div>
+
+                        {/* Quick Status Icons */}
+                        <div className="flex gap-2">
+                            {hasZoom && (
+                                <div className={cn(
+                                    "w-8 h-8 rounded-full flex items-center justify-center",
+                                    completedActions.includes('joined_live') ? "bg-green-500 text-white" : "bg-blue-100 text-blue-600"
+                                )}>
+                                    <Video className="w-4 h-4" />
+                                </div>
+                            )}
+                            {hasVideo && (
+                                <div className={cn(
+                                    "w-8 h-8 rounded-full flex items-center justify-center",
+                                    completedActions.includes('watched_replay') ? "bg-green-500 text-white" : "bg-purple-100 text-purple-600"
+                                )}>
+                                    <Play className="w-4 h-4" />
+                                </div>
+                            )}
+                            {hasResources && (
+                                <div className={cn(
+                                    "w-8 h-8 rounded-full flex items-center justify-center",
+                                    completedActions.includes('viewed_slides') ? "bg-green-500 text-white" : "bg-amber-100 text-amber-600"
+                                )}>
+                                    <FileText className="w-4 h-4" />
+                                </div>
+                            )}
+                            {hasPrompts && (
+                                <div className={cn(
+                                    "w-8 h-8 rounded-full flex items-center justify-center",
+                                    completedActions.includes('responded') ? "bg-green-500 text-white" : "bg-green-100 text-green-600"
+                                )}>
+                                    <MessageSquare className="w-4 h-4" />
+                                </div>
+                            )}
+                            <div className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center",
+                                completedActions.includes('marked_attended') ? "bg-green-500 text-white" : "bg-gray-100 text-gray-600"
+                            )}>
+                                <CheckCircle className="w-4 h-4" />
                             </div>
-                        </CardContent>
-                    </Card>
-                )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* CTA Button */}
+                <Button 
+                    onClick={goToLesson} 
+                    className="btn-primary w-full text-lg py-6 animate-fade-in"
+                    style={{ animationDelay: '0.1s' }}
+                    data-testid="go-to-lesson-btn"
+                >
+                    {completionCount === 0 ? 'Start Lesson' : completionCount === 5 ? 'Review Lesson' : 'Continue Lesson'}
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
 
                 {/* Quick Links */}
                 <div className="grid grid-cols-2 gap-3 animate-fade-in" style={{ animationDelay: '0.15s' }}>
-                    <Link to={`/lessons/${lesson.id}`}>
+                    <Link to="/courses">
                         <Card className="card-organic card-hover h-full">
                             <CardContent className="p-4 flex items-center gap-3">
                                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
                                     <BookOpen className="w-5 h-5 text-primary" />
                                 </div>
                                 <div>
-                                    <p className="font-medium text-sm">Full Lesson</p>
-                                    <p className="text-xs text-muted-foreground">Discussion & more</p>
+                                    <p className="font-medium text-sm">All Courses</p>
+                                    <p className="text-xs text-muted-foreground">Browse content</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -376,7 +260,7 @@ export const Dashboard = () => {
                 </div>
 
                 {/* Completion Celebration */}
-                {completedActions.length === 5 && (
+                {completionCount === 5 && (
                     <Card className="card-organic bg-primary/5 border-primary/20 animate-fade-in">
                         <CardContent className="p-6 text-center">
                             <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
