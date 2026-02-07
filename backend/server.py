@@ -800,6 +800,15 @@ async def record_attendance(data: AttendanceCreate, user: dict = Depends(require
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
     
+    # Check if already recorded this action
+    existing = await db.attendance.find_one({
+        'lesson_id': data.lesson_id, 
+        'user_id': user['id'], 
+        'action': data.action
+    })
+    if existing:
+        return AttendanceResponse(**{k: v for k, v in existing.items() if k != '_id'})
+    
     attendance_id = str(uuid.uuid4())
     attendance = {
         'id': attendance_id,
@@ -817,14 +826,211 @@ async def get_lesson_attendance(lesson_id: str, user: dict = Depends(require_tea
     records = await db.attendance.find({'lesson_id': lesson_id}, {'_id': 0}).to_list(1000)
     return [AttendanceResponse(**r) for r in records]
 
+@api_router.get("/attendance/lesson/{lesson_id}/summary")
+async def get_lesson_attendance_summary(lesson_id: str, user: dict = Depends(require_teacher_or_admin)):
+    """Get attendance summary with unique users per action"""
+    pipeline = [
+        {'$match': {'lesson_id': lesson_id}},
+        {'$group': {
+            '_id': {'action': '$action', 'user_id': '$user_id'},
+            'user_name': {'$first': '$user_name'}
+        }},
+        {'$group': {
+            '_id': '$_id.action',
+            'count': {'$sum': 1},
+            'users': {'$push': '$user_name'}
+        }}
+    ]
+    results = await db.attendance.aggregate(pipeline).to_list(10)
+    return {r['_id']: {'count': r['count'], 'users': r['users']} for r in results}
+
 @api_router.get("/attendance/my/{lesson_id}")
 async def get_my_attendance(lesson_id: str, user: dict = Depends(require_approved)):
     """Get current user's attendance actions for a lesson"""
     records = await db.attendance.find({'lesson_id': lesson_id, 'user_id': user['id']}, {'_id': 0}).to_list(100)
-    actions = [r['action'] for r in records]
+    actions = list(set([r['action'] for r in records]))
     return {'actions': actions}
 
-# ============== PROMPT RESPONSES ==============
+# ============== TEACHER PROMPTS ==============
+
+@api_router.post("/lessons/{lesson_id}/prompts", response_model=TeacherPromptResponse)
+async def create_teacher_prompt(lesson_id: str, data: TeacherPromptCreate, user: dict = Depends(require_teacher_or_admin)):
+    lesson = await db.lessons.find_one({'id': lesson_id})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    # Check max 3 prompts
+    count = await db.teacher_prompts.count_documents({'lesson_id': lesson_id})
+    if count >= 3:
+        raise HTTPException(status_code=400, detail="Maximum 3 prompts per lesson")
+    
+    prompt_id = str(uuid.uuid4())
+    prompt = {
+        'id': prompt_id,
+        'lesson_id': lesson_id,
+        'question': data.question,
+        'order': data.order or count,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.teacher_prompts.insert_one(prompt)
+    return TeacherPromptResponse(**prompt)
+
+@api_router.get("/lessons/{lesson_id}/prompts", response_model=List[TeacherPromptResponse])
+async def get_lesson_prompts(lesson_id: str, user: dict = Depends(require_approved)):
+    prompts = await db.teacher_prompts.find({'lesson_id': lesson_id}, {'_id': 0}).sort('order', 1).to_list(10)
+    return [TeacherPromptResponse(**p) for p in prompts]
+
+@api_router.delete("/prompts/{prompt_id}")
+async def delete_teacher_prompt(prompt_id: str, user: dict = Depends(require_teacher_or_admin)):
+    result = await db.teacher_prompts.delete_one({'id': prompt_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Prompt not found")
+    # Also delete replies
+    await db.prompt_replies.delete_many({'prompt_id': prompt_id})
+    return {'message': 'Prompt deleted'}
+
+# ============== PROMPT REPLIES ==============
+
+@api_router.post("/prompts/{prompt_id}/reply", response_model=PromptReplyResponse)
+async def reply_to_prompt(prompt_id: str, data: PromptReplyCreate, user: dict = Depends(require_approved)):
+    prompt = await db.teacher_prompts.find_one({'id': prompt_id})
+    if not prompt:
+        raise HTTPException(status_code=404, detail="Prompt not found")
+    
+    if user.get('is_muted'):
+        raise HTTPException(status_code=403, detail="You are muted and cannot respond")
+    
+    reply_id = str(uuid.uuid4())
+    reply = {
+        'id': reply_id,
+        'prompt_id': prompt_id,
+        'lesson_id': prompt['lesson_id'],
+        'user_id': user['id'],
+        'user_name': user['name'],
+        'content': data.content,
+        'is_pinned': False,
+        'status': 'pending',
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.prompt_replies.insert_one(reply)
+    return PromptReplyResponse(**reply)
+
+@api_router.get("/prompts/{prompt_id}/replies", response_model=List[PromptReplyResponse])
+async def get_prompt_replies(prompt_id: str, user: dict = Depends(require_approved)):
+    replies = await db.prompt_replies.find({'prompt_id': prompt_id}, {'_id': 0}).sort('created_at', 1).to_list(1000)
+    # Sort pinned first
+    replies.sort(key=lambda x: (not x.get('is_pinned', False), x['created_at']))
+    return [PromptReplyResponse(**r) for r in replies]
+
+@api_router.put("/replies/{reply_id}/pin")
+async def pin_reply(reply_id: str, pinned: bool = Query(...), user: dict = Depends(require_teacher_or_admin)):
+    result = await db.prompt_replies.update_one({'id': reply_id}, {'$set': {'is_pinned': pinned}})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Reply not found")
+    return {'message': f'Reply {"pinned" if pinned else "unpinned"}'}
+
+@api_router.put("/replies/{reply_id}/status")
+async def update_reply_status(reply_id: str, status: str = Query(...), user: dict = Depends(require_teacher_or_admin)):
+    if status not in ['pending', 'answered', 'needs_followup']:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    result = await db.prompt_replies.update_one({'id': reply_id}, {'$set': {'status': status}})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Reply not found")
+    return {'message': f'Status updated to {status}'}
+
+@api_router.delete("/replies/{reply_id}")
+async def delete_reply(reply_id: str, user: dict = Depends(require_teacher_or_admin)):
+    result = await db.prompt_replies.delete_one({'id': reply_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Reply not found")
+    return {'message': 'Reply deleted'}
+
+# ============== RESOURCE MANAGEMENT ==============
+
+@api_router.put("/resources/{resource_id}/primary")
+async def set_primary_resource(resource_id: str, user: dict = Depends(require_teacher_or_admin)):
+    resource = await db.resources.find_one({'id': resource_id}, {'_id': 0})
+    if not resource:
+        raise HTTPException(status_code=404, detail="Resource not found")
+    
+    # Unset other primaries for this lesson
+    await db.resources.update_many(
+        {'lesson_id': resource['lesson_id']},
+        {'$set': {'is_primary': False}}
+    )
+    # Set this one as primary
+    await db.resources.update_one({'id': resource_id}, {'$set': {'is_primary': True}})
+    return {'message': 'Resource set as primary'}
+
+@api_router.put("/resources/{resource_id}/order")
+async def update_resource_order(resource_id: str, order: int = Query(...), user: dict = Depends(require_teacher_or_admin)):
+    result = await db.resources.update_one({'id': resource_id}, {'$set': {'order': order}})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Resource not found")
+    return {'message': 'Order updated'}
+
+@api_router.put("/resources/{resource_id}/replace")
+async def replace_resource(
+    resource_id: str,
+    file: UploadFile = File(...),
+    user: dict = Depends(require_teacher_or_admin)
+):
+    """Replace an existing resource file (keeps same ID and metadata)"""
+    resource = await db.resources.find_one({'id': resource_id}, {'_id': 0})
+    if not resource:
+        raise HTTPException(status_code=404, detail="Resource not found")
+    
+    # Validate file type
+    allowed_types = ['application/pdf', 'application/vnd.ms-powerpoint', 
+                     'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                     'image/jpeg', 'image/png', 'image/gif']
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="File type not allowed")
+    
+    content = await file.read()
+    if len(content) > MAX_UPLOAD_SIZE:
+        raise HTTPException(status_code=400, detail=f"File too large. Max {MAX_UPLOAD_SIZE // (1024*1024)}MB")
+    
+    # Delete old file
+    old_path = UPLOAD_DIR / resource['filename']
+    if old_path.exists():
+        old_path.unlink()
+    
+    # Save new file
+    file_ext = Path(file.filename).suffix
+    stored_filename = f"{resource_id}{file_ext}"
+    file_path = UPLOAD_DIR / stored_filename
+    with open(file_path, 'wb') as f:
+        f.write(content)
+    
+    # Update metadata
+    if 'pdf' in file.content_type:
+        file_type = 'pdf'
+    elif 'powerpoint' in file.content_type or 'presentation' in file.content_type:
+        file_type = 'ppt'
+    else:
+        file_type = 'image'
+    
+    await db.resources.update_one({'id': resource_id}, {'$set': {
+        'filename': stored_filename,
+        'original_filename': file.filename,
+        'file_type': file_type,
+        'file_size': len(content),
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }})
+    
+    return {'message': 'Resource replaced'}
+
+# ============== DISCUSSION LOCK ==============
+
+@api_router.put("/lessons/{lesson_id}/lock")
+async def lock_lesson_discussion(lesson_id: str, locked: bool = Query(...), user: dict = Depends(require_teacher_or_admin)):
+    result = await db.lessons.update_one({'id': lesson_id}, {'$set': {'discussion_locked': locked}})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    return {'message': f'Discussion {"locked" if locked else "unlocked"}'}
+
+# ============== OLD PROMPT RESPONSES (backwards compat) ==============
 
 @api_router.post("/lessons/{lesson_id}/respond", response_model=PromptResponseModel)
 async def respond_to_prompt(lesson_id: str, data: PromptResponseCreate, user: dict = Depends(require_approved)):
