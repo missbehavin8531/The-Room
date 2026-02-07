@@ -350,16 +350,19 @@ export const TeacherResponses = () => {
                                                                                 </Button>
                                                                             </DropdownMenuTrigger>
                                                                             <DropdownMenuContent align="start">
-                                                                                {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                                                                                    <DropdownMenuItem
-                                                                                        key={key}
-                                                                                        onClick={() => handleStatusChange(reply.id, key, item.prompt.id, reply.status)}
-                                                                                        data-testid={`status-option-${key}`}
-                                                                                    >
-                                                                                        <config.icon className="w-4 h-4 mr-2" />
-                                                                                        {config.label}
-                                                                                    </DropdownMenuItem>
-                                                                                ))}
+                                                                                {Object.entries(STATUS_CONFIG).map(([key, config]) => {
+                                                                                    const ConfigIcon = config.icon;
+                                                                                    return (
+                                                                                        <DropdownMenuItem
+                                                                                            key={key}
+                                                                                            onClick={() => handleStatusChange(reply.id, key, item.prompt.id, reply.status)}
+                                                                                            data-testid={`status-option-${key}`}
+                                                                                        >
+                                                                                            <ConfigIcon className="w-4 h-4 mr-2" />
+                                                                                            {config.label}
+                                                                                        </DropdownMenuItem>
+                                                                                    );
+                                                                                })}
                                                                             </DropdownMenuContent>
                                                                         </DropdownMenu>
 
