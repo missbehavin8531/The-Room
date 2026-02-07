@@ -5,59 +5,19 @@ import { Layout } from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Avatar, AvatarFallback } from '../components/ui/avatar';
+import { ReplyCard } from '../components/ReplyCard';
 import { teacherPromptsAPI } from '../lib/api';
-import { formatRelativeTime, getInitials, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
+import { cn } from '../lib/utils';
 import { 
-    ArrowLeft, MessageSquare, Pin, CheckCircle, Clock, 
-    AlertCircle, Trash2, ChevronDown, ChevronUp,
-    Users, BarChart3
+    ArrowLeft, MessageSquare, CheckCircle, Clock, 
+    AlertCircle, ChevronDown, ChevronUp, Users
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '../components/ui/alert-dialog';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
-
-const STATUS_OPTIONS = [
-    { key: 'pending', label: 'Pending', color: 'bg-gray-100 text-gray-700', Icon: Clock },
-    { key: 'answered', label: 'Answered', color: 'bg-green-100 text-green-700', Icon: CheckCircle },
-    { key: 'needs_followup', label: 'Needs Follow-up', color: 'bg-amber-100 text-amber-700', Icon: AlertCircle }
-];
-
-const getStatusStyle = (status) => {
-    const found = STATUS_OPTIONS.find(s => s.key === status);
-    return found ? found.color : 'bg-gray-100 text-gray-700';
-};
-
-const getStatusLabel = (status) => {
-    const found = STATUS_OPTIONS.find(s => s.key === status);
-    return found ? found.label : 'Pending';
-};
-
-const StatusDropdownItems = ({ onSelect }) => (
-    <>
-        <DropdownMenuItem onClick={() => onSelect('pending')}>
-            <Clock className="w-4 h-4 mr-2" />
-            Pending
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onSelect('answered')}>
-            <CheckCircle className="w-4 h-4 mr-2" />
-            Answered
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onSelect('needs_followup')}>
-            <AlertCircle className="w-4 h-4 mr-2" />
-            Needs Follow-up
-        </DropdownMenuItem>
-    </>
-);
 
 export const TeacherResponses = () => {
     const { lessonId } = useParams();
@@ -226,7 +186,7 @@ export const TeacherResponses = () => {
                             </div>
                             <div>
                                 <p className="text-2xl font-bold">{data.total_replies}</p>
-                                <p className="text-xs text-muted-foreground">Total Responses</p>
+                                <p className="text-xs text-muted-foreground">Total</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -328,89 +288,13 @@ export const TeacherResponses = () => {
                                         {item.replies.length > 0 ? (
                                             <div className="divide-y">
                                                 {item.replies.map((reply) => (
-                                                        <div 
-                                                            key={reply.id}
-                                                            className={cn(
-                                                                "p-4 transition-colors",
-                                                                reply.is_pinned && "bg-amber-50/50 dark:bg-amber-900/10"
-                                                            )}
-                                                            data-testid={`reply-${reply.id}`}
-                                                        >
-                                                            <div className="flex items-start gap-3">
-                                                                <Avatar className="w-10 h-10 flex-shrink-0">
-                                                                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                                                                        {getInitials(reply.user_name)}
-                                                                    </AvatarFallback>
-                                                                </Avatar>
-                                                                <div className="flex-grow min-w-0">
-                                                                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                                        <span className="font-semibold">{reply.user_name}</span>
-                                                                        <span className="text-xs text-muted-foreground">
-                                                                            {formatRelativeTime(reply.created_at)}
-                                                                        </span>
-                                                                        {reply.is_pinned && (
-                                                                            <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">
-                                                                                <Pin className="w-3 h-3 mr-1" /> Pinned
-                                                                            </Badge>
-                                                                        )}
-                                                                    </div>
-                                                                    <p className="text-sm mb-3">{reply.content}</p>
-                                                                    
-                                                                    {/* Actions */}
-                                                                    <div className="flex items-center gap-2">
-                                                                        {/* Status Dropdown */}
-                                                                        <DropdownMenu>
-                                                                            <DropdownMenuTrigger asChild>
-                                                                                <Button 
-                                                                                    variant="outline" 
-                                                                                    size="sm"
-                                                                                    className={cn(
-                                                                                        "text-xs h-7",
-                                                                                        getStatusStyle(reply.status)
-                                                                                    )}
-                                                                                    data-testid={`status-btn-${reply.id}`}
-                                                                                >
-                                                                                    {reply.status === 'answered' ? <CheckCircle className="w-3 h-3 mr-1" /> : 
-                                                                                     reply.status === 'needs_followup' ? <AlertCircle className="w-3 h-3 mr-1" /> : 
-                                                                                     <Clock className="w-3 h-3 mr-1" />}
-                                                                                    {getStatusLabel(reply.status)}
-                                                                                </Button>
-                                                                            </DropdownMenuTrigger>
-                                                                            <DropdownMenuContent align="start">
-                                                                                <StatusDropdownItems onSelect={(key) => handleStatusChange(reply.id, key, item.prompt.id, reply.status)} />
-                                                                            </DropdownMenuContent>
-                                                                        </DropdownMenu>
-
-                                                                        {/* Pin Button */}
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="sm"
-                                                                            className={cn(
-                                                                                "h-7 text-xs",
-                                                                                reply.is_pinned && "text-amber-600"
-                                                                            )}
-                                                                            onClick={() => handlePinReply(reply.id, !reply.is_pinned, item.prompt.id)}
-                                                                            data-testid={`pin-btn-${reply.id}`}
-                                                                        >
-                                                                            <Pin className="w-3 h-3 mr-1" />
-                                                                            {reply.is_pinned ? 'Unpin' : 'Pin'}
-                                                                        </Button>
-
-                                                                        {/* Delete Button */}
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="sm"
-                                                                            className="h-7 text-xs text-destructive"
-                                                                            onClick={() => setDeleteReplyId({ replyId: reply.id, promptId: item.prompt.id })}
-                                                                            data-testid={`delete-btn-${reply.id}`}
-                                                                        >
-                                                                            <Trash2 className="w-3 h-3 mr-1" />
-                                                                            Delete
-                                                                        </Button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                    <ReplyCard
+                                                        key={reply.id}
+                                                        reply={reply}
+                                                        onStatusChange={(status) => handleStatusChange(reply.id, status, item.prompt.id, reply.status)}
+                                                        onPinToggle={() => handlePinReply(reply.id, !reply.is_pinned, item.prompt.id)}
+                                                        onDelete={() => setDeleteReplyId({ replyId: reply.id, promptId: item.prompt.id })}
+                                                    />
                                                 ))}
                                             </div>
                                         ) : (
