@@ -780,6 +780,51 @@ async def get_lesson_attendance(lesson_id: str, user: dict = Depends(require_tea
     records = await db.attendance.find({'lesson_id': lesson_id}, {'_id': 0}).to_list(1000)
     return [AttendanceResponse(**r) for r in records]
 
+@api_router.get("/attendance/my/{lesson_id}")
+async def get_my_attendance(lesson_id: str, user: dict = Depends(require_approved)):
+    """Get current user's attendance actions for a lesson"""
+    records = await db.attendance.find({'lesson_id': lesson_id, 'user_id': user['id']}, {'_id': 0}).to_list(100)
+    actions = [r['action'] for r in records]
+    return {'actions': actions}
+
+# ============== PROMPT RESPONSES ==============
+
+@api_router.post("/lessons/{lesson_id}/respond", response_model=PromptResponseModel)
+async def respond_to_prompt(lesson_id: str, data: PromptResponseCreate, user: dict = Depends(require_approved)):
+    lesson = await db.lessons.find_one({'id': lesson_id})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    # Check if user already responded
+    existing = await db.prompt_responses.find_one({'lesson_id': lesson_id, 'user_id': user['id']})
+    if existing:
+        # Update existing response
+        await db.prompt_responses.update_one(
+            {'id': existing['id']},
+            {'$set': {'content': data.content, 'created_at': datetime.now(timezone.utc).isoformat()}}
+        )
+        existing['content'] = data.content
+        existing['created_at'] = datetime.now(timezone.utc).isoformat()
+        return PromptResponseModel(**{k: v for k, v in existing.items() if k != '_id'})
+    
+    response_id = str(uuid.uuid4())
+    response = {
+        'id': response_id,
+        'lesson_id': lesson_id,
+        'user_id': user['id'],
+        'user_name': user['name'],
+        'content': data.content,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.prompt_responses.insert_one(response)
+    return PromptResponseModel(**response)
+
+@api_router.get("/lessons/{lesson_id}/responses", response_model=List[PromptResponseModel])
+async def get_prompt_responses(lesson_id: str, user: dict = Depends(require_teacher_or_admin)):
+    """Get all prompt responses for a lesson (teacher/admin only)"""
+    responses = await db.prompt_responses.find({'lesson_id': lesson_id}, {'_id': 0}).to_list(1000)
+    return [PromptResponseModel(**r) for r in responses]
+
 # ============== ANALYTICS ==============
 
 @api_router.get("/analytics", response_model=AnalyticsResponse)
