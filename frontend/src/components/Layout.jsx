@@ -52,19 +52,25 @@ export const Layout = ({ children }) => {
     if (!isApproved) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center p-4">
-                <div className="card-organic p-8 max-w-md w-full text-center">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <User className="w-8 h-8 text-primary" />
+                <div className="card-organic p-8 max-w-md w-full text-center animate-fade-in">
+                    <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <div className="w-12 h-12 bg-amber-200 rounded-full flex items-center justify-center animate-pulse">
+                            <User className="w-6 h-6 text-amber-600" />
+                        </div>
                     </div>
-                    <h1 className="text-2xl font-serif font-bold mb-2">Pending Approval</h1>
+                    <h1 className="text-2xl font-serif font-bold mb-2">Almost There!</h1>
+                    <p className="text-muted-foreground mb-2">
+                        Hi <strong>{user?.name?.split(' ')[0]}</strong>! 👋
+                    </p>
                     <p className="text-muted-foreground mb-6">
-                        Your account is awaiting approval from an administrator. 
-                        You'll receive access once approved.
+                        An admin will approve your account shortly. You'll get full access to lessons, discussions, and more!
                     </p>
-                    <p className="text-sm text-muted-foreground mb-4">
-                        Logged in as: <strong>{user?.email}</strong>
-                    </p>
-                    <Button onClick={handleLogout} variant="outline" className="w-full">
+                    <div className="p-4 bg-muted/50 rounded-xl mb-6">
+                        <p className="text-sm text-muted-foreground">
+                            Signed in as: <strong>{user?.email}</strong>
+                        </p>
+                    </div>
+                    <Button onClick={handleLogout} variant="outline" className="w-full py-5">
                         <LogOut className="w-4 h-4 mr-2" />
                         Sign Out
                     </Button>
