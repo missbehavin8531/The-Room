@@ -945,6 +945,49 @@ async def delete_reply(reply_id: str, user: dict = Depends(require_teacher_or_ad
         raise HTTPException(status_code=404, detail="Reply not found")
     return {'message': 'Reply deleted'}
 
+@api_router.get("/lessons/{lesson_id}/all-replies")
+async def get_all_lesson_replies(lesson_id: str, user: dict = Depends(require_teacher_or_admin)):
+    """Get all replies for a lesson grouped by prompt (teacher view)"""
+    lesson = await db.lessons.find_one({'id': lesson_id}, {'_id': 0})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    prompts = await db.teacher_prompts.find({'lesson_id': lesson_id}, {'_id': 0}).sort('order', 1).to_list(10)
+    
+    result = []
+    for prompt in prompts:
+        replies = await db.prompt_replies.find({'prompt_id': prompt['id']}, {'_id': 0}).sort('created_at', 1).to_list(1000)
+        # Sort pinned first
+        replies.sort(key=lambda x: (not x.get('is_pinned', False), x['created_at']))
+        result.append({
+            'prompt': prompt,
+            'replies': replies,
+            'stats': {
+                'total': len(replies),
+                'pending': len([r for r in replies if r.get('status') == 'pending']),
+                'answered': len([r for r in replies if r.get('status') == 'answered']),
+                'needs_followup': len([r for r in replies if r.get('status') == 'needs_followup']),
+                'pinned': len([r for r in replies if r.get('is_pinned')])
+            }
+        })
+    
+    return {
+        'lesson': lesson,
+        'prompts_with_replies': result,
+        'total_replies': sum(p['stats']['total'] for p in result)
+    }
+
+@api_router.put("/prompts/{prompt_id}")
+async def update_prompt(prompt_id: str, data: TeacherPromptCreate, user: dict = Depends(require_teacher_or_admin)):
+    """Update a prompt question"""
+    result = await db.teacher_prompts.update_one(
+        {'id': prompt_id},
+        {'$set': {'question': data.question, 'order': data.order}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Prompt not found")
+    return {'message': 'Prompt updated'}
+
 # ============== RESOURCE MANAGEMENT ==============
 
 @api_router.put("/resources/{resource_id}/primary")
