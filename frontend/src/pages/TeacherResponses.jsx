@@ -153,9 +153,14 @@ export const TeacherResponses = () => {
 
     if (!data) return null;
 
-    const totalPending = data.prompts_with_replies.reduce((acc, p) => acc + p.stats.pending, 0);
-    const totalAnswered = data.prompts_with_replies.reduce((acc, p) => acc + p.stats.answered, 0);
-    const totalFollowup = data.prompts_with_replies.reduce((acc, p) => acc + p.stats.needs_followup, 0);
+    // Extract data to simpler variables to avoid babel plugin issues
+    const lesson = data.lesson;
+    const prompts = data.prompts_with_replies || [];
+    const totalReplies = data.total_replies || 0;
+    
+    const totalPending = prompts.reduce((acc, p) => acc + p.stats.pending, 0);
+    const totalAnswered = prompts.reduce((acc, p) => acc + p.stats.answered, 0);
+    const totalFollowup = prompts.reduce((acc, p) => acc + p.stats.needs_followup, 0);
 
     return (
         <Layout>
