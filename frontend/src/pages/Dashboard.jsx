@@ -1,92 +1,169 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { lessonsAPI, coursesAPI, commentsAPI, attendanceAPI, enrollmentsAPI } from '../lib/api';
+import { Textarea } from '../components/ui/textarea';
+import { lessonsAPI, coursesAPI, attendanceAPI, promptAPI } from '../lib/api';
 import { formatDate, getYouTubeEmbedUrl } from '../lib/utils';
 import { toast } from 'sonner';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
+import { cn } from '../lib/utils';
 import { 
-    Calendar, Video, BookOpen, MessageSquare, ArrowRight,
-    Play, Users, CheckCircle, Sparkles
+    Video, Play, FileText, MessageSquare, CheckCircle,
+    ArrowRight, BookOpen, Loader2, Check, Sparkles
 } from 'lucide-react';
+
+// The 5 core actions
+const ACTIONS = [
+    { key: 'joined_live', label: 'Join Live', icon: Video, color: 'bg-blue-500' },
+    { key: 'watched_replay', label: 'Watch Replay', icon: Play, color: 'bg-purple-500' },
+    { key: 'viewed_slides', label: 'View Slides', icon: FileText, color: 'bg-amber-500' },
+    { key: 'responded', label: 'Respond', icon: MessageSquare, color: 'bg-green-500' },
+    { key: 'marked_attended', label: 'Mark Attendance', icon: CheckCircle, color: 'bg-primary' },
+];
 
 export const Dashboard = () => {
     const { user } = useAuth();
-    const [nextLesson, setNextLesson] = useState(null);
-    const [courses, setCourses] = useState([]);
-    const [enrolledCourses, setEnrolledCourses] = useState([]);
-    const [recentComments, setRecentComments] = useState([]);
+    const navigate = useNavigate();
+    const [lesson, setLesson] = useState(null);
+    const [course, setCourse] = useState(null);
+    const [completedActions, setCompletedActions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showVideo, setShowVideo] = useState(false);
+    const [promptResponse, setPromptResponse] = useState('');
+    const [submittingPrompt, setSubmittingPrompt] = useState(false);
+    const [showPromptInput, setShowPromptInput] = useState(false);
+    const [isFirstVisit, setIsFirstVisit] = useState(false);
 
     useEffect(() => {
-        fetchDashboardData();
+        // Check if first visit
+        const hasVisited = localStorage.getItem('ss_visited');
+        if (!hasVisited) {
+            setIsFirstVisit(true);
+            localStorage.setItem('ss_visited', 'true');
+        }
+        fetchData();
     }, []);
 
-    const fetchDashboardData = async () => {
+    const fetchData = async () => {
         try {
-            const [lessonRes, coursesRes, enrollmentsRes] = await Promise.all([
-                lessonsAPI.getNext(),
-                coursesAPI.getAll(),
-                enrollmentsAPI.getMy(),
-            ]);
-            
-            setNextLesson(lessonRes.data);
-            setCourses(coursesRes.data);
-            
-            // Get enrolled course IDs and filter courses
-            const enrolledIds = new Set(enrollmentsRes.data.map(e => e.course_id));
-            setEnrolledCourses(coursesRes.data.filter(c => enrolledIds.has(c.id)));
-            
-            // Fetch comments for the next lesson if available
-            if (lessonRes.data?.id) {
-                const commentsRes = await commentsAPI.getByLesson(lessonRes.data.id);
-                setRecentComments(commentsRes.data.slice(-3));
+            const lessonRes = await lessonsAPI.getNext();
+            if (lessonRes.data) {
+                setLesson(lessonRes.data);
+                
+                // Get course for zoom link fallback
+                const courseRes = await coursesAPI.getOne(lessonRes.data.course_id);
+                setCourse(courseRes.data);
+                
+                // Get user's completed actions
+                const attendanceRes = await attendanceAPI.getMy(lessonRes.data.id);
+                const actions = attendanceRes.data.actions || [];
+                
+                // Check if user has responded to prompt
+                if (lessonRes.data.user_response) {
+                    actions.push('responded');
+                    setPromptResponse(lessonRes.data.user_response.content);
+                }
+                
+                setCompletedActions(actions);
             }
         } catch (error) {
-            console.error('Failed to fetch dashboard data:', error);
+            console.error('Failed to fetch data:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleJoinLive = async () => {
-        if (nextLesson?.zoom_link) {
-            try {
-                await attendanceAPI.record(nextLesson.id, 'joined_live');
-                toast.success('Attendance recorded!');
-            } catch (error) {
-                console.error('Failed to record attendance:', error);
-            }
-            window.open(nextLesson.zoom_link, '_blank');
-        } else if (nextLesson) {
-            const course = courses.find(c => c.id === nextLesson.course_id);
-            if (course?.zoom_link) {
-                try {
-                    await attendanceAPI.record(nextLesson.id, 'joined_live');
-                    toast.success('Attendance recorded!');
-                } catch (error) {
-                    console.error('Failed to record attendance:', error);
+    const handleAction = async (actionKey) => {
+        if (!lesson) return;
+        
+        const zoomLink = lesson.zoom_link || course?.zoom_link;
+        
+        switch (actionKey) {
+            case 'joined_live':
+                if (zoomLink) {
+                    await recordAction('joined_live');
+                    window.open(zoomLink, '_blank');
+                } else {
+                    toast.info('No live session link available');
                 }
-                window.open(course.zoom_link, '_blank');
-            } else {
-                toast.info('No Zoom link available for this lesson');
-            }
+                break;
+            case 'watched_replay':
+                if (lesson.youtube_url) {
+                    setShowVideo(true);
+                    await recordAction('watched_replay');
+                } else {
+                    toast.info('No replay available');
+                }
+                break;
+            case 'viewed_slides':
+                if (lesson.resources?.length > 0) {
+                    await recordAction('viewed_slides');
+                    navigate(`/lessons/${lesson.id}?tab=resources`);
+                } else {
+                    toast.info('No slides available');
+                }
+                break;
+            case 'responded':
+                if (lesson.prompt) {
+                    setShowPromptInput(true);
+                } else {
+                    toast.info('No prompt for this lesson');
+                }
+                break;
+            case 'marked_attended':
+                await recordAction('marked_attended');
+                break;
         }
     };
 
-    const handleMarkAttended = async () => {
-        if (nextLesson) {
-            try {
-                await attendanceAPI.record(nextLesson.id, 'marked_attended');
-                toast.success('Marked as attended!');
-            } catch (error) {
-                toast.error('Failed to mark attendance');
+    const recordAction = async (action) => {
+        try {
+            await attendanceAPI.record(lesson.id, action);
+            if (!completedActions.includes(action)) {
+                setCompletedActions([...completedActions, action]);
             }
+            toast.success(getActionMessage(action));
+        } catch (error) {
+            console.error('Failed to record action:', error);
         }
     };
+
+    const getActionMessage = (action) => {
+        switch (action) {
+            case 'joined_live': return 'Joined live session!';
+            case 'watched_replay': return 'Watching replay...';
+            case 'viewed_slides': return 'Viewing slides...';
+            case 'marked_attended': return 'Attendance marked! ✓';
+            default: return 'Done!';
+        }
+    };
+
+    const handleSubmitPrompt = async () => {
+        if (!promptResponse.trim()) {
+            toast.error('Please write a response');
+            return;
+        }
+        
+        setSubmittingPrompt(true);
+        try {
+            await promptAPI.respond(lesson.id, promptResponse.trim());
+            if (!completedActions.includes('responded')) {
+                setCompletedActions([...completedActions, 'responded']);
+            }
+            setShowPromptInput(false);
+            toast.success('Response submitted! ✓');
+        } catch (error) {
+            toast.error('Failed to submit response');
+        } finally {
+            setSubmittingPrompt(false);
+        }
+    };
+
+    const isActionCompleted = (key) => completedActions.includes(key);
+    const completionPercent = Math.round((completedActions.length / 5) * 100);
 
     if (loading) {
         return (
@@ -98,233 +175,220 @@ export const Dashboard = () => {
         );
     }
 
+    // First visit welcome
+    if (isFirstVisit && !loading) {
+        return (
+            <Layout>
+                <div className="page-container py-8 flex items-center justify-center min-h-[70vh]">
+                    <Card className="card-organic max-w-md w-full text-center p-8 animate-fade-in">
+                        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Sparkles className="w-10 h-10 text-primary" />
+                        </div>
+                        <h1 className="text-3xl font-serif font-bold mb-3">
+                            Welcome, {user?.name?.split(' ')[0]}!
+                        </h1>
+                        <p className="text-muted-foreground mb-6">
+                            Ready to start your Sunday School journey? Let's go to today's lesson.
+                        </p>
+                        <Button 
+                            onClick={() => setIsFirstVisit(false)} 
+                            className="btn-primary w-full text-lg py-6"
+                            data-testid="start-lesson-btn"
+                        >
+                            Go to Today's Lesson
+                            <ArrowRight className="w-5 h-5 ml-2" />
+                        </Button>
+                    </Card>
+                </div>
+            </Layout>
+        );
+    }
+
+    if (!lesson) {
+        return (
+            <Layout>
+                <div className="page-container py-8 flex items-center justify-center min-h-[70vh]">
+                    <Card className="card-organic max-w-md w-full text-center p-8">
+                        <BookOpen className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                        <h2 className="text-xl font-serif font-bold mb-2">No Lesson Today</h2>
+                        <p className="text-muted-foreground mb-6">Check back soon for new content!</p>
+                        <Link to="/courses">
+                            <Button className="btn-primary">Browse Courses</Button>
+                        </Link>
+                    </Card>
+                </div>
+            </Layout>
+        );
+    }
+
     return (
         <Layout>
-            <div className="page-container py-6 space-y-8">
-                {/* Welcome Section */}
+            <div className="page-container py-4 md:py-6 space-y-6">
+                {/* Lesson Header */}
                 <div className="animate-fade-in">
-                    <h1 className="text-3xl md:text-4xl font-serif font-bold mb-2">
-                        Welcome back, {user?.name?.split(' ')[0]}!
+                    <p className="text-sm text-muted-foreground mb-1">
+                        {lesson.lesson_date ? formatDate(lesson.lesson_date) : "Today's Lesson"}
+                    </p>
+                    <h1 className="text-2xl md:text-3xl font-serif font-bold mb-1">
+                        {lesson.title}
                     </h1>
-                    <p className="text-muted-foreground">
-                        Continue your spiritual journey with today's lesson
+                    <p className="text-muted-foreground text-sm md:text-base line-clamp-2">
+                        {lesson.description}
                     </p>
                 </div>
 
-                {/* Next Lesson Card */}
-                {nextLesson ? (
-                    <Card className="card-organic overflow-hidden animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                        <div className="md:flex">
-                            {/* Video Preview */}
-                            <div className="md:w-1/2 bg-muted aspect-video md:aspect-auto relative">
-                                {nextLesson.youtube_url ? (
-                                    <div className="youtube-wrapper h-full">
-                                        <iframe
-                                            src={getYouTubeEmbedUrl(nextLesson.youtube_url)}
-                                            title={nextLesson.title}
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="text-center">
-                                            <Play className="w-16 h-16 text-muted-foreground/30 mx-auto mb-2" />
-                                            <p className="text-muted-foreground text-sm">No video available</p>
-                                        </div>
-                                    </div>
+                {/* Progress Bar */}
+                <div className="animate-fade-in" style={{ animationDelay: '0.05s' }}>
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Your Progress</span>
+                        <span className="text-sm text-muted-foreground">{completedActions.length}/5 complete</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                            className="h-full bg-primary transition-all duration-500 rounded-full"
+                            style={{ width: `${completionPercent}%` }}
+                        />
+                    </div>
+                </div>
+
+                {/* 5-Step Action Buttons */}
+                <div className="grid grid-cols-5 gap-2 md:gap-3 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                    {ACTIONS.map((action, index) => {
+                        const completed = isActionCompleted(action.key);
+                        const Icon = action.icon;
+                        return (
+                            <button
+                                key={action.key}
+                                onClick={() => handleAction(action.key)}
+                                className={cn(
+                                    "flex flex-col items-center justify-center p-3 md:p-4 rounded-xl transition-all duration-200",
+                                    "active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary/50",
+                                    completed 
+                                        ? "bg-primary/10 text-primary border-2 border-primary/30" 
+                                        : "bg-muted hover:bg-muted/80 text-foreground border-2 border-transparent"
                                 )}
-                            </div>
-                            
-                            {/* Lesson Info */}
-                            <div className="md:w-1/2 p-6 flex flex-col">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                                    <Calendar className="w-4 h-4" />
-                                    {nextLesson.lesson_date ? formatDate(nextLesson.lesson_date) : 'Upcoming'}
+                                data-testid={`action-${action.key}`}
+                            >
+                                <div className={cn(
+                                    "w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-2",
+                                    completed ? "bg-primary text-primary-foreground" : action.color + " text-white"
+                                )}>
+                                    {completed ? <Check className="w-5 h-5 md:w-6 md:h-6" /> : <Icon className="w-5 h-5 md:w-6 md:h-6" />}
                                 </div>
-                                <h2 className="text-2xl font-serif font-bold mb-2">{nextLesson.title}</h2>
-                                <p className="text-muted-foreground flex-grow line-clamp-3 mb-4">
-                                    {nextLesson.description}
-                                </p>
-                                
-                                <div className="flex flex-wrap gap-3">
-                                    <Button 
-                                        onClick={handleJoinLive}
-                                        className="zoom-button flex-1 md:flex-none active:scale-95 transition-transform"
-                                        data-testid="join-live-btn"
-                                    >
-                                        <Video className="w-4 h-4" />
-                                        Join Live
-                                    </Button>
-                                    <Button 
-                                        onClick={handleMarkAttended}
-                                        variant="outline"
-                                        className="flex-1 md:flex-none rounded-full active:scale-95 transition-transform"
-                                        data-testid="mark-attended-btn"
-                                    >
-                                        <CheckCircle className="w-4 h-4 mr-2" />
-                                        I Attended
-                                    </Button>
-                                    <Link to={`/lessons/${nextLesson.id}`} className="flex-1 md:flex-none">
-                                        <Button variant="ghost" className="w-full rounded-full active:scale-95 transition-transform" data-testid="view-lesson-btn">
-                                            View Details
-                                            <ArrowRight className="w-4 h-4 ml-2" />
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </div>
+                                <span className="text-xs md:text-sm font-medium text-center leading-tight">
+                                    {action.label}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Video Player (expandable) */}
+                {showVideo && lesson.youtube_url && (
+                    <Card className="card-organic overflow-hidden animate-fade-in">
+                        <div className="youtube-wrapper">
+                            <iframe
+                                src={getYouTubeEmbedUrl(lesson.youtube_url)}
+                                title={lesson.title}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            />
                         </div>
-                    </Card>
-                ) : (
-                    <Card className="card-organic p-8 text-center animate-fade-in">
-                        <BookOpen className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">No upcoming lessons</h3>
-                        <p className="text-muted-foreground mb-4">Check back soon for new content!</p>
-                        <Link to="/courses">
-                            <Button className="btn-primary active:scale-95 transition-transform">Browse Courses</Button>
-                        </Link>
                     </Card>
                 )}
 
-                {/* Enrolled Courses Section */}
-                {enrolledCourses.length > 0 && (
-                    <div className="animate-fade-in" style={{ animationDelay: '0.15s' }}>
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-serif font-semibold flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-primary" />
-                                My Courses
-                            </h2>
-                            <Link to="/courses">
-                                <Button variant="ghost" size="sm" className="active:scale-95 transition-transform">
-                                    View All <ArrowRight className="w-4 h-4 ml-1" />
+                {/* Prompt Response Section */}
+                {showPromptInput && lesson.prompt && (
+                    <Card className="card-organic animate-fade-in">
+                        <CardContent className="p-4 md:p-6">
+                            <div className="flex items-start gap-3 mb-4">
+                                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <MessageSquare className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold mb-1">This Week's Prompt</h3>
+                                    <p className="text-muted-foreground">{lesson.prompt}</p>
+                                </div>
+                            </div>
+                            <Textarea
+                                placeholder="Share your thoughts..."
+                                value={promptResponse}
+                                onChange={(e) => setPromptResponse(e.target.value)}
+                                rows={3}
+                                className="mb-3"
+                                data-testid="prompt-response-input"
+                            />
+                            <div className="flex gap-2">
+                                <Button 
+                                    onClick={handleSubmitPrompt}
+                                    disabled={submittingPrompt}
+                                    className="btn-primary flex-1"
+                                    data-testid="submit-prompt-btn"
+                                >
+                                    {submittingPrompt ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Check className="w-4 h-4 mr-2" />
+                                            Submit Response
+                                        </>
+                                    )}
                                 </Button>
-                            </Link>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {enrolledCourses.slice(0, 4).map((course, index) => (
-                                <Link key={course.id} to={`/courses/${course.id}`}>
-                                    <Card 
-                                        className="card-organic card-hover overflow-hidden animate-fade-in"
-                                        style={{ animationDelay: `${0.2 + index * 0.05}s` }}
-                                    >
-                                        <div className="aspect-video bg-muted relative">
-                                            {course.thumbnail_url ? (
-                                                <img src={course.thumbnail_url} alt={course.title} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="absolute inset-0 flex items-center justify-center bg-primary/5">
-                                                    <BookOpen className="w-8 h-8 text-primary/30" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <CardContent className="p-3">
-                                            <h3 className="font-medium text-sm line-clamp-1">{course.title}</h3>
-                                            <p className="text-xs text-muted-foreground">{course.lesson_count} lessons</p>
-                                        </CardContent>
-                                    </Card>
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
+                                <Button 
+                                    variant="outline"
+                                    onClick={() => setShowPromptInput(false)}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
                 )}
 
-                {/* Quick Actions Grid */}
-                <div className="grid md:grid-cols-3 gap-4">
-                    {/* Courses Preview */}
-                    <Card className="card-organic card-hover animate-fade-in" style={{ animationDelay: '0.25s' }}>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <BookOpen className="w-5 h-5 text-primary" />
-                                Your Courses
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-3xl font-bold text-primary mb-1">{courses.length}</p>
-                            <p className="text-sm text-muted-foreground mb-4">courses available</p>
-                            <Link to="/courses">
-                                <Button variant="ghost" className="w-full justify-between active:scale-95 transition-transform" data-testid="view-courses-btn">
-                                    View All
-                                    <ArrowRight className="w-4 h-4" />
-                                </Button>
-                            </Link>
-                        </CardContent>
-                    </Card>
-
-                    {/* Chat Preview */}
-                    <Card className="card-organic card-hover animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <MessageSquare className="w-5 h-5 text-primary" />
-                                Community Chat
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground mb-4">
-                                Connect with fellow members and share your thoughts
-                            </p>
-                            <Link to="/chat">
-                                <Button variant="ghost" className="w-full justify-between active:scale-95 transition-transform" data-testid="open-chat-btn">
-                                    Open Chat
-                                    <ArrowRight className="w-4 h-4" />
-                                </Button>
-                            </Link>
-                        </CardContent>
-                    </Card>
-
-                    {/* Discussion Preview */}
-                    <Card className="card-organic card-hover animate-fade-in" style={{ animationDelay: '0.35s' }}>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <Users className="w-5 h-5 text-primary" />
-                                Recent Discussion
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {recentComments.length > 0 ? (
-                                <div className="space-y-2 mb-4">
-                                    {recentComments.slice(0, 2).map((comment) => (
-                                        <div key={comment.id} className="text-sm">
-                                            <span className="font-medium">{comment.user_name}:</span>{' '}
-                                            <span className="text-muted-foreground line-clamp-1">
-                                                {comment.content}
-                                            </span>
-                                        </div>
-                                    ))}
+                {/* Quick Links */}
+                <div className="grid grid-cols-2 gap-3 animate-fade-in" style={{ animationDelay: '0.15s' }}>
+                    <Link to={`/lessons/${lesson.id}`}>
+                        <Card className="card-organic card-hover h-full">
+                            <CardContent className="p-4 flex items-center gap-3">
+                                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                                    <BookOpen className="w-5 h-5 text-primary" />
                                 </div>
-                            ) : (
-                                <p className="text-sm text-muted-foreground mb-4">
-                                    No recent discussions. Start the conversation!
-                                </p>
-                            )}
-                            {nextLesson && (
-                                <Link to={`/lessons/${nextLesson.id}`}>
-                                    <Button variant="ghost" className="w-full justify-between active:scale-95 transition-transform" data-testid="join-discussion-btn">
-                                        Join Discussion
-                                        <ArrowRight className="w-4 h-4" />
-                                    </Button>
-                                </Link>
-                            )}
-                        </CardContent>
-                    </Card>
+                                <div>
+                                    <p className="font-medium text-sm">Full Lesson</p>
+                                    <p className="text-xs text-muted-foreground">Discussion & more</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                    <Link to="/chat">
+                        <Card className="card-organic card-hover h-full">
+                            <CardContent className="p-4 flex items-center gap-3">
+                                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                                    <MessageSquare className="w-5 h-5 text-primary" />
+                                </div>
+                                <div>
+                                    <p className="font-medium text-sm">Chat</p>
+                                    <p className="text-xs text-muted-foreground">Community</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
                 </div>
 
-                {/* Hero Image */}
-                <div className="relative rounded-2xl overflow-hidden h-48 md:h-64 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                    <img
-                        src="https://images.unsplash.com/photo-1610070835951-156b6921281d?w=1200"
-                        alt="Sunday School Community"
-                        className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/80 to-transparent flex items-center">
-                        <div className="p-6 md:p-8 text-white max-w-md">
-                            <h3 className="text-xl md:text-2xl font-serif font-bold mb-2">
-                                Growing Together in Faith
-                            </h3>
-                            <p className="text-white/80 text-sm md:text-base">
-                                Join our community of learners on this spiritual journey
+                {/* Completion Celebration */}
+                {completedActions.length === 5 && (
+                    <Card className="card-organic bg-primary/5 border-primary/20 animate-fade-in">
+                        <CardContent className="p-6 text-center">
+                            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle className="w-8 h-8 text-primary-foreground" />
+                            </div>
+                            <h3 className="text-xl font-serif font-bold mb-2">All Done! 🎉</h3>
+                            <p className="text-muted-foreground">
+                                You've completed all activities for today's lesson. See you next week!
                             </p>
-                        </div>
-                    </div>
-                </div>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </Layout>
     );
