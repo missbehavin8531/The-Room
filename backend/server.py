@@ -1175,7 +1175,7 @@ async def seed_data():
     }
     await db.courses.insert_one(course)
     
-    # Create sample lessons
+    # Create sample lessons with full lesson-centric data
     lessons_data = [
         {
             'title': 'The Good News',
@@ -1183,7 +1183,12 @@ async def seed_data():
             'youtube_url': 'https://www.youtube.com/watch?v=cgn6bjRo1Lg',
             'lesson_date': '2026-02-09',
             'order': 1,
-            'prompt': 'What does the Gospel mean to you personally? Share one way it has impacted your life.'
+            'teacher_notes': '**Key Points to Remember:**\n\n1. The Gospel is the "good news" of salvation through Jesus Christ\n2. It\'s not about what we do, but what God has done for us\n3. The message is for everyone, regardless of background\n\n*"For God so loved the world that he gave his one and only Son" - John 3:16*',
+            'reading_plan': '**This Week\'s Reading:**\n\n- Monday: John 3:1-21\n- Tuesday: Romans 1:16-17\n- Wednesday: 1 Corinthians 15:1-11\n- Thursday: Ephesians 2:1-10\n- Friday: Psalm 96',
+            'prompts': [
+                {'question': 'What does the Gospel mean to you personally?', 'order': 0},
+                {'question': 'Share one way the good news has impacted your life.', 'order': 1},
+            ]
         },
         {
             'title': 'Faith and Grace',
@@ -1191,7 +1196,12 @@ async def seed_data():
             'youtube_url': 'https://www.youtube.com/watch?v=cgn6bjRo1Lg',
             'lesson_date': '2026-02-16',
             'order': 2,
-            'prompt': 'How do you experience God\'s grace in your daily life? Give a specific example.'
+            'teacher_notes': '**Understanding Grace:**\n\nGrace is unmerited favor - a gift we cannot earn.\n\n**Key Scriptures:**\n- Ephesians 2:8-9 - Saved by grace through faith\n- Romans 5:1-2 - Access to grace through faith\n\n**Discussion Focus:** Help members understand the balance between faith and works.',
+            'reading_plan': '**This Week\'s Reading:**\n\n- Monday: Ephesians 2:1-10\n- Tuesday: Romans 3:21-31\n- Wednesday: Galatians 2:15-21\n- Thursday: Hebrews 11:1-6\n- Friday: James 2:14-26',
+            'prompts': [
+                {'question': 'How do you experience God\'s grace in your daily life?', 'order': 0},
+                {'question': 'Give a specific example of grace you\'ve witnessed recently.', 'order': 1},
+            ]
         },
         {
             'title': 'Living in Christ',
@@ -1199,20 +1209,61 @@ async def seed_data():
             'youtube_url': 'https://www.youtube.com/watch?v=cgn6bjRo1Lg',
             'lesson_date': '2026-02-23',
             'order': 3,
-            'prompt': 'What is one practical way you can live out your faith this week?'
+            'teacher_notes': '**Living It Out:**\n\nFaith is not just belief - it transforms how we live.\n\n**Practical Applications:**\n1. Daily prayer and Scripture reading\n2. Serving others in our community\n3. Speaking truth with love\n4. Forgiving as we have been forgiven\n\n*"Whatever you do, work at it with all your heart, as working for the Lord" - Colossians 3:23*',
+            'reading_plan': '**This Week\'s Reading:**\n\n- Monday: Colossians 3:1-17\n- Tuesday: Romans 12:1-8\n- Wednesday: Galatians 5:16-26\n- Thursday: Philippians 4:4-9\n- Friday: 1 Peter 2:9-12',
+            'prompts': [
+                {'question': 'What is one practical way you can live out your faith this week?', 'order': 0},
+                {'question': 'Who in your life could benefit from seeing Christ in you?', 'order': 1},
+            ]
         }
     ]
     
     for lesson_data in lessons_data:
         lesson_id = str(uuid.uuid4())
+        prompts_data = lesson_data.pop('prompts', [])
+        
         lesson = {
             'id': lesson_id,
             'course_id': course_id,
-            **lesson_data,
-            'zoom_link': None,
+            'title': lesson_data['title'],
+            'description': lesson_data['description'],
+            'youtube_url': lesson_data['youtube_url'],
+            'lesson_date': lesson_data['lesson_date'],
+            'order': lesson_data['order'],
+            'teacher_notes': lesson_data.get('teacher_notes'),
+            'reading_plan': lesson_data.get('reading_plan'),
+            'zoom_link': 'https://zoom.us/j/1234567890' if lesson_data['order'] == 1 else None,
+            'discussion_locked': False,
             'created_at': datetime.now(timezone.utc).isoformat()
         }
         await db.lessons.insert_one(lesson)
+        
+        # Add teacher prompts for this lesson
+        for prompt_data in prompts_data:
+            prompt_id = str(uuid.uuid4())
+            prompt = {
+                'id': prompt_id,
+                'lesson_id': lesson_id,
+                'question': prompt_data['question'],
+                'order': prompt_data['order'],
+                'created_at': datetime.now(timezone.utc).isoformat()
+            }
+            await db.teacher_prompts.insert_one(prompt)
+            
+            # Add a sample reply from the member
+            if prompt_data['order'] == 0:
+                reply = {
+                    'id': str(uuid.uuid4()),
+                    'prompt_id': prompt_id,
+                    'lesson_id': lesson_id,
+                    'user_id': member_id,
+                    'user_name': 'John Smith',
+                    'content': f'This is a thoughtful response to: {prompt_data["question"]}',
+                    'is_pinned': False,
+                    'status': 'pending',
+                    'created_at': datetime.now(timezone.utc).isoformat()
+                }
+                await db.prompt_replies.insert_one(reply)
         
         # Add sample comments
         comment = {
