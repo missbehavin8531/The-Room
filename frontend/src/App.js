@@ -118,6 +118,22 @@ function AppRoutes() {
                 }
             />
             <Route
+                path="/lessons/:lessonId/edit"
+                element={
+                    <ProtectedRoute requireTeacher>
+                        <LessonEditor />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/lessons/:lessonId/responses"
+                element={
+                    <ProtectedRoute requireTeacher>
+                        <TeacherResponses />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
                 path="/chat"
                 element={
                     <ProtectedRoute>
