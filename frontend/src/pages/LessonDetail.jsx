@@ -798,7 +798,7 @@ export const LessonDetail = () => {
                                                                             variant="ghost" 
                                                                             size="sm" 
                                                                             className="h-7 text-xs text-destructive"
-                                                                            onClick={() => setDeleteItem(reply)}}
+                                                                            onClick={() => setDeleteItem(reply)}
                                                                         >
                                                                             <Trash2 className="w-3 h-3 mr-1" />
                                                                             Delete
