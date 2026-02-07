@@ -119,6 +119,13 @@ export const resourcesAPI = {
 export const attendanceAPI = {
     record: (lessonId, action) => api.post('/attendance', { lesson_id: lessonId, action }),
     getByLesson: (lessonId) => api.get(`/attendance/lesson/${lessonId}`),
+    getMy: (lessonId) => api.get(`/attendance/my/${lessonId}`),
+};
+
+// Prompt Responses API
+export const promptAPI = {
+    respond: (lessonId, content) => api.post(`/lessons/${lessonId}/respond`, { content }),
+    getResponses: (lessonId) => api.get(`/lessons/${lessonId}/responses`),
 };
 
 // Analytics API
