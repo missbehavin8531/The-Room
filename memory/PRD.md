@@ -26,44 +26,40 @@ A **narrow-wedge mobile-first** "Sunday School Classroom" web app for one church
 - Global chat
 - Admin panel with moderation
 
-## What's Been Implemented (Jan-Feb 2026)
+## What's Been Implemented (Feb 2026)
+
+### Core Wedge Features
+- [x] **5-step action dashboard** - Join Live, Watch Replay, View Slides, Respond, Mark Attendance
+- [x] **Progress bar** showing completion status (0/5 to 5/5)
+- [x] **Prompt responses** - simple text response to lesson prompts
+- [x] **Attendance tracking** for all 5 action types
+- [x] **First-time user welcome** with auto-navigate to lesson
+- [x] **Step-by-step registration** (3 steps: name, email, password)
 
 ### Backend (FastAPI + MongoDB)
-- [x] User authentication (register/login/JWT)
-- [x] User management with approval workflow
+- [x] User authentication with approval workflow
 - [x] Role-based access control (Admin/Teacher/Member)
-- [x] Courses CRUD with Zoom link support
-- [x] Lessons CRUD with YouTube URL and ordering
+- [x] Courses & Lessons with prompts
+- [x] Prompt responses API
+- [x] Multi-action attendance tracking
 - [x] Discussion comments per lesson
-- [x] Global chat with message persistence
+- [x] Global chat
 - [x] Private messages (Member→Teacher inbox)
 - [x] File upload/download (local storage)
-- [x] Attendance recording
 - [x] Analytics endpoints
-- [x] Seed data endpoint
-- [x] **NEW: Course enrollment/unenrollment APIs**
-- [x] **NEW: Get all lessons API (for calendar)**
 
 ### Frontend (React + Tailwind + Shadcn)
-- [x] Login/Register pages with demo credentials
-- [x] Pending approval screen
-- [x] Dashboard with next lesson, video embed
-- [x] Courses list with creation dialog
-- [x] Course detail with lessons list
-- [x] Lesson detail with YouTube, Discussion, Resources tabs
-- [x] Global chat with real-time polling
-- [x] Messages inbox for teacher communication
-- [x] Admin panel with user approval, role management, analytics
+- [x] Streamlined login page with demo accounts
+- [x] Step-by-step registration with progress indicators
+- [x] First-time welcome screen
+- [x] 5-step action dashboard (all visible without scrolling)
+- [x] Video player for Watch Replay
+- [x] Prompt input modal for Respond
+- [x] Progress tracking with real-time updates
+- [x] Course enrollment & calendar view
+- [x] File preview modal (PDF, PPT, images)
 - [x] Mobile-first responsive design
-- [x] Calming sage green theme (Merriweather + Nunito fonts)
-- [x] **NEW: Course enrollment tracking with enroll/unenroll buttons**
-- [x] **NEW: Lesson calendar view with month navigation**
-- [x] **NEW: File preview modal (PDF, PPT via Office viewer, images)**
-- [x] **NEW: Enhanced loading skeletons with shimmer effect**
-- [x] **NEW: Beautiful empty states with icons**
-- [x] **NEW: Smooth fade-in animations on page load**
-- [x] **NEW: "My Courses" section on dashboard**
-- [x] **NEW: Mobile bottom navigation bar**
+- [x] Bottom navigation on mobile
 
 ## Demo Credentials
 - **Admin**: admin@sundayschool.com / admin123
