@@ -770,27 +770,18 @@ export const LessonDetail = () => {
                                                                                     size="sm"
                                                                                     className={cn(
                                                                                         "text-xs h-7",
-                                                                                        STATUS_CONFIG[reply.status]?.color
+                                                                                        getStatusStyle(reply.status)
                                                                                     )}
                                                                                     data-testid={`status-btn-${reply.id}`}
                                                                                 >
-                                                                                    <StatusIcon className="w-3 h-3 mr-1" />
-                                                                                    {STATUS_CONFIG[reply.status]?.label || 'Pending'}
+                                                                                    {reply.status === 'answered' ? <CheckCircle className="w-3 h-3 mr-1" /> : 
+                                                                                     reply.status === 'needs_followup' ? <AlertCircle className="w-3 h-3 mr-1" /> : 
+                                                                                     <Clock className="w-3 h-3 mr-1" />}
+                                                                                    {getStatusLabel(reply.status)}
                                                                                 </Button>
                                                                             </DropdownMenuTrigger>
                                                                             <DropdownMenuContent align="start">
-                                                                                {Object.entries(STATUS_CONFIG).map(([key, config]) => {
-                                                                                    const ConfigIcon = config.icon;
-                                                                                    return (
-                                                                                        <DropdownMenuItem
-                                                                                            key={key}
-                                                                                            onClick={() => handleStatusChange(reply.id, key)}
-                                                                                        >
-                                                                                            <ConfigIcon className="w-4 h-4 mr-2" />
-                                                                                            {config.label}
-                                                                                        </DropdownMenuItem>
-                                                                                    );
-                                                                                })}
+                                                                                <StatusDropdownItems onSelect={(key) => handleStatusChange(reply.id, key)} />
                                                                             </DropdownMenuContent>
                                                                         </DropdownMenu>
                                                                         
@@ -807,7 +798,7 @@ export const LessonDetail = () => {
                                                                             variant="ghost" 
                                                                             size="sm" 
                                                                             className="h-7 text-xs text-destructive"
-                                                                            onClick={() => setDeleteItem(reply)}
+                                                                            onClick={() => setDeleteItem(reply)}}
                                                                         >
                                                                             <Trash2 className="w-3 h-3 mr-1" />
                                                                             Delete
