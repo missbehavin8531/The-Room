@@ -507,15 +507,23 @@ async def create_lesson(data: LessonCreate, user: dict = Depends(require_teacher
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.lessons.insert_one(lesson)
-    return LessonResponse(**lesson, resources=[])
+    return LessonResponse(**lesson, resources=[], prompts=[], user_attendance=[])
+
+async def get_lesson_with_details(lesson: dict, user_id: str):
+    """Helper to get lesson with all related data"""
+    resources = await db.resources.find({'lesson_id': lesson['id']}, {'_id': 0}).sort('order', 1).to_list(100)
+    prompts = await db.teacher_prompts.find({'lesson_id': lesson['id']}, {'_id': 0}).sort('order', 1).to_list(10)
+    attendance_records = await db.attendance.find({'lesson_id': lesson['id'], 'user_id': user_id}, {'_id': 0}).to_list(100)
+    user_attendance = list(set([r['action'] for r in attendance_records]))
+    return LessonResponse(**lesson, resources=resources, prompts=prompts, user_attendance=user_attendance)
 
 @api_router.get("/courses/{course_id}/lessons", response_model=List[LessonResponse])
 async def get_course_lessons(course_id: str, user: dict = Depends(require_approved)):
     lessons = await db.lessons.find({'course_id': course_id}, {'_id': 0}).sort('order', 1).to_list(1000)
     result = []
     for lesson in lessons:
-        resources = await db.resources.find({'lesson_id': lesson['id']}, {'_id': 0}).to_list(100)
-        result.append(LessonResponse(**lesson, resources=resources))
+        lesson_data = await get_lesson_with_details(lesson, user['id'])
+        result.append(lesson_data)
     return result
 
 @api_router.get("/lessons/all", response_model=List[LessonResponse])
@@ -524,9 +532,8 @@ async def get_all_lessons(user: dict = Depends(require_approved)):
     lessons = await db.lessons.find({}, {'_id': 0}).sort('lesson_date', 1).to_list(1000)
     result = []
     for lesson in lessons:
-        resources = await db.resources.find({'lesson_id': lesson['id']}, {'_id': 0}).to_list(100)
-        user_response = await db.prompt_responses.find_one({'lesson_id': lesson['id'], 'user_id': user['id']}, {'_id': 0})
-        result.append(LessonResponse(**lesson, resources=resources, user_response=user_response))
+        lesson_data = await get_lesson_with_details(lesson, user['id'])
+        result.append(lesson_data)
     return result
 
 @api_router.get("/lessons/{lesson_id}", response_model=LessonResponse)
@@ -534,9 +541,7 @@ async def get_lesson(lesson_id: str, user: dict = Depends(require_approved)):
     lesson = await db.lessons.find_one({'id': lesson_id}, {'_id': 0})
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
-    resources = await db.resources.find({'lesson_id': lesson_id}, {'_id': 0}).to_list(100)
-    user_response = await db.prompt_responses.find_one({'lesson_id': lesson_id, 'user_id': user['id']}, {'_id': 0})
-    return LessonResponse(**lesson, resources=resources, user_response=user_response)
+    return await get_lesson_with_details(lesson, user['id'])
 
 @api_router.get("/lessons/next/upcoming", response_model=Optional[LessonResponse])
 async def get_next_lesson(user: dict = Depends(require_approved)):
@@ -546,15 +551,11 @@ async def get_next_lesson(user: dict = Depends(require_approved)):
         {'_id': 0}
     )
     if lesson:
-        resources = await db.resources.find({'lesson_id': lesson['id']}, {'_id': 0}).to_list(100)
-        user_response = await db.prompt_responses.find_one({'lesson_id': lesson['id'], 'user_id': user['id']}, {'_id': 0})
-        return LessonResponse(**lesson, resources=resources, user_response=user_response)
+        return await get_lesson_with_details(lesson, user['id'])
     # Fallback to most recent
     lesson = await db.lessons.find_one({}, {'_id': 0}, sort=[('created_at', -1)])
     if lesson:
-        resources = await db.resources.find({'lesson_id': lesson['id']}, {'_id': 0}).to_list(100)
-        user_response = await db.prompt_responses.find_one({'lesson_id': lesson['id'], 'user_id': user['id']}, {'_id': 0})
-        return LessonResponse(**lesson, resources=resources, user_response=user_response)
+        return await get_lesson_with_details(lesson, user['id'])
     return None
 
 @api_router.put("/lessons/{lesson_id}")
