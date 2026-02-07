@@ -26,11 +26,38 @@ import {
     DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
 
-const STATUS_CONFIG = {
-    pending: { label: 'Pending', color: 'bg-gray-100 text-gray-700', icon: Clock },
-    answered: { label: 'Answered', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-    needs_followup: { label: 'Needs Follow-up', color: 'bg-amber-100 text-amber-700', icon: AlertCircle }
+const STATUS_OPTIONS = [
+    { key: 'pending', label: 'Pending', color: 'bg-gray-100 text-gray-700', Icon: Clock },
+    { key: 'answered', label: 'Answered', color: 'bg-green-100 text-green-700', Icon: CheckCircle },
+    { key: 'needs_followup', label: 'Needs Follow-up', color: 'bg-amber-100 text-amber-700', Icon: AlertCircle }
+];
+
+const getStatusStyle = (status) => {
+    const found = STATUS_OPTIONS.find(s => s.key === status);
+    return found ? found.color : 'bg-gray-100 text-gray-700';
 };
+
+const getStatusLabel = (status) => {
+    const found = STATUS_OPTIONS.find(s => s.key === status);
+    return found ? found.label : 'Pending';
+};
+
+const StatusDropdownItems = ({ onSelect }) => (
+    <>
+        <DropdownMenuItem onClick={() => onSelect('pending')}>
+            <Clock className="w-4 h-4 mr-2" />
+            Pending
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onSelect('answered')}>
+            <CheckCircle className="w-4 h-4 mr-2" />
+            Answered
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onSelect('needs_followup')}>
+            <AlertCircle className="w-4 h-4 mr-2" />
+            Needs Follow-up
+        </DropdownMenuItem>
+    </>
+);
 
 export const TeacherResponses = () => {
     const { lessonId } = useParams();
