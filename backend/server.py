@@ -171,7 +171,7 @@ class ResourceResponse(BaseModel):
 
 class AttendanceCreate(BaseModel):
     lesson_id: str
-    action: str  # "joined_live" or "marked_attended"
+    action: str  # "joined_live", "watched_replay", "viewed_slides", "marked_attended"
 
 class AttendanceResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -180,6 +180,18 @@ class AttendanceResponse(BaseModel):
     user_name: str
     lesson_id: str
     action: str
+    created_at: str
+
+class PromptResponseCreate(BaseModel):
+    content: str
+
+class PromptResponseModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    lesson_id: str
+    user_id: str
+    user_name: str
+    content: str
     created_at: str
 
 class AnalyticsResponse(BaseModel):
