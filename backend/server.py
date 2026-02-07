@@ -97,6 +97,7 @@ class LessonBase(BaseModel):
     youtube_url: Optional[str] = None
     zoom_link: Optional[str] = None  # Override course zoom if set
     lesson_date: Optional[str] = None
+    prompt: Optional[str] = None  # Discussion prompt for the lesson
     order: int = 0
 
 class LessonCreate(LessonBase):
@@ -111,9 +112,11 @@ class LessonResponse(BaseModel):
     youtube_url: Optional[str] = None
     zoom_link: Optional[str] = None
     lesson_date: Optional[str] = None
+    prompt: Optional[str] = None
     order: int
     created_at: str
     resources: List[dict] = []
+    user_response: Optional[dict] = None  # Current user's prompt response
 
 class CommentCreate(BaseModel):
     content: str
