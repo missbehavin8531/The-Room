@@ -33,12 +33,40 @@ import ReactMarkdown from 'react-markdown';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Status configuration for reply management
-const STATUS_CONFIG = {
-    pending: { label: 'Pending', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300', icon: Clock },
-    answered: { label: 'Answered', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', icon: CheckCircle },
-    needs_followup: { label: 'Follow-up', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', icon: AlertCircle }
+// Helper functions for status
+const getStatusStyle = (status) => {
+    switch(status) {
+        case 'answered': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+        case 'needs_followup': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+        default: return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+    }
 };
+
+const getStatusLabel = (status) => {
+    switch(status) {
+        case 'answered': return 'Answered';
+        case 'needs_followup': return 'Follow-up';
+        default: return 'Pending';
+    }
+};
+
+// Separate component to avoid babel plugin recursion issues
+const StatusDropdownItems = ({ onSelect }) => (
+    <>
+        <DropdownMenuItem onClick={() => onSelect('pending')}>
+            <Clock className="w-4 h-4 mr-2" />
+            Pending
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onSelect('answered')}>
+            <CheckCircle className="w-4 h-4 mr-2" />
+            Answered
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onSelect('needs_followup')}>
+            <AlertCircle className="w-4 h-4 mr-2" />
+            Follow-up
+        </DropdownMenuItem>
+    </>
+);
 
 // Tab definitions for Now/Next/After flow
 const LESSON_TABS = [
