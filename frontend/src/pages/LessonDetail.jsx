@@ -17,15 +17,28 @@ import {
     ArrowLeft, Video, Calendar, FileText, Image, Presentation,
     Download, Upload, Send, Trash2, Eye, EyeOff, CheckCircle,
     Loader2, Play, BookOpen, MessageCircle, Clock, ChevronRight,
-    Pin, Star, Users, BookMarked
+    Pin, Star, Users, BookMarked, Edit, BarChart3, AlertCircle
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '../components/ui/alert-dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
 import ReactMarkdown from 'react-markdown';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+// Status configuration for reply management
+const STATUS_CONFIG = {
+    pending: { label: 'Pending', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300', icon: Clock },
+    answered: { label: 'Answered', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', icon: CheckCircle },
+    needs_followup: { label: 'Follow-up', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', icon: AlertCircle }
+};
 
 // Tab definitions for Now/Next/After flow
 const LESSON_TABS = [
