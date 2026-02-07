@@ -187,7 +187,7 @@ export const TeacherResponses = () => {
                                 <Users className="w-5 h-5 text-primary" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold">{data.total_replies}</p>
+                                <p className="text-2xl font-bold">{totalReplies}</p>
                                 <p className="text-xs text-muted-foreground">Total</p>
                             </div>
                         </CardContent>
