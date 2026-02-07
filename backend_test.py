@@ -485,6 +485,16 @@ class SundaySchoolAPITester:
         self.test_seed_data()
         self.test_user_management()
         self.test_courses_and_lessons()
+        self.test_enrollment_system()
+        self.test_comments_and_discussions()
+        self.test_chat_system()
+        self.test_private_messaging()
+        self.test_prompt_responses()
+        self.test_attendance_system()
+        self.test_analytics()
+        
+        return True
+
     def test_prompt_responses(self):
         """Test prompt response system for narrow-wedge features"""
         self.log("=== Testing Prompt Response System ===")
