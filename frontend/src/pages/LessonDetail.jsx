@@ -344,12 +344,32 @@ export const LessonDetail = () => {
             <div className="page-container py-4 md:py-6 space-y-6">
                 {/* Back Button + Header */}
                 <div className="animate-fade-in">
-                    <Link to={`/courses/${lesson.course_id}`}>
-                        <Button variant="ghost" className="gap-2 -ml-2 mb-2 active:scale-95 transition-transform" data-testid="back-to-course-btn">
-                            <ArrowLeft className="w-4 h-4" />
-                            Back to Course
-                        </Button>
-                    </Link>
+                    <div className="flex items-center justify-between mb-2">
+                        <Link to={`/courses/${lesson.course_id}`}>
+                            <Button variant="ghost" className="gap-2 -ml-2 active:scale-95 transition-transform" data-testid="back-to-course-btn">
+                                <ArrowLeft className="w-4 h-4" />
+                                Back to Course
+                            </Button>
+                        </Link>
+                        
+                        {/* Teacher Actions */}
+                        {isTeacherOrAdmin && (
+                            <div className="flex gap-2">
+                                <Link to={`/lessons/${lessonId}/edit`}>
+                                    <Button variant="outline" size="sm" className="gap-1" data-testid="edit-lesson-btn">
+                                        <Edit className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Edit</span>
+                                    </Button>
+                                </Link>
+                                <Link to={`/lessons/${lessonId}/responses`}>
+                                    <Button variant="outline" size="sm" className="gap-1" data-testid="view-responses-btn">
+                                        <BarChart3 className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Responses</span>
+                                    </Button>
+                                </Link>
+                            </div>
+                        )}
+                    </div>
                     
                     {lesson.lesson_date && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
