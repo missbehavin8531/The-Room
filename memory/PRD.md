@@ -1,29 +1,30 @@
-# Sunday School Education App - PRD
+# Sunday School Classroom - PRD
 
-## Original Problem Statement
-Mobile-first Sunday School education app for one church (v1) with:
-- Roles: Admin, Teacher, Member
-- Weekly learning flow: before/during/after lessons
-- Attendance and participation tracking
-- Discussion and chat features
+## Product Vision
+A **narrow-wedge mobile-first** "Sunday School Classroom" web app for one church (v1), optimized for mixed ages and teacher workflows.
+
+**NOT**: a full church management system, giving/events platform, or generic group-chat app.
+
+## Core Wedge Promise
+> In under 10 seconds, a member can: **Join Live → Watch Replay → View Slides → Respond to Prompt → Mark Attendance**
 
 ## User Personas
 1. **Admin**: User approval, moderation, reporting
-2. **Teacher**: Course/lesson management, resource uploads
-3. **Member**: View courses, join lessons, participate in discussions
+2. **Teacher**: Course/lesson management, resource uploads, view prompt responses
+3. **Member**: Complete 5-step lesson workflow, participate in discussions
 
 ## Core Requirements (Static)
 - JWT email/password authentication with approval workflow
-- Course and Lesson CRUD operations
+- 5-step action dashboard (Join Live, Watch Replay, View Slides, Respond, Mark Attendance)
+- Progress tracking per lesson
+- Prompt responses (simple text)
+- Course and Lesson management
 - Zoom link storage (course/lesson level)
 - YouTube video embedding
-- Per-lesson discussion comments
-- Global chat room
-- Member→Teacher private messaging
 - File uploads (PDF, PPT, images - max 25MB)
-- Attendance tracking (Join Live / Marked Attended)
-- Moderation tools (hide/delete content, mute users)
-- Basic analytics (participation stats)
+- Per-lesson discussions
+- Global chat
+- Admin panel with moderation
 
 ## What's Been Implemented (Jan-Feb 2026)
 
