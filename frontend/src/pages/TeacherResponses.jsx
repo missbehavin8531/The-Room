@@ -4,24 +4,130 @@ import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { PromptCard } from '../components/PromptCard';
+import { Badge } from '../components/ui/badge';
+import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { teacherPromptsAPI } from '../lib/api';
+import { formatRelativeTime, getInitials, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
 import { 
-    ArrowLeft, MessageSquare, CheckCircle, Clock, AlertCircle, Users
+    ArrowLeft, MessageSquare, CheckCircle, Clock, AlertCircle, 
+    Users, Pin, Trash2, ChevronDown, ChevronUp
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '../components/ui/alert-dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
+
+// Simple helper functions
+function getStatusStyle(status) {
+    if (status === 'answered') return 'bg-green-100 text-green-700';
+    if (status === 'needs_followup') return 'bg-amber-100 text-amber-700';
+    return 'bg-gray-100 text-gray-700';
+}
+
+function getStatusLabel(status) {
+    if (status === 'answered') return 'Answered';
+    if (status === 'needs_followup') return 'Follow-up';
+    return 'Pending';
+}
+
+// Single reply item - keeping it simple
+function ReplyItem({ reply, onStatusChange, onPinToggle, onDelete }) {
+    return (
+        <div 
+            className={cn(
+                "p-4 transition-colors",
+                reply.is_pinned && "bg-amber-50/50"
+            )}
+        >
+            <div className="flex items-start gap-3">
+                <Avatar className="w-10 h-10 flex-shrink-0">
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                        {getInitials(reply.user_name)}
+                    </AvatarFallback>
+                </Avatar>
+                <div className="flex-grow min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="font-semibold">{reply.user_name}</span>
+                        <span className="text-xs text-muted-foreground">
+                            {formatRelativeTime(reply.created_at)}
+                        </span>
+                        {reply.is_pinned && (
+                            <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">
+                                <Pin className="w-3 h-3 mr-1" /> Pinned
+                            </Badge>
+                        )}
+                    </div>
+                    <p className="text-sm mb-3">{reply.content}</p>
+                    
+                    <div className="flex items-center gap-2">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    className={cn("text-xs h-7", getStatusStyle(reply.status))}
+                                >
+                                    {reply.status === 'answered' && <CheckCircle className="w-3 h-3 mr-1" />}
+                                    {reply.status === 'needs_followup' && <AlertCircle className="w-3 h-3 mr-1" />}
+                                    {reply.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
+                                    {!reply.status && <Clock className="w-3 h-3 mr-1" />}
+                                    {getStatusLabel(reply.status)}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                                <DropdownMenuItem onClick={() => onStatusChange('pending')}>
+                                    <Clock className="w-4 h-4 mr-2" /> Pending
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onStatusChange('answered')}>
+                                    <CheckCircle className="w-4 h-4 mr-2" /> Answered
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onStatusChange('needs_followup')}>
+                                    <AlertCircle className="w-4 h-4 mr-2" /> Follow-up
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn("h-7 text-xs", reply.is_pinned && "text-amber-600")}
+                            onClick={onPinToggle}
+                        >
+                            <Pin className="w-3 h-3 mr-1" />
+                            {reply.is_pinned ? 'Unpin' : 'Pin'}
+                        </Button>
+
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs text-destructive"
+                            onClick={onDelete}
+                        >
+                            <Trash2 className="w-3 h-3 mr-1" /> Delete
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export const TeacherResponses = () => {
     const { lessonId } = useParams();
     const navigate = useNavigate();
     const { isTeacherOrAdmin } = useAuth();
     const [loading, setLoading] = useState(true);
-    const [data, setData] = useState(null);
+    const [lessonData, setLessonData] = useState(null);
+    const [promptsData, setPromptsData] = useState([]);
+    const [totalReplies, setTotalReplies] = useState(0);
     const [expandedPrompts, setExpandedPrompts] = useState({});
     const [deleteReplyId, setDeleteReplyId] = useState(null);
 
@@ -36,11 +142,15 @@ export const TeacherResponses = () => {
     const fetchData = async () => {
         try {
             const res = await teacherPromptsAPI.getAllReplies(lessonId);
-            setData(res.data);
+            setLessonData(res.data.lesson);
+            setPromptsData(res.data.prompts_with_replies || []);
+            setTotalReplies(res.data.total_replies || 0);
+            
             const expanded = {};
-            res.data.prompts_with_replies.forEach(p => {
-                expanded[p.prompt.id] = true;
-            });
+            const pwrData = res.data.prompts_with_replies || [];
+            for (let i = 0; i < pwrData.length; i++) {
+                expanded[pwrData[i].prompt.id] = true;
+            }
             setExpandedPrompts(expanded);
         } catch (error) {
             toast.error('Failed to load responses');
@@ -50,87 +160,69 @@ export const TeacherResponses = () => {
         }
     };
 
-    const handlePinReply = async (reply, promptId) => {
+    const handlePinReply = async (replyId, isPinned, promptId) => {
         try {
-            await teacherPromptsAPI.pinReply(reply.id, !reply.is_pinned);
-            setData(prev => ({
-                ...prev,
-                prompts_with_replies: prev.prompts_with_replies.map(p => {
-                    if (p.prompt.id === promptId) {
-                        return {
-                            ...p,
-                            replies: p.replies.map(r => 
-                                r.id === reply.id ? { ...r, is_pinned: !reply.is_pinned } : r
-                            ),
-                            stats: {
-                                ...p.stats,
-                                pinned: reply.is_pinned ? p.stats.pinned - 1 : p.stats.pinned + 1
-                            }
-                        };
-                    }
-                    return p;
-                })
-            }));
-            toast.success(!reply.is_pinned ? 'Reply pinned' : 'Reply unpinned');
+            await teacherPromptsAPI.pinReply(replyId, !isPinned);
+            setPromptsData(prev => {
+                return prev.map(p => {
+                    if (p.prompt.id !== promptId) return p;
+                    return {
+                        ...p,
+                        replies: p.replies.map(r => r.id === replyId ? { ...r, is_pinned: !isPinned } : r),
+                        stats: { ...p.stats, pinned: isPinned ? p.stats.pinned - 1 : p.stats.pinned + 1 }
+                    };
+                });
+            });
+            toast.success(!isPinned ? 'Pinned' : 'Unpinned');
         } catch (error) {
-            toast.error('Failed to update reply');
+            toast.error('Failed');
         }
     };
 
-    const handleStatusChange = async (reply, status, promptId) => {
+    const handleStatusChange = async (replyId, newStatus, promptId, oldStatus) => {
         try {
-            await teacherPromptsAPI.updateReplyStatus(reply.id, status);
-            setData(prev => ({
-                ...prev,
-                prompts_with_replies: prev.prompts_with_replies.map(p => {
-                    if (p.prompt.id === promptId) {
-                        const newStats = { ...p.stats };
-                        newStats[reply.status]--;
-                        newStats[status]++;
-                        return {
-                            ...p,
-                            replies: p.replies.map(r => 
-                                r.id === reply.id ? { ...r, status } : r
-                            ),
-                            stats: newStats
-                        };
-                    }
-                    return p;
-                })
-            }));
-            toast.success('Status updated');
+            await teacherPromptsAPI.updateReplyStatus(replyId, newStatus);
+            setPromptsData(prev => {
+                return prev.map(p => {
+                    if (p.prompt.id !== promptId) return p;
+                    const newStats = { ...p.stats };
+                    newStats[oldStatus || 'pending']--;
+                    newStats[newStatus]++;
+                    return {
+                        ...p,
+                        replies: p.replies.map(r => r.id === replyId ? { ...r, status: newStatus } : r),
+                        stats: newStats
+                    };
+                });
+            });
+            toast.success('Updated');
         } catch (error) {
-            toast.error('Failed to update status');
+            toast.error('Failed');
         }
     };
 
     const handleDeleteReply = async () => {
         if (!deleteReplyId) return;
-        
         try {
             await teacherPromptsAPI.deleteReply(deleteReplyId.replyId);
-            setData(prev => ({
-                ...prev,
-                prompts_with_replies: prev.prompts_with_replies.map(p => {
-                    if (p.prompt.id === deleteReplyId.promptId) {
-                        const deletedReply = p.replies.find(r => r.id === deleteReplyId.replyId);
-                        const newStats = { ...p.stats };
-                        newStats.total--;
-                        newStats[deletedReply.status]--;
-                        if (deletedReply.is_pinned) newStats.pinned--;
-                        return {
-                            ...p,
-                            replies: p.replies.filter(r => r.id !== deleteReplyId.replyId),
-                            stats: newStats
-                        };
-                    }
-                    return p;
-                }),
-                total_replies: prev.total_replies - 1
-            }));
-            toast.success('Reply deleted');
+            setPromptsData(prev => {
+                return prev.map(p => {
+                    if (p.prompt.id !== deleteReplyId.promptId) return p;
+                    const dr = p.replies.find(r => r.id === deleteReplyId.replyId);
+                    const newStats = { ...p.stats, total: p.stats.total - 1 };
+                    newStats[dr?.status || 'pending']--;
+                    if (dr?.is_pinned) newStats.pinned--;
+                    return {
+                        ...p,
+                        replies: p.replies.filter(r => r.id !== deleteReplyId.replyId),
+                        stats: newStats
+                    };
+                });
+            });
+            setTotalReplies(prev => prev - 1);
+            toast.success('Deleted');
         } catch (error) {
-            toast.error('Failed to delete reply');
+            toast.error('Failed');
         }
         setDeleteReplyId(null);
     };
@@ -151,35 +243,31 @@ export const TeacherResponses = () => {
         );
     }
 
-    if (!data) return null;
+    if (!lessonData) return null;
 
-    // Extract data to simpler variables to avoid babel plugin issues
-    const lesson = data.lesson;
-    const prompts = data.prompts_with_replies || [];
-    const totalReplies = data.total_replies || 0;
-    
-    const totalPending = prompts.reduce((acc, p) => acc + p.stats.pending, 0);
-    const totalAnswered = prompts.reduce((acc, p) => acc + p.stats.answered, 0);
-    const totalFollowup = prompts.reduce((acc, p) => acc + p.stats.needs_followup, 0);
+    // Calculate stats
+    let totalPending = 0;
+    let totalAnswered = 0;
+    let totalFollowup = 0;
+    for (let i = 0; i < promptsData.length; i++) {
+        totalPending += promptsData[i].stats.pending || 0;
+        totalAnswered += promptsData[i].stats.answered || 0;
+        totalFollowup += promptsData[i].stats.needs_followup || 0;
+    }
 
     return (
         <Layout>
             <div className="page-container py-4 md:py-6 space-y-6">
-                {/* Header */}
                 <div className="animate-fade-in">
                     <Link to={`/lessons/${lessonId}`}>
                         <Button variant="ghost" className="gap-2 -ml-2 mb-2" data-testid="back-to-lesson-btn">
-                            <ArrowLeft className="w-4 h-4" />
-                            Back to Lesson
+                            <ArrowLeft className="w-4 h-4" /> Back to Lesson
                         </Button>
                     </Link>
-                    <h1 className="text-2xl md:text-3xl font-serif font-bold mb-1">
-                        Student Responses
-                    </h1>
-                    <p className="text-muted-foreground">{lesson.title}</p>
+                    <h1 className="text-2xl md:text-3xl font-serif font-bold mb-1">Student Responses</h1>
+                    <p className="text-muted-foreground">{lessonData.title}</p>
                 </div>
 
-                {/* Stats Overview */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in" style={{ animationDelay: '0.05s' }}>
                     <Card className="card-organic">
                         <CardContent className="p-4 flex items-center gap-3">
@@ -227,28 +315,62 @@ export const TeacherResponses = () => {
                     </Card>
                 </div>
 
-                {/* Prompts with Replies */}
                 <div className="space-y-4">
-                    {prompts.length > 0 ? (
-                        prompts.map((item, index) => (
-                            <PromptCard
-                                key={item.prompt.id}
-                                item={item}
-                                index={index}
-                                isExpanded={expandedPrompts[item.prompt.id]}
-                                onToggle={() => togglePrompt(item.prompt.id)}
-                                onStatusChange={(reply, status) => handleStatusChange(reply, status, item.prompt.id)}
-                                onPinToggle={(reply) => handlePinReply(reply, item.prompt.id)}
-                                onDelete={(reply) => setDeleteReplyId({ replyId: reply.id, promptId: item.prompt.id })}
-                            />
+                    {promptsData.length > 0 ? (
+                        promptsData.map((item, index) => (
+                            <Card key={item.prompt.id} className="card-organic animate-fade-in" style={{ animationDelay: `${0.1 + index * 0.05}s` }}>
+                                <div 
+                                    className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
+                                    onClick={() => togglePrompt(item.prompt.id)}
+                                    data-testid={`prompt-header-${index}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                                            <MessageSquare className="w-5 h-5 text-primary" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium">Prompt {index + 1}</p>
+                                            <p className="text-sm text-muted-foreground line-clamp-1">{item.prompt.question}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Badge variant="outline" className="text-xs">{item.stats.total} responses</Badge>
+                                        {expandedPrompts[item.prompt.id] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                                    </div>
+                                </div>
+
+                                {expandedPrompts[item.prompt.id] && (
+                                    <div className="border-t">
+                                        <div className="p-4 bg-primary/5 border-b">
+                                            <p className="font-medium text-primary">{item.prompt.question}</p>
+                                        </div>
+                                        {item.replies.length > 0 ? (
+                                            <div className="divide-y">
+                                                {item.replies.map(reply => (
+                                                    <ReplyItem
+                                                        key={reply.id}
+                                                        reply={reply}
+                                                        onStatusChange={(s) => handleStatusChange(reply.id, s, item.prompt.id, reply.status)}
+                                                        onPinToggle={() => handlePinReply(reply.id, reply.is_pinned, item.prompt.id)}
+                                                        onDelete={() => setDeleteReplyId({ replyId: reply.id, promptId: item.prompt.id })}
+                                                    />
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="p-8 text-center text-muted-foreground">
+                                                <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                                                <p>No responses yet</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </Card>
                         ))
                     ) : (
                         <Card className="card-organic p-8 text-center">
                             <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/30" />
                             <h3 className="text-lg font-semibold mb-2">No prompts yet</h3>
-                            <p className="text-muted-foreground mb-4">
-                                Add discussion prompts to collect student responses
-                            </p>
+                            <p className="text-muted-foreground mb-4">Add prompts to collect responses</p>
                             <Link to={`/lessons/${lessonId}/edit`}>
                                 <Button className="btn-primary">Edit Lesson</Button>
                             </Link>
@@ -256,20 +378,15 @@ export const TeacherResponses = () => {
                     )}
                 </div>
 
-                {/* Delete Confirmation */}
                 <AlertDialog open={!!deleteReplyId} onOpenChange={() => setDeleteReplyId(null)}>
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>Delete Response?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This will permanently delete this student's response.
-                            </AlertDialogDescription>
+                            <AlertDialogDescription>This cannot be undone.</AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteReply} className="bg-destructive text-destructive-foreground">
-                                Delete
-                            </AlertDialogAction>
+                            <AlertDialogAction onClick={handleDeleteReply} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
