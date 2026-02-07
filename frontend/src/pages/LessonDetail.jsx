@@ -729,88 +729,85 @@ export const LessonDetail = () => {
                                     
                                     {/* Replies */}
                                     <div className="space-y-2">
-                                        {sortedReplies.length > 0 ? sortedReplies.map((reply) => {
-                                            const StatusIcon = STATUS_CONFIG[reply.status]?.icon || Clock;
-                                            return (
-                                                <Card 
-                                                    key={reply.id} 
-                                                    className={cn(
-                                                        "card-organic",
-                                                        reply.is_pinned && "ring-2 ring-amber-400 bg-amber-50/50 dark:bg-amber-900/10"
-                                                    )}
-                                                    data-testid={`reply-${reply.id}`}
-                                                >
-                                                    <CardContent className="p-3">
-                                                        <div className="flex items-start gap-3">
-                                                            <Avatar className="w-8 h-8">
-                                                                <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                                                    {getInitials(reply.user_name)}
-                                                                </AvatarFallback>
-                                                            </Avatar>
-                                                            <div className="flex-grow min-w-0">
-                                                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                                    <span className="font-semibold text-sm">{reply.user_name}</span>
-                                                                    <span className="text-xs text-muted-foreground">{formatRelativeTime(reply.created_at)}</span>
-                                                                    {reply.is_pinned && (
-                                                                        <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">
-                                                                            <Pin className="w-3 h-3 mr-1" /> Pinned
-                                                                        </Badge>
-                                                                    )}
-                                                                </div>
-                                                                <p className="text-sm mb-2">{reply.content}</p>
-                                                                
-                                                                {/* Teacher Actions Row */}
-                                                                {isTeacherOrAdmin && (
-                                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                                        {/* Status Dropdown */}
-                                                                        <DropdownMenu>
-                                                                            <DropdownMenuTrigger asChild>
-                                                                                <Button 
-                                                                                    variant="outline" 
-                                                                                    size="sm"
-                                                                                    className={cn(
-                                                                                        "text-xs h-7",
-                                                                                        getStatusStyle(reply.status)
-                                                                                    )}
-                                                                                    data-testid={`status-btn-${reply.id}`}
-                                                                                >
-                                                                                    {reply.status === 'answered' ? <CheckCircle className="w-3 h-3 mr-1" /> : 
-                                                                                     reply.status === 'needs_followup' ? <AlertCircle className="w-3 h-3 mr-1" /> : 
-                                                                                     <Clock className="w-3 h-3 mr-1" />}
-                                                                                    {getStatusLabel(reply.status)}
-                                                                                </Button>
-                                                                            </DropdownMenuTrigger>
-                                                                            <DropdownMenuContent align="start">
-                                                                                <StatusDropdownItems onSelect={(key) => handleStatusChange(reply.id, key)} />
-                                                                            </DropdownMenuContent>
-                                                                        </DropdownMenu>
-                                                                        
-                                                                        <Button 
-                                                                            variant="ghost" 
-                                                                            size="sm" 
-                                                                            className={cn("h-7 text-xs", reply.is_pinned && "text-amber-600")}
-                                                                            onClick={() => handlePinReply(reply.id, !reply.is_pinned)}
-                                                                        >
-                                                                            <Pin className="w-3 h-3 mr-1" />
-                                                                            {reply.is_pinned ? 'Unpin' : 'Pin'}
-                                                                        </Button>
-                                                                        <Button 
-                                                                            variant="ghost" 
-                                                                            size="sm" 
-                                                                            className="h-7 text-xs text-destructive"
-                                                                            onClick={() => setDeleteItem(reply)}
-                                                                        >
-                                                                            <Trash2 className="w-3 h-3 mr-1" />
-                                                                            Delete
-                                                                        </Button>
-                                                                    </div>
+                                        {sortedReplies.length > 0 ? sortedReplies.map((reply) => (
+                                            <Card 
+                                                key={reply.id} 
+                                                className={cn(
+                                                    "card-organic",
+                                                    reply.is_pinned && "ring-2 ring-amber-400 bg-amber-50/50 dark:bg-amber-900/10"
+                                                )}
+                                                data-testid={`reply-${reply.id}`}
+                                            >
+                                                <CardContent className="p-3">
+                                                    <div className="flex items-start gap-3">
+                                                        <Avatar className="w-8 h-8">
+                                                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                                                {getInitials(reply.user_name)}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="flex-grow min-w-0">
+                                                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                                <span className="font-semibold text-sm">{reply.user_name}</span>
+                                                                <span className="text-xs text-muted-foreground">{formatRelativeTime(reply.created_at)}</span>
+                                                                {reply.is_pinned && (
+                                                                    <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">
+                                                                        <Pin className="w-3 h-3 mr-1" /> Pinned
+                                                                    </Badge>
                                                                 )}
                                                             </div>
+                                                            <p className="text-sm mb-2">{reply.content}</p>
+                                                            
+                                                            {/* Teacher Actions Row */}
+                                                            {isTeacherOrAdmin && (
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    {/* Status Dropdown */}
+                                                                    <DropdownMenu>
+                                                                        <DropdownMenuTrigger asChild>
+                                                                            <Button 
+                                                                                variant="outline" 
+                                                                                size="sm"
+                                                                                className={cn(
+                                                                                    "text-xs h-7",
+                                                                                    getStatusStyle(reply.status)
+                                                                                )}
+                                                                                data-testid={`status-btn-${reply.id}`}
+                                                                            >
+                                                                                {reply.status === 'answered' ? <CheckCircle className="w-3 h-3 mr-1" /> : 
+                                                                                 reply.status === 'needs_followup' ? <AlertCircle className="w-3 h-3 mr-1" /> : 
+                                                                                 <Clock className="w-3 h-3 mr-1" />}
+                                                                                {getStatusLabel(reply.status)}
+                                                                            </Button>
+                                                                        </DropdownMenuTrigger>
+                                                                        <DropdownMenuContent align="start">
+                                                                            <StatusDropdownItems onSelect={(key) => handleStatusChange(reply.id, key)} />
+                                                                        </DropdownMenuContent>
+                                                                    </DropdownMenu>
+                                                                    
+                                                                    <Button 
+                                                                        variant="ghost" 
+                                                                        size="sm" 
+                                                                        className={cn("h-7 text-xs", reply.is_pinned && "text-amber-600")}
+                                                                        onClick={() => handlePinReply(reply.id, !reply.is_pinned)}
+                                                                    >
+                                                                        <Pin className="w-3 h-3 mr-1" />
+                                                                        {reply.is_pinned ? 'Unpin' : 'Pin'}
+                                                                    </Button>
+                                                                    <Button 
+                                                                        variant="ghost" 
+                                                                        size="sm" 
+                                                                        className="h-7 text-xs text-destructive"
+                                                                        onClick={() => setDeleteItem(reply)}
+                                                                    >
+                                                                        <Trash2 className="w-3 h-3 mr-1" />
+                                                                        Delete
+                                                                    </Button>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    </CardContent>
-                                                </Card>
-                                            );
-                                        }) : (
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        )) : (
                                             <Card className="card-organic">
                                                 <CardContent className="p-4 text-center text-muted-foreground">
                                                     <p>Be the first to respond to this prompt!</p>
