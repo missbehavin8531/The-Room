@@ -411,8 +411,7 @@ export const TeacherResponses = () => {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    );
-                                                })}
+                                                ))}
                                             </div>
                                         ) : (
                                             <div className="p-8 text-center text-muted-foreground">
