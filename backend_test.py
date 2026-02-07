@@ -360,25 +360,36 @@ class SundaySchoolAPITester:
         )
 
     def test_attendance_system(self):
-        """Test attendance recording"""
-        self.log("=== Testing Attendance System ===")
+        """Test attendance recording for narrow-wedge 5-step actions"""
+        self.log("=== Testing Attendance System (5-Step Actions) ===")
         
         if not self.lesson_id:
             self.log("⚠️ No lesson ID available, skipping attendance tests")
             return
         
-        # Record attendance
-        attendance_data = {
-            "lesson_id": self.lesson_id,
-            "action": "joined_live"
-        }
+        # Test all 5 core actions
+        actions = ["joined_live", "watched_replay", "viewed_slides", "responded", "marked_attended"]
         
+        for action in actions:
+            attendance_data = {
+                "lesson_id": self.lesson_id,
+                "action": action
+            }
+            
+            self.run_test(
+                f"Record Attendance - {action}",
+                "POST",
+                "attendance",
+                200,
+                attendance_data
+            )
+        
+        # Get my attendance for the lesson (to check progress)
         self.run_test(
-            "Record Attendance",
-            "POST",
-            "attendance",
-            200,
-            attendance_data
+            "Get My Attendance for Lesson",
+            "GET",
+            f"attendance/my/{self.lesson_id}",
+            200
         )
 
     def test_enrollment_system(self):
