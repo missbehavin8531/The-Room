@@ -19,117 +19,24 @@ import {
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '../components/ui/alert-dialog';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
-
-// Simple helper functions
-function getStatusStyle(status) {
-    if (status === 'answered') return 'bg-green-100 text-green-700';
-    if (status === 'needs_followup') return 'bg-amber-100 text-amber-700';
-    return 'bg-gray-100 text-gray-700';
-}
-
-function getStatusLabel(status) {
-    if (status === 'answered') return 'Answered';
-    if (status === 'needs_followup') return 'Follow-up';
-    return 'Pending';
-}
-
-// Single reply item - keeping it simple
-function ReplyItem({ reply, onStatusChange, onPinToggle, onDelete }) {
-    return (
-        <div 
-            className={cn(
-                "p-4 transition-colors",
-                reply.is_pinned && "bg-amber-50/50"
-            )}
-        >
-            <div className="flex items-start gap-3">
-                <Avatar className="w-10 h-10 flex-shrink-0">
-                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                        {getInitials(reply.user_name)}
-                    </AvatarFallback>
-                </Avatar>
-                <div className="flex-grow min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="font-semibold">{reply.user_name}</span>
-                        <span className="text-xs text-muted-foreground">
-                            {formatRelativeTime(reply.created_at)}
-                        </span>
-                        {reply.is_pinned && (
-                            <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">
-                                <Pin className="w-3 h-3 mr-1" /> Pinned
-                            </Badge>
-                        )}
-                    </div>
-                    <p className="text-sm mb-3">{reply.content}</p>
-                    
-                    <div className="flex items-center gap-2">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    className={cn("text-xs h-7", getStatusStyle(reply.status))}
-                                >
-                                    {reply.status === 'answered' && <CheckCircle className="w-3 h-3 mr-1" />}
-                                    {reply.status === 'needs_followup' && <AlertCircle className="w-3 h-3 mr-1" />}
-                                    {reply.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
-                                    {!reply.status && <Clock className="w-3 h-3 mr-1" />}
-                                    {getStatusLabel(reply.status)}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                                <DropdownMenuItem onClick={() => onStatusChange('pending')}>
-                                    <Clock className="w-4 h-4 mr-2" /> Pending
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => onStatusChange('answered')}>
-                                    <CheckCircle className="w-4 h-4 mr-2" /> Answered
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => onStatusChange('needs_followup')}>
-                                    <AlertCircle className="w-4 h-4 mr-2" /> Follow-up
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className={cn("h-7 text-xs", reply.is_pinned && "text-amber-600")}
-                            onClick={onPinToggle}
-                        >
-                            <Pin className="w-3 h-3 mr-1" />
-                            {reply.is_pinned ? 'Unpin' : 'Pin'}
-                        </Button>
-
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs text-destructive"
-                            onClick={onDelete}
-                        >
-                            <Trash2 className="w-3 h-3 mr-1" /> Delete
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '../components/ui/select';
 
 export const TeacherResponses = () => {
     const { lessonId } = useParams();
     const navigate = useNavigate();
     const { isTeacherOrAdmin } = useAuth();
     const [loading, setLoading] = useState(true);
-    const [lessonData, setLessonData] = useState(null);
-    const [promptsData, setPromptsData] = useState([]);
-    const [totalReplies, setTotalReplies] = useState(0);
-    const [expandedPrompts, setExpandedPrompts] = useState({});
+    const [lesson, setLesson] = useState(null);
+    const [prompts, setPrompts] = useState([]);
+    const [replies, setReplies] = useState([]);
+    const [selectedPromptId, setSelectedPromptId] = useState(null);
     const [deleteReplyId, setDeleteReplyId] = useState(null);
+    const [stats, setStats] = useState({ total: 0, pending: 0, answered: 0, needs_followup: 0 });
 
     useEffect(() => {
         if (!isTeacherOrAdmin) {
@@ -142,16 +49,35 @@ export const TeacherResponses = () => {
     const fetchData = async () => {
         try {
             const res = await teacherPromptsAPI.getAllReplies(lessonId);
-            setLessonData(res.data.lesson);
-            setPromptsData(res.data.prompts_with_replies || []);
-            setTotalReplies(res.data.total_replies || 0);
+            const data = res.data;
+            setLesson(data.lesson);
             
-            const expanded = {};
-            const pwrData = res.data.prompts_with_replies || [];
-            for (let i = 0; i < pwrData.length; i++) {
-                expanded[pwrData[i].prompt.id] = true;
+            // Flatten prompts and replies
+            const allPrompts = [];
+            const allReplies = [];
+            let totalStats = { total: 0, pending: 0, answered: 0, needs_followup: 0 };
+            
+            for (let i = 0; i < data.prompts_with_replies.length; i++) {
+                const pwr = data.prompts_with_replies[i];
+                allPrompts.push(pwr.prompt);
+                
+                for (let j = 0; j < pwr.replies.length; j++) {
+                    allReplies.push({ ...pwr.replies[j], promptId: pwr.prompt.id });
+                }
+                
+                totalStats.total += pwr.stats.total;
+                totalStats.pending += pwr.stats.pending;
+                totalStats.answered += pwr.stats.answered;
+                totalStats.needs_followup += pwr.stats.needs_followup;
             }
-            setExpandedPrompts(expanded);
+            
+            setPrompts(allPrompts);
+            setReplies(allReplies);
+            setStats(totalStats);
+            
+            if (allPrompts.length > 0) {
+                setSelectedPromptId(allPrompts[0].id);
+            }
         } catch (error) {
             toast.error('Failed to load responses');
             navigate('/courses');
@@ -160,40 +86,27 @@ export const TeacherResponses = () => {
         }
     };
 
-    const handlePinReply = async (replyId, isPinned, promptId) => {
+    const handlePinReply = async (replyId, isPinned) => {
         try {
             await teacherPromptsAPI.pinReply(replyId, !isPinned);
-            setPromptsData(prev => {
-                return prev.map(p => {
-                    if (p.prompt.id !== promptId) return p;
-                    return {
-                        ...p,
-                        replies: p.replies.map(r => r.id === replyId ? { ...r, is_pinned: !isPinned } : r),
-                        stats: { ...p.stats, pinned: isPinned ? p.stats.pinned - 1 : p.stats.pinned + 1 }
-                    };
-                });
-            });
+            setReplies(prev => prev.map(r => r.id === replyId ? { ...r, is_pinned: !isPinned } : r));
             toast.success(!isPinned ? 'Pinned' : 'Unpinned');
         } catch (error) {
             toast.error('Failed');
         }
     };
 
-    const handleStatusChange = async (replyId, newStatus, promptId, oldStatus) => {
+    const handleStatusChange = async (replyId, newStatus, oldStatus) => {
         try {
             await teacherPromptsAPI.updateReplyStatus(replyId, newStatus);
-            setPromptsData(prev => {
-                return prev.map(p => {
-                    if (p.prompt.id !== promptId) return p;
-                    const newStats = { ...p.stats };
-                    newStats[oldStatus || 'pending']--;
-                    newStats[newStatus]++;
-                    return {
-                        ...p,
-                        replies: p.replies.map(r => r.id === replyId ? { ...r, status: newStatus } : r),
-                        stats: newStats
-                    };
-                });
+            setReplies(prev => prev.map(r => r.id === replyId ? { ...r, status: newStatus } : r));
+            
+            // Update stats
+            setStats(prev => {
+                const updated = { ...prev };
+                updated[oldStatus || 'pending']--;
+                updated[newStatus]++;
+                return updated;
             });
             toast.success('Updated');
         } catch (error) {
@@ -204,22 +117,15 @@ export const TeacherResponses = () => {
     const handleDeleteReply = async () => {
         if (!deleteReplyId) return;
         try {
-            await teacherPromptsAPI.deleteReply(deleteReplyId.replyId);
-            setPromptsData(prev => {
-                return prev.map(p => {
-                    if (p.prompt.id !== deleteReplyId.promptId) return p;
-                    const dr = p.replies.find(r => r.id === deleteReplyId.replyId);
-                    const newStats = { ...p.stats, total: p.stats.total - 1 };
-                    newStats[dr?.status || 'pending']--;
-                    if (dr?.is_pinned) newStats.pinned--;
-                    return {
-                        ...p,
-                        replies: p.replies.filter(r => r.id !== deleteReplyId.replyId),
-                        stats: newStats
-                    };
-                });
-            });
-            setTotalReplies(prev => prev - 1);
+            const reply = replies.find(r => r.id === deleteReplyId);
+            await teacherPromptsAPI.deleteReply(deleteReplyId);
+            setReplies(prev => prev.filter(r => r.id !== deleteReplyId));
+            
+            setStats(prev => ({
+                ...prev,
+                total: prev.total - 1,
+                [reply?.status || 'pending']: prev[reply?.status || 'pending'] - 1
+            }));
             toast.success('Deleted');
         } catch (error) {
             toast.error('Failed');
@@ -227,9 +133,8 @@ export const TeacherResponses = () => {
         setDeleteReplyId(null);
     };
 
-    const togglePrompt = (promptId) => {
-        setExpandedPrompts(prev => ({ ...prev, [promptId]: !prev[promptId] }));
-    };
+    const selectedPrompt = prompts.find(p => p.id === selectedPromptId);
+    const filteredReplies = replies.filter(r => r.promptId === selectedPromptId);
 
     if (loading) {
         return (
@@ -243,17 +148,7 @@ export const TeacherResponses = () => {
         );
     }
 
-    if (!lessonData) return null;
-
-    // Calculate stats
-    let totalPending = 0;
-    let totalAnswered = 0;
-    let totalFollowup = 0;
-    for (let i = 0; i < promptsData.length; i++) {
-        totalPending += promptsData[i].stats.pending || 0;
-        totalAnswered += promptsData[i].stats.answered || 0;
-        totalFollowup += promptsData[i].stats.needs_followup || 0;
-    }
+    if (!lesson) return null;
 
     return (
         <Layout>
@@ -265,17 +160,18 @@ export const TeacherResponses = () => {
                         </Button>
                     </Link>
                     <h1 className="text-2xl md:text-3xl font-serif font-bold mb-1">Student Responses</h1>
-                    <p className="text-muted-foreground">{lessonData.title}</p>
+                    <p className="text-muted-foreground">{lesson.title}</p>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in" style={{ animationDelay: '0.05s' }}>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in">
                     <Card className="card-organic">
                         <CardContent className="p-4 flex items-center gap-3">
                             <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                                 <Users className="w-5 h-5 text-primary" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold">{totalReplies}</p>
+                                <p className="text-2xl font-bold">{stats.total}</p>
                                 <p className="text-xs text-muted-foreground">Total</p>
                             </div>
                         </CardContent>
@@ -286,7 +182,7 @@ export const TeacherResponses = () => {
                                 <Clock className="w-5 h-5 text-gray-600" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold">{totalPending}</p>
+                                <p className="text-2xl font-bold">{stats.pending}</p>
                                 <p className="text-xs text-muted-foreground">Pending</p>
                             </div>
                         </CardContent>
@@ -297,7 +193,7 @@ export const TeacherResponses = () => {
                                 <CheckCircle className="w-5 h-5 text-green-600" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold">{totalAnswered}</p>
+                                <p className="text-2xl font-bold">{stats.answered}</p>
                                 <p className="text-xs text-muted-foreground">Answered</p>
                             </div>
                         </CardContent>
@@ -308,75 +204,126 @@ export const TeacherResponses = () => {
                                 <AlertCircle className="w-5 h-5 text-amber-600" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold">{totalFollowup}</p>
+                                <p className="text-2xl font-bold">{stats.needs_followup}</p>
                                 <p className="text-xs text-muted-foreground">Follow-up</p>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
-                <div className="space-y-4">
-                    {promptsData.length > 0 ? (
-                        promptsData.map((item, index) => (
-                            <Card key={item.prompt.id} className="card-organic animate-fade-in" style={{ animationDelay: `${0.1 + index * 0.05}s` }}>
-                                <div 
-                                    className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
-                                    onClick={() => togglePrompt(item.prompt.id)}
-                                    data-testid={`prompt-header-${index}`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                                            <MessageSquare className="w-5 h-5 text-primary" />
-                                        </div>
-                                        <div>
-                                            <p className="font-medium">Prompt {index + 1}</p>
-                                            <p className="text-sm text-muted-foreground line-clamp-1">{item.prompt.question}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <Badge variant="outline" className="text-xs">{item.stats.total} responses</Badge>
-                                        {expandedPrompts[item.prompt.id] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                                    </div>
+                {/* Prompt Selector */}
+                {prompts.length > 0 && (
+                    <Card className="card-organic">
+                        <CardContent className="p-4">
+                            <label className="text-sm font-medium mb-2 block">Select Prompt</label>
+                            <Select value={selectedPromptId} onValueChange={setSelectedPromptId}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select a prompt" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {prompts.map((p, i) => (
+                                        <SelectItem key={p.id} value={p.id}>
+                                            Prompt {i + 1}: {p.question.substring(0, 50)}...
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            
+                            {selectedPrompt && (
+                                <div className="mt-4 p-4 bg-primary/5 rounded-lg">
+                                    <p className="font-medium text-primary">{selectedPrompt.question}</p>
                                 </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
 
-                                {expandedPrompts[item.prompt.id] && (
-                                    <div className="border-t">
-                                        <div className="p-4 bg-primary/5 border-b">
-                                            <p className="font-medium text-primary">{item.prompt.question}</p>
+                {/* Replies List */}
+                <div className="space-y-3">
+                    <h3 className="font-semibold flex items-center gap-2">
+                        <MessageSquare className="w-5 h-5" />
+                        Responses ({filteredReplies.length})
+                    </h3>
+                    
+                    {filteredReplies.length > 0 ? (
+                        filteredReplies.map(reply => (
+                            <Card key={reply.id} className={cn("card-organic", reply.is_pinned && "ring-2 ring-amber-400")}>
+                                <CardContent className="p-4">
+                                    <div className="flex items-start gap-3">
+                                        <Avatar className="w-10 h-10">
+                                            <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                                                {getInitials(reply.user_name)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-grow">
+                                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                <span className="font-semibold">{reply.user_name}</span>
+                                                <span className="text-xs text-muted-foreground">{formatRelativeTime(reply.created_at)}</span>
+                                                {reply.is_pinned && (
+                                                    <Badge variant="outline" className="text-xs text-amber-600">
+                                                        <Pin className="w-3 h-3 mr-1" /> Pinned
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <p className="text-sm mb-3">{reply.content}</p>
+                                            
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <Select 
+                                                    value={reply.status || 'pending'} 
+                                                    onValueChange={(v) => handleStatusChange(reply.id, v, reply.status)}
+                                                >
+                                                    <SelectTrigger className="w-36 h-8 text-xs">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="pending">Pending</SelectItem>
+                                                        <SelectItem value="answered">Answered</SelectItem>
+                                                        <SelectItem value="needs_followup">Follow-up</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className={cn("h-8 text-xs", reply.is_pinned && "text-amber-600")}
+                                                    onClick={() => handlePinReply(reply.id, reply.is_pinned)}
+                                                >
+                                                    <Pin className="w-3 h-3 mr-1" />
+                                                    {reply.is_pinned ? 'Unpin' : 'Pin'}
+                                                </Button>
+                                                
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 text-xs text-destructive"
+                                                    onClick={() => setDeleteReplyId(reply.id)}
+                                                >
+                                                    <Trash2 className="w-3 h-3 mr-1" /> Delete
+                                                </Button>
+                                            </div>
                                         </div>
-                                        {item.replies.length > 0 ? (
-                                            <div className="divide-y">
-                                                {item.replies.map(reply => (
-                                                    <ReplyItem
-                                                        key={reply.id}
-                                                        reply={reply}
-                                                        onStatusChange={(s) => handleStatusChange(reply.id, s, item.prompt.id, reply.status)}
-                                                        onPinToggle={() => handlePinReply(reply.id, reply.is_pinned, item.prompt.id)}
-                                                        onDelete={() => setDeleteReplyId({ replyId: reply.id, promptId: item.prompt.id })}
-                                                    />
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="p-8 text-center text-muted-foreground">
-                                                <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                                                <p>No responses yet</p>
-                                            </div>
-                                        )}
                                     </div>
-                                )}
+                                </CardContent>
                             </Card>
                         ))
                     ) : (
                         <Card className="card-organic p-8 text-center">
-                            <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/30" />
-                            <h3 className="text-lg font-semibold mb-2">No prompts yet</h3>
-                            <p className="text-muted-foreground mb-4">Add prompts to collect responses</p>
-                            <Link to={`/lessons/${lessonId}/edit`}>
-                                <Button className="btn-primary">Edit Lesson</Button>
-                            </Link>
+                            <MessageSquare className="w-10 h-10 mx-auto mb-2 text-muted-foreground/30" />
+                            <p className="text-muted-foreground">No responses for this prompt yet</p>
                         </Card>
                     )}
                 </div>
+
+                {prompts.length === 0 && (
+                    <Card className="card-organic p-8 text-center">
+                        <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/30" />
+                        <h3 className="text-lg font-semibold mb-2">No prompts yet</h3>
+                        <p className="text-muted-foreground mb-4">Add prompts to collect responses</p>
+                        <Link to={`/lessons/${lessonId}/edit`}>
+                            <Button className="btn-primary">Edit Lesson</Button>
+                        </Link>
+                    </Card>
+                )}
 
                 <AlertDialog open={!!deleteReplyId} onOpenChange={() => setDeleteReplyId(null)}>
                     <AlertDialogContent>
