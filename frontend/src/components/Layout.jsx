@@ -184,7 +184,7 @@ export const Layout = ({ children }) => {
             </header>
 
             {/* Main Content */}
-            <main className="pb-24 md:pb-8">
+            <main className="pb-32 md:pb-8">
                 {children}
             </main>
 
