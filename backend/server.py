@@ -489,7 +489,8 @@ async def get_all_lessons(user: dict = Depends(require_approved)):
     result = []
     for lesson in lessons:
         resources = await db.resources.find({'lesson_id': lesson['id']}, {'_id': 0}).to_list(100)
-        result.append(LessonResponse(**lesson, resources=resources))
+        user_response = await db.prompt_responses.find_one({'lesson_id': lesson['id'], 'user_id': user['id']}, {'_id': 0})
+        result.append(LessonResponse(**lesson, resources=resources, user_response=user_response))
     return result
 
 @api_router.get("/lessons/{lesson_id}", response_model=LessonResponse)
@@ -498,7 +499,8 @@ async def get_lesson(lesson_id: str, user: dict = Depends(require_approved)):
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
     resources = await db.resources.find({'lesson_id': lesson_id}, {'_id': 0}).to_list(100)
-    return LessonResponse(**lesson, resources=resources)
+    user_response = await db.prompt_responses.find_one({'lesson_id': lesson_id, 'user_id': user['id']}, {'_id': 0})
+    return LessonResponse(**lesson, resources=resources, user_response=user_response)
 
 @api_router.get("/lessons/next/upcoming", response_model=Optional[LessonResponse])
 async def get_next_lesson(user: dict = Depends(require_approved)):
@@ -509,12 +511,14 @@ async def get_next_lesson(user: dict = Depends(require_approved)):
     )
     if lesson:
         resources = await db.resources.find({'lesson_id': lesson['id']}, {'_id': 0}).to_list(100)
-        return LessonResponse(**lesson, resources=resources)
+        user_response = await db.prompt_responses.find_one({'lesson_id': lesson['id'], 'user_id': user['id']}, {'_id': 0})
+        return LessonResponse(**lesson, resources=resources, user_response=user_response)
     # Fallback to most recent
     lesson = await db.lessons.find_one({}, {'_id': 0}, sort=[('created_at', -1)])
     if lesson:
         resources = await db.resources.find({'lesson_id': lesson['id']}, {'_id': 0}).to_list(100)
-        return LessonResponse(**lesson, resources=resources)
+        user_response = await db.prompt_responses.find_one({'lesson_id': lesson['id'], 'user_id': user['id']}, {'_id': 0})
+        return LessonResponse(**lesson, resources=resources, user_response=user_response)
     return None
 
 @api_router.put("/lessons/{lesson_id}")
