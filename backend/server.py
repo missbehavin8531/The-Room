@@ -201,6 +201,8 @@ class ResourceResponse(BaseModel):
     file_type: str
     file_size: int
     uploaded_by: str
+    is_primary: bool = False
+    order: int = 0
     created_at: str
 
 class AttendanceCreate(BaseModel):
