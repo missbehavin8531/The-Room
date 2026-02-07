@@ -95,9 +95,10 @@ class LessonBase(BaseModel):
     title: str
     description: str
     youtube_url: Optional[str] = None
-    zoom_link: Optional[str] = None  # Override course zoom if set
+    zoom_link: Optional[str] = None
     lesson_date: Optional[str] = None
-    prompt: Optional[str] = None  # Discussion prompt for the lesson
+    teacher_notes: Optional[str] = None  # Notes shown during/after replay
+    reading_plan: Optional[str] = None  # Scripture/reading for the week
     order: int = 0
 
 class LessonCreate(LessonBase):
@@ -112,11 +113,44 @@ class LessonResponse(BaseModel):
     youtube_url: Optional[str] = None
     zoom_link: Optional[str] = None
     lesson_date: Optional[str] = None
-    prompt: Optional[str] = None
+    teacher_notes: Optional[str] = None
+    reading_plan: Optional[str] = None
     order: int
     created_at: str
     resources: List[dict] = []
-    user_response: Optional[dict] = None  # Current user's prompt response
+    prompts: List[dict] = []  # Teacher prompts for discussion
+    user_attendance: List[str] = []  # Current user's attendance actions
+
+# ============== TEACHER PROMPTS ==============
+
+class TeacherPromptCreate(BaseModel):
+    question: str
+    order: int = 0
+
+class TeacherPromptResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    lesson_id: str
+    question: str
+    order: int
+    created_at: str
+
+class PromptReplyCreate(BaseModel):
+    content: str
+
+class PromptReplyResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    prompt_id: str
+    lesson_id: str
+    user_id: str
+    user_name: str
+    content: str
+    is_pinned: bool = False
+    status: str = "pending"  # pending, answered, needs_followup
+    created_at: str
+
+# ============== COMMENTS ==============
 
 class CommentCreate(BaseModel):
     content: str
