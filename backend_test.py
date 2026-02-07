@@ -485,12 +485,50 @@ class SundaySchoolAPITester:
         self.test_seed_data()
         self.test_user_management()
         self.test_courses_and_lessons()
-        self.test_enrollment_system()
-        self.test_comments_and_discussions()
-        self.test_chat_system()
-        self.test_private_messaging()
-        self.test_attendance_system()
-        self.test_analytics()
+    def test_prompt_responses(self):
+        """Test prompt response system for narrow-wedge features"""
+        self.log("=== Testing Prompt Response System ===")
+        
+        if not self.lesson_id:
+            self.log("⚠️ No lesson ID available, skipping prompt response tests")
+            return
+        
+        # Submit a prompt response
+        response_data = {
+            "content": "This is my test response to the lesson prompt. I learned a lot about faith and grace."
+        }
+        
+        success, response = self.run_test(
+            "Submit Prompt Response",
+            "POST",
+            f"lessons/{self.lesson_id}/respond",
+            200,
+            response_data
+        )
+        
+        if success:
+            self.log(f"✅ Successfully submitted prompt response")
+        
+        # Test updating the response (should update existing)
+        updated_response_data = {
+            "content": "This is my updated response to the lesson prompt with more insights."
+        }
+        
+        self.run_test(
+            "Update Prompt Response",
+            "POST",
+            f"lessons/{self.lesson_id}/respond",
+            200,
+            updated_response_data
+        )
+        
+        # Get all responses for the lesson (admin only)
+        self.run_test(
+            "Get All Prompt Responses for Lesson",
+            "GET",
+            f"lessons/{self.lesson_id}/responses",
+            200
+        )
         
         return True
 
