@@ -2,17 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { ReplyCard } from '../components/ReplyCard';
+import { PromptCard } from '../components/PromptCard';
 import { teacherPromptsAPI } from '../lib/api';
 import { toast } from 'sonner';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
-import { cn } from '../lib/utils';
 import { 
-    ArrowLeft, MessageSquare, CheckCircle, Clock, 
-    AlertCircle, ChevronDown, ChevronUp, Users
+    ArrowLeft, MessageSquare, CheckCircle, Clock, AlertCircle, Users
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -40,7 +37,6 @@ export const TeacherResponses = () => {
         try {
             const res = await teacherPromptsAPI.getAllReplies(lessonId);
             setData(res.data);
-            // Expand all prompts by default
             const expanded = {};
             res.data.prompts_with_replies.forEach(p => {
                 expanded[p.prompt.id] = true;
@@ -54,9 +50,9 @@ export const TeacherResponses = () => {
         }
     };
 
-    const handlePinReply = async (replyId, pinned, promptId) => {
+    const handlePinReply = async (reply, promptId) => {
         try {
-            await teacherPromptsAPI.pinReply(replyId, pinned);
+            await teacherPromptsAPI.pinReply(reply.id, !reply.is_pinned);
             setData(prev => ({
                 ...prev,
                 prompts_with_replies: prev.prompts_with_replies.map(p => {
@@ -64,37 +60,37 @@ export const TeacherResponses = () => {
                         return {
                             ...p,
                             replies: p.replies.map(r => 
-                                r.id === replyId ? { ...r, is_pinned: pinned } : r
+                                r.id === reply.id ? { ...r, is_pinned: !reply.is_pinned } : r
                             ),
                             stats: {
                                 ...p.stats,
-                                pinned: pinned ? p.stats.pinned + 1 : p.stats.pinned - 1
+                                pinned: reply.is_pinned ? p.stats.pinned - 1 : p.stats.pinned + 1
                             }
                         };
                     }
                     return p;
                 })
             }));
-            toast.success(pinned ? 'Reply pinned' : 'Reply unpinned');
+            toast.success(!reply.is_pinned ? 'Reply pinned' : 'Reply unpinned');
         } catch (error) {
             toast.error('Failed to update reply');
         }
     };
 
-    const handleStatusChange = async (replyId, status, promptId, oldStatus) => {
+    const handleStatusChange = async (reply, status, promptId) => {
         try {
-            await teacherPromptsAPI.updateReplyStatus(replyId, status);
+            await teacherPromptsAPI.updateReplyStatus(reply.id, status);
             setData(prev => ({
                 ...prev,
                 prompts_with_replies: prev.prompts_with_replies.map(p => {
                     if (p.prompt.id === promptId) {
                         const newStats = { ...p.stats };
-                        newStats[oldStatus]--;
+                        newStats[reply.status]--;
                         newStats[status]++;
                         return {
                             ...p,
                             replies: p.replies.map(r => 
-                                r.id === replyId ? { ...r, status } : r
+                                r.id === reply.id ? { ...r, status } : r
                             ),
                             stats: newStats
                         };
@@ -140,10 +136,7 @@ export const TeacherResponses = () => {
     };
 
     const togglePrompt = (promptId) => {
-        setExpandedPrompts(prev => ({
-            ...prev,
-            [promptId]: !prev[promptId]
-        }));
+        setExpandedPrompts(prev => ({ ...prev, [promptId]: !prev[promptId] }));
     };
 
     if (loading) {
@@ -159,6 +152,10 @@ export const TeacherResponses = () => {
     }
 
     if (!data) return null;
+
+    const totalPending = data.prompts_with_replies.reduce((acc, p) => acc + p.stats.pending, 0);
+    const totalAnswered = data.prompts_with_replies.reduce((acc, p) => acc + p.stats.answered, 0);
+    const totalFollowup = data.prompts_with_replies.reduce((acc, p) => acc + p.stats.needs_followup, 0);
 
     return (
         <Layout>
@@ -196,9 +193,7 @@ export const TeacherResponses = () => {
                                 <Clock className="w-5 h-5 text-gray-600" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold">
-                                    {data.prompts_with_replies.reduce((acc, p) => acc + p.stats.pending, 0)}
-                                </p>
+                                <p className="text-2xl font-bold">{totalPending}</p>
                                 <p className="text-xs text-muted-foreground">Pending</p>
                             </div>
                         </CardContent>
@@ -209,9 +204,7 @@ export const TeacherResponses = () => {
                                 <CheckCircle className="w-5 h-5 text-green-600" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold">
-                                    {data.prompts_with_replies.reduce((acc, p) => acc + p.stats.answered, 0)}
-                                </p>
+                                <p className="text-2xl font-bold">{totalAnswered}</p>
                                 <p className="text-xs text-muted-foreground">Answered</p>
                             </div>
                         </CardContent>
@@ -222,9 +215,7 @@ export const TeacherResponses = () => {
                                 <AlertCircle className="w-5 h-5 text-amber-600" />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold">
-                                    {data.prompts_with_replies.reduce((acc, p) => acc + p.stats.needs_followup, 0)}
-                                </p>
+                                <p className="text-2xl font-bold">{totalFollowup}</p>
                                 <p className="text-xs text-muted-foreground">Follow-up</p>
                             </div>
                         </CardContent>
@@ -235,77 +226,16 @@ export const TeacherResponses = () => {
                 <div className="space-y-4">
                     {data.prompts_with_replies.length > 0 ? (
                         data.prompts_with_replies.map((item, index) => (
-                            <Card 
-                                key={item.prompt.id} 
-                                className="card-organic animate-fade-in"
-                                style={{ animationDelay: `${0.1 + index * 0.05}s` }}
-                            >
-                                {/* Prompt Header */}
-                                <div 
-                                    className="p-4 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
-                                    onClick={() => togglePrompt(item.prompt.id)}
-                                    data-testid={`prompt-header-${index}`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                                            <MessageSquare className="w-5 h-5 text-primary" />
-                                        </div>
-                                        <div>
-                                            <p className="font-medium">Prompt {index + 1}</p>
-                                            <p className="text-sm text-muted-foreground line-clamp-1">
-                                                {item.prompt.question}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex gap-1">
-                                            <Badge variant="outline" className="text-xs">
-                                                {item.stats.total} responses
-                                            </Badge>
-                                            {item.stats.pinned > 0 && (
-                                                <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
-                                                    {item.stats.pinned} pinned
-                                                </Badge>
-                                            )}
-                                        </div>
-                                        {expandedPrompts[item.prompt.id] ? (
-                                            <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                                        ) : (
-                                            <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Expanded Replies */}
-                                {expandedPrompts[item.prompt.id] && (
-                                    <div className="border-t">
-                                        {/* Prompt Question */}
-                                        <div className="p-4 bg-primary/5 border-b">
-                                            <p className="font-medium text-primary">{item.prompt.question}</p>
-                                        </div>
-
-                                        {/* Replies List */}
-                                        {item.replies.length > 0 ? (
-                                            <div className="divide-y">
-                                                {item.replies.map((reply) => (
-                                                    <ReplyCard
-                                                        key={reply.id}
-                                                        reply={reply}
-                                                        onStatusChange={(status) => handleStatusChange(reply.id, status, item.prompt.id, reply.status)}
-                                                        onPinToggle={() => handlePinReply(reply.id, !reply.is_pinned, item.prompt.id)}
-                                                        onDelete={() => setDeleteReplyId({ replyId: reply.id, promptId: item.prompt.id })}
-                                                    />
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="p-8 text-center text-muted-foreground">
-                                                <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                                                <p>No responses yet for this prompt</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </Card>
+                            <PromptCard
+                                key={item.prompt.id}
+                                item={item}
+                                index={index}
+                                isExpanded={expandedPrompts[item.prompt.id]}
+                                onToggle={() => togglePrompt(item.prompt.id)}
+                                onStatusChange={(reply, status) => handleStatusChange(reply, status, item.prompt.id)}
+                                onPinToggle={(reply) => handlePinReply(reply, item.prompt.id)}
+                                onDelete={(reply) => setDeleteReplyId({ replyId: reply.id, promptId: item.prompt.id })}
+                            />
                         ))
                     ) : (
                         <Card className="card-organic p-8 text-center">
@@ -327,7 +257,7 @@ export const TeacherResponses = () => {
                         <AlertDialogHeader>
                             <AlertDialogTitle>Delete Response?</AlertDialogTitle>
                             <AlertDialogDescription>
-                                This will permanently delete this student's response. This action cannot be undone.
+                                This will permanently delete this student's response.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
