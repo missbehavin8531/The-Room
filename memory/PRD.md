@@ -6,57 +6,73 @@ A **narrow-wedge mobile-first** "Sunday School Classroom" web app for one church
 **NOT**: a full church management system, giving/events platform, or generic group-chat app.
 
 ## Core Wedge Promise
-> In under 10 seconds, a member can: **Join Live → Watch Replay → View Slides → Respond to Prompt → Mark Attendance**
+> The app is **lesson-centric**, revolving around a "Now / Next / After" experience on a Lesson page.
 
 ## User Personas
 1. **Admin**: User approval, moderation, reporting
-2. **Teacher**: Course/lesson management, resource uploads, view prompt responses
-3. **Member**: Complete 5-step lesson workflow, participate in discussions
+2. **Teacher**: Course/lesson management, resource uploads, manage discussion prompts, pin replies
+3. **Member**: Complete lesson activities, participate in discussions, mark attendance
 
-## Core Requirements (Static)
-- JWT email/password authentication with approval workflow
-- 5-step action dashboard (Join Live, Watch Replay, View Slides, Respond, Mark Attendance)
-- Progress tracking per lesson
-- Prompt responses (simple text)
-- Course and Lesson management
-- Zoom link storage (course/lesson level)
-- YouTube video embedding
-- File uploads (PDF, PPT, images - max 25MB)
-- Per-lesson discussions
-- Global chat
-- Admin panel with moderation
+## Core User Flow: Now / Next / After
+
+### NOW Tab
+- **Join Live** - Opens Zoom link in new tab
+- **Live Chat** - Link to global chat room
+- Attendance auto-recorded when joining
+
+### NEXT Tab
+- **Watch Replay** - YouTube video embed
+- **Teacher Notes** - Markdown-rendered notes from teacher
+- Attendance tracked when video viewed
+
+### AFTER Tab
+- **Slides & Resources** - Upload/download PDF, PPT, images (25MB max)
+- **Discussion** - Teacher-defined prompts with member replies
+  - Multiple prompts per lesson (tabs)
+  - Pin important replies (teacher)
+  - Reply status tracking
+- **Reading Plan** - Weekly scripture reading schedule
+- **Mark Attendance** - Manual attendance confirmation
 
 ## What's Been Implemented (Feb 2026)
 
-### Core Wedge Features
-- [x] **5-step action dashboard** - Join Live, Watch Replay, View Slides, Respond, Mark Attendance
-- [x] **Progress bar** showing completion status (0/5 to 5/5)
-- [x] **Prompt responses** - simple text response to lesson prompts
-- [x] **Attendance tracking** for all 5 action types
-- [x] **First-time user welcome** with auto-navigate to lesson
-- [x] **Step-by-step registration** (3 steps: name, email, password)
+### ✅ Lesson-Centric Flow (NEW)
+- [x] **Now/Next/After tabs** - Three-tab navigation for lesson content
+- [x] **Teacher Prompts** - Multiple discussion prompts per lesson
+- [x] **Prompt Replies** - Members respond to specific prompts
+- [x] **Pin Replies** - Teachers can pin important responses
+- [x] **Teacher Notes** - Markdown-rendered notes in NEXT tab
+- [x] **Reading Plan** - Weekly scripture schedule in AFTER tab
+- [x] **Resource Management** - Order, mark primary deck
+- [x] **Multi-action Attendance** - Tracks joined_live, watched_replay, viewed_slides, responded, marked_attended
 
-### Backend (FastAPI + MongoDB)
+### ✅ Backend (FastAPI + MongoDB)
 - [x] User authentication with approval workflow
 - [x] Role-based access control (Admin/Teacher/Member)
-- [x] Courses & Lessons with prompts
-- [x] Prompt responses API
+- [x] Courses & Lessons with full metadata
+- [x] Teacher Prompts API (create, list, delete)
+- [x] Prompt Replies API (reply, pin, status, delete)
+- [x] Resource Management API (upload, order, primary, replace)
 - [x] Multi-action attendance tracking
 - [x] Discussion comments per lesson
 - [x] Global chat
 - [x] Private messages (Member→Teacher inbox)
 - [x] File upload/download (local storage)
 - [x] Analytics endpoints
+- [x] Comprehensive seed data with prompts, replies, teacher notes, reading plans
 
-### Frontend (React + Tailwind + Shadcn)
-- [x] Streamlined login page with demo accounts
-- [x] Step-by-step registration with progress indicators
-- [x] First-time welcome screen
-- [x] 5-step action dashboard (all visible without scrolling)
-- [x] Video player for Watch Replay
-- [x] Prompt input modal for Respond
-- [x] Progress tracking with real-time updates
-- [x] Course enrollment & calendar view
+### ✅ Frontend (React + Tailwind + Shadcn)
+- [x] Login page with demo accounts
+- [x] First-time welcome screen with redirect to lesson
+- [x] Dashboard with current lesson card and progress indicator
+- [x] **Lesson Detail page with Now/Next/After tabs**
+- [x] YouTube video embedding
+- [x] Markdown rendering for teacher notes and reading plan
+- [x] Discussion with prompt tabs
+- [x] Reply submission form
+- [x] Pinned reply indicators
+- [x] Reading plan display
+- [x] Mark attendance button
 - [x] File preview modal (PDF, PPT, images)
 - [x] Mobile-first responsive design
 - [x] Bottom navigation on mobile
@@ -69,34 +85,133 @@ A **narrow-wedge mobile-first** "Sunday School Classroom" web app for one church
 ## Prioritized Backlog
 
 ### P0 - Done in MVP
-All core requirements implemented
+All core requirements implemented including lesson-centric flow
 
-### P1 - Future Enhancements
-- Email notifications for upcoming lessons (stubbed)
-- Real-time WebSocket for chat
-- PPT preview via online viewer
-- Course enrollment tracking
-- Lesson scheduling calendar view
+### P1 - Next Priorities
+- [ ] Teacher UI to create/edit prompts within lesson editor
+- [ ] Teacher view of all responses grouped by prompt
+- [ ] Email notifications for upcoming lessons
+- [ ] Reply status management UI (pending/answered/needs_followup)
+- [ ] Resource reordering drag-and-drop
 
-### P2 - Nice to Have
-- Push notifications (mobile PWA)
-- Offline lesson viewing
-- Video progress tracking
-- Certificate generation
-- Multiple church support (multi-tenant)
+### P2 - Future Enhancements
+- [ ] Real-time WebSocket for chat
+- [ ] PPT preview via online viewer
+- [ ] Push notifications (mobile PWA)
+- [ ] Offline lesson viewing
+- [ ] Video progress tracking
+- [ ] Certificate generation
+- [ ] Multiple church support (multi-tenant)
 
 ## Technical Stack
 - **Backend**: FastAPI, MongoDB, JWT, bcrypt
-- **Frontend**: React 19, Tailwind CSS, Shadcn/UI
+- **Frontend**: React 19, Tailwind CSS, Shadcn/UI, react-markdown
 - **Storage**: Local filesystem for uploads
 - **Deployment**: Supervisor-managed services
 
 ## API Routes Summary
-- `/api/auth/*` - Authentication
-- `/api/users/*` - User management
-- `/api/courses/*` - Course CRUD
-- `/api/lessons/*` - Lesson CRUD  
-- `/api/chat` - Global chat
-- `/api/messages/*` - Private messaging
-- `/api/attendance` - Attendance tracking
-- `/api/analytics` - Reporting
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login
+- `GET /api/auth/me` - Get current user
+
+### Lessons
+- `GET /api/lessons/{id}` - Get lesson with prompts, resources, attendance
+- `GET /api/lessons/next/upcoming` - Get next/current lesson
+- `GET /api/courses/{id}/lessons` - Get all lessons for course
+
+### Teacher Prompts
+- `GET /api/lessons/{id}/prompts` - Get prompts for lesson
+- `POST /api/lessons/{id}/prompts` - Create prompt (teacher)
+- `DELETE /api/prompts/{id}` - Delete prompt (teacher)
+
+### Prompt Replies
+- `GET /api/prompts/{id}/replies` - Get replies for prompt
+- `POST /api/prompts/{id}/reply` - Submit reply
+- `PUT /api/replies/{id}/pin` - Pin/unpin reply (teacher)
+- `PUT /api/replies/{id}/status` - Update status (teacher)
+- `DELETE /api/replies/{id}` - Delete reply (teacher)
+
+### Attendance
+- `POST /api/attendance` - Record attendance action
+- `GET /api/attendance/my/{lesson_id}` - Get user's attendance for lesson
+
+### Resources
+- `POST /api/lessons/{id}/resources` - Upload resource
+- `PUT /api/resources/{id}/primary` - Set as primary
+- `PUT /api/resources/{id}/order` - Update order
+- `GET /api/resources/{id}/download` - Download file
+
+## Architecture
+
+```
+/app
+├── backend/
+│   ├── server.py         # FastAPI app with all routes
+│   ├── tests/            # pytest tests
+│   └── uploads/          # File storage
+├── frontend/
+│   ├── src/
+│   │   ├── components/   # Shared components
+│   │   ├── pages/        # Page components
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── LessonDetail.jsx  # Main lesson-centric page
+│   │   │   └── ...
+│   │   └── lib/
+│   │       └── api.js    # API client
+│   └── package.json
+└── memory/
+    └── PRD.md
+```
+
+## Database Schema
+
+### lessons
+```json
+{
+  "id": "uuid",
+  "course_id": "uuid",
+  "title": "string",
+  "description": "string",
+  "youtube_url": "string",
+  "zoom_link": "string",
+  "lesson_date": "date",
+  "teacher_notes": "markdown string",
+  "reading_plan": "markdown string",
+  "order": "int"
+}
+```
+
+### teacher_prompts
+```json
+{
+  "id": "uuid",
+  "lesson_id": "uuid",
+  "question": "string",
+  "order": "int"
+}
+```
+
+### prompt_replies
+```json
+{
+  "id": "uuid",
+  "prompt_id": "uuid",
+  "lesson_id": "uuid",
+  "user_id": "uuid",
+  "content": "string",
+  "is_pinned": "boolean",
+  "status": "pending|answered|needs_followup"
+}
+```
+
+### attendance
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "lesson_id": "uuid",
+  "action": "joined_live|watched_replay|viewed_slides|responded|marked_attended"
+}
+```
