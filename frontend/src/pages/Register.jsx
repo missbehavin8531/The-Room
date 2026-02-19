@@ -84,11 +84,13 @@ export const Register = () => {
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <div className="text-center mb-8 animate-fade-in">
-                    <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <BookOpen className="w-8 h-8 text-primary-foreground" />
-                    </div>
-                    <h1 className="font-serif text-3xl font-bold">Sunday School</h1>
-                    <p className="text-muted-foreground mt-2">Join our learning community</p>
+                    <img 
+                        src="/logo.png" 
+                        alt="Rooted" 
+                        className="w-20 h-20 mx-auto mb-4 rounded-2xl"
+                    />
+                    <h1 className="font-serif text-3xl font-bold">Rooted</h1>
+                    <p className="text-muted-foreground mt-2">Join our small group community</p>
                 </div>
 
                 {/* Progress Indicator */}
