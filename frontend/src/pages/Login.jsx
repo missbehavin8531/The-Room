@@ -42,12 +42,37 @@ export const Login = () => {
                     <img 
                         src="/logo.png" 
                         alt="Rooted" 
-                        className="w-20 h-20 mx-auto mb-4 rounded-2xl"
+                        className="w-32 h-32 mx-auto mb-4 rounded-2xl"
                     />
                     <h1 className="font-serif text-3xl font-bold">Rooted</h1>
                     <p className="text-muted-foreground mt-2 text-sm max-w-xs mx-auto">
                         A weekly discipleship hub: meet live, share resources, discuss, and follow up.
                     </p>
+                </div>
+
+                {/* Demo credentials - above login form */}
+                <div className="mb-4 p-4 bg-muted/50 rounded-xl text-center animate-fade-in" style={{ animationDelay: '0.05s' }}>
+                    <p className="text-xs text-muted-foreground mb-2 font-medium">Quick Demo Login:</p>
+                    <div className="flex flex-wrap justify-center gap-2 text-xs">
+                        <button 
+                            onClick={() => { setEmail('admin@sundayschool.com'); setPassword('admin123'); }}
+                            className="px-3 py-1.5 bg-white rounded-full hover:bg-primary hover:text-white transition-colors shadow-sm"
+                        >
+                            Admin
+                        </button>
+                        <button 
+                            onClick={() => { setEmail('teacher@sundayschool.com'); setPassword('teacher123'); }}
+                            className="px-3 py-1.5 bg-white rounded-full hover:bg-primary hover:text-white transition-colors shadow-sm"
+                        >
+                            Teacher
+                        </button>
+                        <button 
+                            onClick={() => { setEmail('member@sundayschool.com'); setPassword('member123'); }}
+                            className="px-3 py-1.5 bg-white rounded-full hover:bg-primary hover:text-white transition-colors shadow-sm"
+                        >
+                            Member
+                        </button>
+                    </div>
                 </div>
 
                 <Card className="card-organic animate-fade-in" style={{ animationDelay: '0.1s' }}>
@@ -104,31 +129,6 @@ export const Login = () => {
                         </div>
                     </CardContent>
                 </Card>
-
-                {/* Demo credentials - smaller */}
-                <div className="mt-6 p-4 bg-muted/50 rounded-xl text-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                    <p className="text-xs text-muted-foreground mb-2 font-medium">Demo Accounts:</p>
-                    <div className="flex flex-wrap justify-center gap-2 text-xs">
-                        <button 
-                            onClick={() => { setEmail('admin@sundayschool.com'); setPassword('admin123'); }}
-                            className="px-3 py-1 bg-white rounded-full hover:bg-muted transition-colors"
-                        >
-                            Admin
-                        </button>
-                        <button 
-                            onClick={() => { setEmail('teacher@sundayschool.com'); setPassword('teacher123'); }}
-                            className="px-3 py-1 bg-white rounded-full hover:bg-muted transition-colors"
-                        >
-                            Teacher
-                        </button>
-                        <button 
-                            onClick={() => { setEmail('member@sundayschool.com'); setPassword('member123'); }}
-                            className="px-3 py-1 bg-white rounded-full hover:bg-muted transition-colors"
-                        >
-                            Member
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
     );
