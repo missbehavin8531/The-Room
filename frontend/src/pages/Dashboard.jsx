@@ -84,14 +84,12 @@ export const Dashboard = () => {
             <Layout>
                 <div className="page-container py-8 flex items-center justify-center min-h-[70vh]">
                     <Card className="card-organic max-w-md w-full text-center p-8 animate-fade-in">
-                        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <Sparkles className="w-10 h-10 text-primary" />
-                        </div>
+                        <img src="/logo.png" alt="Rooted" className="w-20 h-20 mx-auto mb-6 rounded-2xl" />
                         <h1 className="text-3xl font-serif font-bold mb-3">
                             Welcome, {user?.name?.split(' ')[0]}!
                         </h1>
                         <p className="text-muted-foreground mb-6">
-                            Ready to start your Sunday School journey? Let's go to today's lesson.
+                            Ready to grow with your small group? Let's dive into this week's lesson.
                         </p>
                         <Button 
                             onClick={goToLesson} 
