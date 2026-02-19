@@ -131,7 +131,7 @@ export const Dashboard = () => {
                         Welcome back, {user?.name?.split(' ')[0]}
                     </p>
                     <h1 className="text-2xl md:text-3xl font-serif font-bold">
-                        Today's Lesson
+                        This Week's Lesson
                     </h1>
                 </div>
 
