@@ -41,7 +41,7 @@ export const Register = () => {
         try {
             await register(name, email, password);
             setSuccess(true);
-            toast.success('Welcome to Sunday School!');
+            toast.success('Welcome to Rooted!');
         } catch (error) {
             const message = error.response?.data?.detail || 'Registration failed';
             toast.error(message);
