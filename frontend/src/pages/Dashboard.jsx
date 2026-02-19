@@ -96,7 +96,7 @@ export const Dashboard = () => {
                             className="btn-primary w-full text-lg py-6"
                             data-testid="start-lesson-btn"
                         >
-                            Go to Today's Lesson
+                            Go to This Week's Lesson
                             <ArrowRight className="w-5 h-5 ml-2" />
                         </Button>
                     </Card>
