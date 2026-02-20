@@ -461,43 +461,63 @@ export const LessonDetail = () => {
                     })}
                 </div>
 
-                {/* ============ NOW TAB: Join Live ============ */}
+                {/* ============ NOW TAB: Join Live Video Room ============ */}
                 {activeTab === 'now' && (
                     <div className="space-y-4 animate-fade-in">
-                        <Card className="card-organic">
-                            <CardContent className="p-6 text-center">
-                                <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Video className="w-10 h-10 text-white" />
-                                </div>
-                                <h2 className="text-xl font-serif font-bold mb-2">Join Live Session</h2>
-                                <p className="text-muted-foreground mb-6">
-                                    {zoomLink 
-                                        ? "Click below to join the live class via Zoom" 
-                                        : "No live session scheduled for this lesson"
-                                    }
-                                </p>
-                                {zoomLink ? (
-                                    <Button 
-                                        onClick={handleJoinLive} 
-                                        className="zoom-button text-lg py-6 px-8 active:scale-95 transition-transform" 
-                                        data-testid="join-live-btn"
-                                    >
-                                        <Video className="w-5 h-5 mr-2" />
-                                        Join Zoom Meeting
-                                    </Button>
-                                ) : (
-                                    <Button variant="outline" disabled className="text-lg py-6 px-8">
-                                        No Live Session
-                                    </Button>
-                                )}
-                                {completedActions.includes('joined_live') && (
-                                    <div className="mt-4 flex items-center justify-center gap-2 text-green-600">
-                                        <CheckCircle className="w-5 h-5" />
-                                        <span className="font-medium">You joined live!</span>
+                        {/* Embedded Video Room */}
+                        <VideoRoom 
+                            lessonId={lessonId} 
+                            onClose={() => {
+                                setShowVideoRoom(false);
+                                fetchRoomStatus();
+                            }}
+                        />
+                        
+                        {/* Room Status Badge */}
+                        {roomStatus?.room_exists && roomStatus.participants_count > 0 && (
+                            <Card className="card-organic bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                                <CardContent className="p-3 flex items-center justify-center gap-2">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                                    <span className="text-green-700 dark:text-green-400 font-medium">
+                                        {roomStatus.participants_count} {roomStatus.participants_count === 1 ? 'person' : 'people'} in the room
+                                    </span>
+                                </CardContent>
+                            </Card>
+                        )}
+                        
+                        {completedActions.includes('joined_video') && (
+                            <div className="flex items-center justify-center gap-2 text-green-600">
+                                <CheckCircle className="w-5 h-5" />
+                                <span className="font-medium">You've joined video!</span>
+                            </div>
+                        )}
+                        
+                        {/* Alternative: External Zoom Link (if configured) */}
+                        {zoomLink && (
+                            <Card className="card-organic">
+                                <CardContent className="p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                                                <Video className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                            </div>
+                                            <div>
+                                                <p className="font-medium">External Zoom Meeting</p>
+                                                <p className="text-sm text-muted-foreground">Alternative meeting link</p>
+                                            </div>
+                                        </div>
+                                        <Button 
+                                            onClick={handleJoinLive}
+                                            variant="outline"
+                                            size="sm"
+                                            data-testid="join-zoom-btn"
+                                        >
+                                            Join Zoom
+                                        </Button>
                                     </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
+                        )}
                         
                         {/* Live Chat Link */}
                         <Card className="card-organic card-hover">
