@@ -330,7 +330,7 @@ const ParticipantCount = () => {
 };
 
 // Meeting View (inside DailyProvider)
-const MeetingView = ({ onLeave, isFullscreen, onToggleFullscreen }) => {
+const MeetingView = ({ onLeave, isFullscreen, onToggleFullscreen, lessonId, isTeacherOrAdmin }) => {
     return (
         <div className="relative w-full h-full flex flex-col bg-gray-950">
             <ParticipantCount />
@@ -342,6 +342,8 @@ const MeetingView = ({ onLeave, isFullscreen, onToggleFullscreen }) => {
                     onLeave={onLeave} 
                     isFullscreen={isFullscreen}
                     onToggleFullscreen={onToggleFullscreen}
+                    lessonId={lessonId}
+                    isTeacherOrAdmin={isTeacherOrAdmin}
                 />
             </div>
         </div>
