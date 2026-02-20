@@ -287,6 +287,13 @@ class LessonRecordingsResponse(BaseModel):
     recordings: List[RecordingResponse] = []
     has_recordings: bool = False
 
+class RecordingControlResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    success: bool
+    message: str
+    recording_id: Optional[str] = None
+    is_recording: bool = False
+
 # ============== DAILY.CO SERVICE ==============
 
 class DailyService:
