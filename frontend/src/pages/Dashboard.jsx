@@ -84,7 +84,7 @@ export const Dashboard = () => {
             <Layout>
                 <div className="page-container py-8 flex items-center justify-center min-h-[70vh]">
                     <Card className="card-organic max-w-md w-full text-center p-8 animate-fade-in">
-                        <img src="/logo.png" alt="Rooted" className="w-20 h-20 mx-auto mb-6 rounded-2xl" />
+                        <img src="/logo.png" alt="The Room" className="w-20 h-20 mx-auto mb-6 rounded-2xl" />
                         <h1 className="text-3xl font-serif font-bold mb-3">
                             Welcome, {user?.name?.split(' ')[0]}!
                         </h1>

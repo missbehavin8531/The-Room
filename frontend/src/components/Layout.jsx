@@ -87,8 +87,8 @@ export const Layout = ({ children }) => {
                     <div className="flex items-center justify-between h-16">
                         {/* Logo */}
                         <Link to="/" className="flex items-center gap-3">
-                            <img src="/logo.png" alt="Rooted" className="w-10 h-10 rounded-xl" />
-                            <span className="font-serif font-bold text-xl">Rooted</span>
+                            <img src="/logo.png" alt="The Room" className="w-10 h-10 rounded-xl" />
+                            <span className="font-serif font-bold text-xl">The Room</span>
                         </Link>
 
                         {/* Desktop Nav */}
