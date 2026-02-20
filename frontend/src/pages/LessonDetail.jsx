@@ -131,12 +131,32 @@ export const LessonDetail = () => {
         }
     }, [activeTab, lessonId]);
     
+    // Fetch recordings when on NEXT tab
+    useEffect(() => {
+        if (activeTab === 'next' && lessonId) {
+            fetchRecordings();
+        }
+    }, [activeTab, lessonId]);
+    
     const fetchRoomStatus = async () => {
         try {
             const res = await videoRoomAPI.getStatus(lessonId);
             setRoomStatus(res.data);
         } catch (error) {
             console.error('Failed to fetch room status:', error);
+        }
+    };
+    
+    const fetchRecordings = async () => {
+        setLoadingRecordings(true);
+        try {
+            const res = await videoRoomAPI.getRecordings(lessonId);
+            setRecordings(res.data.recordings || []);
+        } catch (error) {
+            console.error('Failed to fetch recordings:', error);
+            setRecordings([]);
+        } finally {
+            setLoadingRecordings(false);
         }
     };
 
