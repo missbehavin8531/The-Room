@@ -1,7 +1,7 @@
-# Sunday School Classroom - PRD
+# The Room - PRD
 
 ## Product Vision
-A **narrow-wedge mobile-first** "Sunday School Classroom" web app for one church (v1), optimized for mixed ages and teacher workflows.
+A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (v1), optimized for mixed ages and teacher workflows.
 
 **NOT**: a full church management system, giving/events platform, or generic group-chat app.
 
@@ -16,7 +16,8 @@ A **narrow-wedge mobile-first** "Sunday School Classroom" web app for one church
 ## Core User Flow: Now / Next / After
 
 ### NOW Tab
-- **Join Live** - Opens Zoom link in new tab
+- **Join Video Room** - Embedded Daily.co video conferencing (NEW!)
+- **External Zoom Link** - Alternative Zoom meeting option
 - **Live Chat** - Link to global chat room
 - Attendance auto-recorded when joining
 
@@ -36,6 +37,14 @@ A **narrow-wedge mobile-first** "Sunday School Classroom" web app for one church
 
 ## What's Been Implemented
 
+### ✅ Phase 3: Embedded Video Conferencing (Feb 2026)
+- [x] **Daily.co Integration** - Real-time video rooms embedded in app
+- [x] **Persistent Room per Lesson** - Each lesson has its own video room
+- [x] **Video Controls** - Camera, microphone, screen share, fullscreen, leave
+- [x] **Participant Count** - Shows how many people are in the room
+- [x] **Attendance Tracking** - Records 'joined_video' when user joins
+- [x] **External Zoom Option** - Alternative meeting link still available
+
 ### ✅ Phase 1: Core Lesson-Centric Flow (Feb 2026)
 - [x] **Now/Next/After tabs** - Three-tab navigation for lesson content
 - [x] **Teacher Prompts** - Multiple discussion prompts per lesson (max 3)
@@ -44,7 +53,7 @@ A **narrow-wedge mobile-first** "Sunday School Classroom" web app for one church
 - [x] **Teacher Notes** - Markdown-rendered notes in NEXT tab
 - [x] **Reading Plan** - Weekly scripture schedule in AFTER tab
 - [x] **Resource Management** - Upload, download, set primary deck
-- [x] **Multi-action Attendance** - Tracks joined_live, watched_replay, viewed_slides, responded, marked_attended
+- [x] **Multi-action Attendance** - Tracks joined_live, watched_replay, viewed_slides, responded, marked_attended, joined_video
 
 ### ✅ Phase 2: Teacher Management Features (Feb 2026)
 - [x] **Lesson Editor** - Edit all lesson content including:
@@ -78,16 +87,14 @@ A **narrow-wedge mobile-first** "Sunday School Classroom" web app for one church
 
 ## Prioritized Backlog
 
-### P0 - Done (MVP + Teacher Features)
-All core lesson-centric flow and teacher management features implemented.
+### P0 - Done (MVP + Teacher Features + Video)
+All core lesson-centric flow, teacher management, and video conferencing implemented.
 
-### P1 - Next Priorities (Done ✅)
-- [x] Teacher UI to create/edit prompts within lesson editor
-- [x] Teacher view of all responses grouped by prompt
-- [x] Reply status management UI (pending/answered/needs_followup)
+### P1 - Next Priorities
+- [ ] Private teacher feedback on individual responses
+- [ ] Email notifications for upcoming lessons/user approval
 
 ### P2 - Future Enhancements
-- [ ] Email notifications for upcoming lessons
 - [ ] Resource reordering with drag-and-drop
 - [ ] Real-time WebSocket for chat
 - [ ] PPT preview via online viewer
@@ -98,8 +105,9 @@ All core lesson-centric flow and teacher management features implemented.
 - [ ] Multiple church support (multi-tenant)
 
 ## Technical Stack
-- **Backend**: FastAPI, MongoDB, JWT, bcrypt
+- **Backend**: FastAPI, MongoDB, JWT, bcrypt, httpx
 - **Frontend**: React 19, Tailwind CSS, Shadcn/UI, react-markdown
+- **Video**: Daily.co SDK (@daily-co/daily-js, @daily-co/daily-react, jotai)
 - **Storage**: Local filesystem for uploads
 - **Deployment**: Supervisor-managed services
 
@@ -115,6 +123,10 @@ All core lesson-centric flow and teacher management features implemented.
 - `PUT /api/lessons/{id}` - Update lesson content (teacher)
 - `GET /api/lessons/next/upcoming` - Get next/current lesson
 - `GET /api/courses/{id}/lessons` - Get all lessons for course
+
+### Video Rooms (NEW!)
+- `POST /api/lessons/{id}/video/join` - Join video room (creates room if needed)
+- `GET /api/lessons/{id}/video/status` - Get room status and participant count
 
 ### Teacher Prompts
 - `GET /api/lessons/{id}/prompts` - Get prompts for lesson
@@ -145,20 +157,22 @@ All core lesson-centric flow and teacher management features implemented.
 ```
 /app
 ├── backend/
-│   ├── server.py         # FastAPI app with all routes
+│   ├── server.py         # FastAPI app with all routes + DailyService
 │   ├── tests/            # pytest tests
 │   └── uploads/          # File storage
 ├── frontend/
 │   ├── src/
-│   │   ├── components/   # Shared components
-│   │   ├── pages/        # Page components
+│   │   ├── components/
+│   │   │   ├── VideoRoom.jsx  # Daily.co video component (NEW!)
+│   │   │   └── ...
+│   │   ├── pages/
 │   │   │   ├── Dashboard.jsx
 │   │   │   ├── LessonDetail.jsx  # Main lesson-centric page
 │   │   │   ├── LessonEditor.jsx  # Teacher editing page
 │   │   │   ├── TeacherResponses.jsx  # Teacher responses dashboard
 │   │   │   └── ...
 │   │   └── lib/
-│   │       └── api.js    # API client
+│   │       └── api.js    # API client + videoRoomAPI
 │   └── package.json
 └── memory/
     └── PRD.md
@@ -211,11 +225,18 @@ All core lesson-centric flow and teacher management features implemented.
   "id": "uuid",
   "user_id": "uuid",
   "lesson_id": "uuid",
-  "action": "joined_live|watched_replay|viewed_slides|responded|marked_attended"
+  "action": "joined_live|watched_replay|viewed_slides|responded|marked_attended|joined_video"
 }
 ```
 
 ## Test Reports
 - `/app/test_reports/iteration_4.json` - Lesson-centric flow tests (100% pass)
 - `/app/test_reports/iteration_5.json` - P1 teacher features tests (95% backend, 100% frontend)
+- `/app/test_reports/iteration_6.json` - Daily.co video integration tests (100% pass)
 - `/app/backend/tests/test_p1_features.py` - Comprehensive P1 API tests
+- `/app/backend/tests/test_video_room.py` - Video room API tests
+
+## 3rd Party Integrations
+- **Daily.co** - Embedded video conferencing (API key in backend .env)
+- **YouTube** - Video embed for lesson replays
+- **Zoom** - External meeting link option
