@@ -111,10 +111,30 @@ export const LessonDetail = () => {
     
     // Delete confirmation
     const [deleteItem, setDeleteItem] = useState(null);
+    
+    // Video room state
+    const [showVideoRoom, setShowVideoRoom] = useState(false);
+    const [roomStatus, setRoomStatus] = useState(null);
 
     useEffect(() => {
         fetchLessonData();
     }, [lessonId]);
+    
+    // Fetch video room status when on NOW tab
+    useEffect(() => {
+        if (activeTab === 'now') {
+            fetchRoomStatus();
+        }
+    }, [activeTab, lessonId]);
+    
+    const fetchRoomStatus = async () => {
+        try {
+            const res = await videoRoomAPI.getStatus(lessonId);
+            setRoomStatus(res.data);
+        } catch (error) {
+            console.error('Failed to fetch room status:', error);
+        }
+    };
 
     const fetchLessonData = async () => {
         try {
