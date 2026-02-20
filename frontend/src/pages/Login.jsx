@@ -41,10 +41,10 @@ export const Login = () => {
                 <div className="text-center mb-8 animate-fade-in">
                     <img 
                         src="/logo.png" 
-                        alt="Rooted" 
+                        alt="The Room" 
                         className="w-32 h-32 mx-auto mb-4 rounded-2xl"
                     />
-                    <h1 className="font-serif text-3xl font-bold">Rooted</h1>
+                    <h1 className="font-serif text-3xl font-bold">The Room</h1>
                     <p className="text-muted-foreground mt-2 text-sm max-w-xs mx-auto">
                         A weekly discipleship hub: meet live, share resources, discuss, and follow up.
                     </p>

@@ -41,7 +41,7 @@ export const Register = () => {
         try {
             await register(name, email, password);
             setSuccess(true);
-            toast.success('Welcome to Rooted!');
+            toast.success('Welcome to The Room!');
         } catch (error) {
             const message = error.response?.data?.detail || 'Registration failed';
             toast.error(message);
@@ -86,10 +86,10 @@ export const Register = () => {
                 <div className="text-center mb-8 animate-fade-in">
                     <img 
                         src="/logo.png" 
-                        alt="Rooted" 
+                        alt="The Room" 
                         className="w-20 h-20 mx-auto mb-4 rounded-2xl"
                     />
-                    <h1 className="font-serif text-3xl font-bold">Rooted</h1>
+                    <h1 className="font-serif text-3xl font-bold">The Room</h1>
                     <p className="text-muted-foreground mt-2">Join our small group community</p>
                 </div>
 
