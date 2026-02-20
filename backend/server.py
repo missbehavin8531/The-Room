@@ -255,6 +255,128 @@ class EnrollmentResponse(BaseModel):
     enrolled_at: str
     progress: int = 0  # percentage of lessons completed
 
+# ============== VIDEO ROOM MODELS ==============
+
+class VideoRoomResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    room_name: str
+    room_url: str
+    meeting_token: str
+    lesson_id: str
+
+class VideoRoomStatus(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    room_exists: bool
+    room_name: Optional[str] = None
+    room_url: Optional[str] = None
+    participants_count: int = 0
+
+# ============== DAILY.CO SERVICE ==============
+
+class DailyService:
+    """Service for interacting with Daily.co API"""
+    
+    BASE_URL = "https://api.daily.co/v1"
+    
+    def __init__(self):
+        self.api_key = DAILY_API_KEY
+        self.domain = DAILY_DOMAIN
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+    
+    async def get_or_create_room(self, room_name: str) -> dict:
+        """Get existing room or create new one"""
+        async with httpx.AsyncClient() as client:
+            # Try to get existing room
+            try:
+                response = await client.get(
+                    f"{self.BASE_URL}/rooms/{room_name}",
+                    headers=self.headers,
+                    timeout=10.0
+                )
+                if response.status_code == 200:
+                    return response.json()
+            except Exception:
+                pass
+            
+            # Room doesn't exist, create it
+            exp_time = int((datetime.now(timezone.utc) + timedelta(days=30)).timestamp())
+            payload = {
+                "name": room_name,
+                "privacy": "public",
+                "properties": {
+                    "exp": exp_time,
+                    "enable_chat": True,
+                    "enable_screenshare": True,
+                    "start_video_off": False,
+                    "start_audio_off": False,
+                    "enable_knocking": False,
+                    "max_participants": 100
+                }
+            }
+            
+            try:
+                response = await client.post(
+                    f"{self.BASE_URL}/rooms",
+                    json=payload,
+                    headers=self.headers,
+                    timeout=10.0
+                )
+                response.raise_for_status()
+                return response.json()
+            except httpx.HTTPError as e:
+                logging.error(f"Failed to create room: {e}")
+                raise Exception(f"Failed to create video room: {str(e)}")
+    
+    async def get_room_status(self, room_name: str) -> dict:
+        """Get room status and participant count"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    f"{self.BASE_URL}/rooms/{room_name}",
+                    headers=self.headers,
+                    timeout=10.0
+                )
+                if response.status_code == 200:
+                    room_data = response.json()
+                    # Get active session info
+                    presence_response = await client.get(
+                        f"{self.BASE_URL}/rooms/{room_name}/presence",
+                        headers=self.headers,
+                        timeout=10.0
+                    )
+                    participants = 0
+                    if presence_response.status_code == 200:
+                        presence_data = presence_response.json()
+                        participants = len(presence_data.get('data', []))
+                    return {
+                        "exists": True,
+                        "room": room_data,
+                        "participants": participants
+                    }
+            except Exception:
+                pass
+            return {"exists": False, "room": None, "participants": 0}
+    
+    def create_meeting_token(self, room_name: str, user_id: str, user_name: str, is_owner: bool = False) -> str:
+        """Create a Daily.co meeting token"""
+        domain_id = self.domain.replace(".daily.co", "")
+        payload = {
+            "r": room_name,
+            "d": domain_id,
+            "ud": user_id,
+            "u": user_name,
+            "o": is_owner,
+            "ss": True,  # enable screenshare
+            "iat": int(time.time()),
+            "exp": int(time.time()) + 7200  # 2 hour expiration
+        }
+        return jwt.encode(payload, self.api_key, algorithm="HS256")
+
+daily_service = DailyService()
+
 # ============== AUTH HELPERS ==============
 
 def hash_password(password: str) -> str:
