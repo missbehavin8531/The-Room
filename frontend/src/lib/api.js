@@ -131,6 +131,12 @@ export const attendanceAPI = {
     getMy: (lessonId) => api.get(`/attendance/my/${lessonId}`),
 };
 
+// Video Room API (Daily.co)
+export const videoRoomAPI = {
+    join: (lessonId) => api.post(`/lessons/${lessonId}/video/join`),
+    getStatus: (lessonId) => api.get(`/lessons/${lessonId}/video/status`),
+};
+
 // Prompt Responses API (legacy)
 export const promptAPI = {
     respond: (lessonId, content) => api.post(`/lessons/${lessonId}/respond`, { content }),
