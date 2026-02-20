@@ -566,30 +566,117 @@ export const LessonDetail = () => {
                 {/* ============ NEXT TAB: Watch Replay + Teacher Notes ============ */}
                 {activeTab === 'next' && (
                     <div className="space-y-4 animate-fade-in">
-                        {/* YouTube Video */}
-                        {lesson.youtube_url ? (
-                            <Card className="card-organic overflow-hidden">
-                                <div className="youtube-wrapper" onClick={handleWatchReplay}>
-                                    <iframe
-                                        src={getYouTubeEmbedUrl(lesson.youtube_url)}
-                                        title={lesson.title}
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                    />
-                                </div>
+                        {/* Session Recordings Section */}
+                        {loadingRecordings ? (
+                            <Card className="card-organic">
+                                <CardContent className="p-6 flex items-center justify-center gap-2">
+                                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                    <span>Loading recordings...</span>
+                                </CardContent>
+                            </Card>
+                        ) : recordings.length > 0 ? (
+                            <div className="space-y-3">
+                                <h3 className="font-semibold flex items-center gap-2">
+                                    <Video className="w-5 h-5 text-purple-500" />
+                                    Session Recordings
+                                </h3>
+                                {recordings.map((recording, idx) => (
+                                    <Card key={recording.id} className="card-organic overflow-hidden" data-testid={`recording-${recording.id}`}>
+                                        {recording.download_url ? (
+                                            <>
+                                                <div className="aspect-video bg-black">
+                                                    <video
+                                                        controls
+                                                        className="w-full h-full"
+                                                        src={recording.download_url}
+                                                        onPlay={handleWatchReplay}
+                                                        data-testid={`recording-video-${idx}`}
+                                                    >
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                </div>
+                                                <CardContent className="p-3 flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant="secondary">
+                                                            Recording {recordings.length > 1 ? idx + 1 : ''}
+                                                        </Badge>
+                                                        {recording.duration && (
+                                                            <span className="text-sm text-muted-foreground">
+                                                                {Math.floor(recording.duration / 60)}:{String(recording.duration % 60).padStart(2, '0')} min
+                                                            </span>
+                                                        )}
+                                                        {recording.max_participants && (
+                                                            <span className="text-sm text-muted-foreground flex items-center gap-1">
+                                                                <Users className="w-3 h-3" />
+                                                                {recording.max_participants}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {recording.start_ts && (
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {formatDate(new Date(recording.start_ts * 1000).toISOString())}
+                                                        </span>
+                                                    )}
+                                                </CardContent>
+                                            </>
+                                        ) : (
+                                            <CardContent className="p-4 flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                                                    <Clock className="w-5 h-5 text-amber-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium">Recording Processing</p>
+                                                    <p className="text-sm text-muted-foreground">This recording is being processed. Check back soon.</p>
+                                                </div>
+                                            </CardContent>
+                                        )}
+                                    </Card>
+                                ))}
                                 {completedActions.includes('watched_replay') && (
-                                    <div className="p-3 bg-green-50 dark:bg-green-900/20 flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
-                                        <CheckCircle className="w-4 h-4" />
-                                        <span className="text-sm font-medium">Watched</span>
+                                    <div className="flex items-center justify-center gap-2 text-green-600">
+                                        <CheckCircle className="w-5 h-5" />
+                                        <span className="font-medium">You've watched a replay!</span>
                                     </div>
                                 )}
-                            </Card>
-                        ) : (
+                            </div>
+                        ) : null}
+                        
+                        {/* YouTube Video (shown when available, or as fallback when no recordings) */}
+                        {lesson.youtube_url && (
+                            <div className="space-y-3">
+                                {recordings.length > 0 && (
+                                    <h3 className="font-semibold flex items-center gap-2">
+                                        <Play className="w-5 h-5 text-red-500" />
+                                        Additional Video Content
+                                    </h3>
+                                )}
+                                <Card className="card-organic overflow-hidden">
+                                    <div className="youtube-wrapper" onClick={handleWatchReplay}>
+                                        <iframe
+                                            src={getYouTubeEmbedUrl(lesson.youtube_url)}
+                                            title={lesson.title}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                        />
+                                    </div>
+                                    {completedActions.includes('watched_replay') && recordings.length === 0 && (
+                                        <div className="p-3 bg-green-50 dark:bg-green-900/20 flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
+                                            <CheckCircle className="w-4 h-4" />
+                                            <span className="text-sm font-medium">Watched</span>
+                                        </div>
+                                    )}
+                                </Card>
+                            </div>
+                        )}
+                        
+                        {/* No content available message */}
+                        {!loadingRecordings && recordings.length === 0 && !lesson.youtube_url && (
                             <Card className="card-organic">
                                 <CardContent className="p-8 text-center">
                                     <Play className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
                                     <h3 className="text-lg font-medium mb-2">No Replay Available</h3>
-                                    <p className="text-muted-foreground">Check back after the live session</p>
+                                    <p className="text-muted-foreground">Recordings from live sessions will appear here after they're processed.</p>
+                                    <p className="text-sm text-muted-foreground mt-2">Check back after the live session ends.</p>
                                 </CardContent>
                             </Card>
                         )}
