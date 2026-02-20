@@ -49,6 +49,8 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 - [x] **Recording Metadata** - Duration, participant count, timestamp
 - [x] **YouTube Fallback** - Shows YouTube content when no recordings available
 - [x] **Attendance Tracking** - Records 'watched_replay' when viewing recordings
+- [x] **Teacher Recording Controls** - Start/Stop recording button in video room (teacher/admin only)
+- [x] **Recording Status Indicator** - Shows "REC" badge when recording is active
 
 ### ✅ Phase 3: Embedded Video Conferencing (Feb 2026)
 - [x] **Daily.co Integration** - Real-time video rooms embedded in app
@@ -139,7 +141,10 @@ All core lesson-centric flow, teacher management, and video conferencing impleme
 ### Video Rooms (NEW!)
 - `POST /api/lessons/{id}/video/join` - Join video room (creates room if needed)
 - `GET /api/lessons/{id}/video/status` - Get room status and participant count
-- `GET /api/lessons/{id}/recordings` - Get cloud recordings for lesson (NEW!)
+- `GET /api/lessons/{id}/recordings` - Get cloud recordings for lesson
+- `POST /api/lessons/{id}/recording/start` - Start cloud recording (teacher/admin)
+- `POST /api/lessons/{id}/recording/stop` - Stop cloud recording (teacher/admin)
+- `GET /api/lessons/{id}/recording/status` - Get current recording status
 
 ### Teacher Prompts
 - `GET /api/lessons/{id}/prompts` - Get prompts for lesson
