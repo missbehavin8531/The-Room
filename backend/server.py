@@ -1104,6 +1104,49 @@ async def get_lesson_video_status(lesson_id: str, user: dict = Depends(require_a
         logging.error(f"Failed to get room status: {e}")
         return VideoRoomStatus(room_exists=False)
 
+@api_router.get("/lessons/{lesson_id}/recordings", response_model=LessonRecordingsResponse)
+async def get_lesson_recordings(lesson_id: str, user: dict = Depends(require_approved)):
+    """Get all cloud recordings for a lesson"""
+    lesson = await db.lessons.find_one({'id': lesson_id}, {'_id': 0})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    room_name = f"lesson-{lesson_id[:8]}"
+    
+    try:
+        raw_recordings = await daily_service.get_recordings(room_name)
+        recordings = []
+        
+        for rec in raw_recordings:
+            # Get access link for each recording
+            access_link = await daily_service.get_recording_access_link(rec.get('id', ''))
+            download_url = None
+            if access_link:
+                download_url = access_link.get('download_link') or access_link.get('link')
+            
+            recordings.append(RecordingResponse(
+                id=rec.get('id', ''),
+                room_name=rec.get('room_name', room_name),
+                start_ts=rec.get('start_ts'),
+                duration=rec.get('duration'),
+                max_participants=rec.get('max_participants'),
+                download_url=download_url,
+                status=rec.get('status', 'unknown')
+            ))
+        
+        return LessonRecordingsResponse(
+            lesson_id=lesson_id,
+            recordings=recordings,
+            has_recordings=len(recordings) > 0
+        )
+    except Exception as e:
+        logging.error(f"Failed to fetch recordings: {e}")
+        return LessonRecordingsResponse(
+            lesson_id=lesson_id,
+            recordings=[],
+            has_recordings=False
+        )
+
 # ============== TEACHER PROMPTS ==============
 
 @api_router.post("/lessons/{lesson_id}/prompts", response_model=TeacherPromptResponse)
