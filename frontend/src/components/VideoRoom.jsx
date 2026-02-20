@@ -352,6 +352,7 @@ const MeetingView = ({ onLeave, isFullscreen, onToggleFullscreen, lessonId, isTe
 
 // Main VideoRoom Component
 export const VideoRoom = ({ lessonId, onClose }) => {
+    const { isTeacherOrAdmin } = useAuth();
     const [callObject, setCallObject] = useState(null);
     const [status, setStatus] = useState('idle'); // idle, joining, joined, error
     const [error, setError] = useState(null);
