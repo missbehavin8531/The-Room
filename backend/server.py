@@ -466,8 +466,7 @@ class DailyService:
                     timeout=10.0
                 )
                 if response.status_code == 200:
-                    room_data = response.json()
-                    # Check active_recording field or recent recordings
+                    # Check recent recordings for any that are currently active
                     recordings = await self.get_recordings(room_name)
                     # Find any recording that's currently active (no end timestamp)
                     for rec in recordings:
