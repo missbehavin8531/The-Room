@@ -135,6 +135,7 @@ export const attendanceAPI = {
 export const videoRoomAPI = {
     join: (lessonId) => api.post(`/lessons/${lessonId}/video/join`),
     getStatus: (lessonId) => api.get(`/lessons/${lessonId}/video/status`),
+    getRecordings: (lessonId) => api.get(`/lessons/${lessonId}/recordings`),
 };
 
 // Prompt Responses API (legacy)
