@@ -22,7 +22,11 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 - Attendance auto-recorded when joining
 
 ### NEXT Tab
-- **Watch Replay** - YouTube video embed
+- **Session Recordings** - Cloud recordings from Daily.co live sessions (NEW!)
+  - Auto-enabled on video rooms
+  - Video player with playback controls
+  - Recording metadata (duration, participants)
+- **Watch Replay** - YouTube video embed (fallback)
 - **Teacher Notes** - Markdown-rendered notes from teacher
 - Attendance tracked when video viewed
 
@@ -36,6 +40,15 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 - **Mark Attendance** - Manual attendance confirmation
 
 ## What's Been Implemented
+
+### ✅ Phase 4: Cloud Recording Playback (Feb 2026)
+- [x] **Cloud Recording Enabled** - Daily.co rooms created with `enable_recording: "cloud"`
+- [x] **Recordings API** - Fetch recordings from Daily.co via REST API
+- [x] **Recording Access Links** - Generate download URLs for recorded sessions
+- [x] **NEXT Tab Recordings** - Session recordings displayed in Watch Replay tab
+- [x] **Recording Metadata** - Duration, participant count, timestamp
+- [x] **YouTube Fallback** - Shows YouTube content when no recordings available
+- [x] **Attendance Tracking** - Records 'watched_replay' when viewing recordings
 
 ### ✅ Phase 3: Embedded Video Conferencing (Feb 2026)
 - [x] **Daily.co Integration** - Real-time video rooms embedded in app
@@ -99,7 +112,6 @@ All core lesson-centric flow, teacher management, and video conferencing impleme
 - [ ] Real-time WebSocket for chat
 - [ ] PPT preview via online viewer
 - [ ] Push notifications (mobile PWA)
-- [ ] Offline lesson viewing
 - [ ] Video progress tracking
 - [ ] Certificate generation
 - [ ] Multiple church support (multi-tenant)
@@ -127,6 +139,7 @@ All core lesson-centric flow, teacher management, and video conferencing impleme
 ### Video Rooms (NEW!)
 - `POST /api/lessons/{id}/video/join` - Join video room (creates room if needed)
 - `GET /api/lessons/{id}/video/status` - Get room status and participant count
+- `GET /api/lessons/{id}/recordings` - Get cloud recordings for lesson (NEW!)
 
 ### Teacher Prompts
 - `GET /api/lessons/{id}/prompts` - Get prompts for lesson
@@ -233,8 +246,10 @@ All core lesson-centric flow, teacher management, and video conferencing impleme
 - `/app/test_reports/iteration_4.json` - Lesson-centric flow tests (100% pass)
 - `/app/test_reports/iteration_5.json` - P1 teacher features tests (95% backend, 100% frontend)
 - `/app/test_reports/iteration_6.json` - Daily.co video integration tests (100% pass)
+- `/app/test_reports/iteration_7.json` - Cloud recordings feature tests (100% pass)
 - `/app/backend/tests/test_p1_features.py` - Comprehensive P1 API tests
 - `/app/backend/tests/test_video_room.py` - Video room API tests
+- `/app/backend/tests/test_recordings.py` - Recordings API tests
 
 ## 3rd Party Integrations
 - **Daily.co** - Embedded video conferencing (API key in backend .env)
