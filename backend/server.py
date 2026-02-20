@@ -36,6 +36,10 @@ UPLOAD_DIR = ROOT_DIR / 'uploads'
 UPLOAD_DIR.mkdir(exist_ok=True)
 MAX_UPLOAD_SIZE = 25 * 1024 * 1024  # 25MB
 
+# Daily.co Configuration
+DAILY_API_KEY = os.environ.get('DAILY_API_KEY', '')
+DAILY_DOMAIN = os.environ.get('DAILY_DOMAIN', '')
+
 # Create the main app
 app = FastAPI(title="Sunday School Education API")
 
