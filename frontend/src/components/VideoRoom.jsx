@@ -133,14 +133,34 @@ const VideoGrid = () => {
 };
 
 // Control Bar Component
-const ControlBar = ({ onLeave, isFullscreen, onToggleFullscreen }) => {
+const ControlBar = ({ onLeave, isFullscreen, onToggleFullscreen, lessonId, isTeacherOrAdmin }) => {
     const daily = useDaily();
     const localParticipant = useLocalParticipant();
     const { screens, startScreenShare, stopScreenShare } = useScreenShare();
     
     const [videoOn, setVideoOn] = useState(true);
     const [audioOn, setAudioOn] = useState(true);
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingId, setRecordingId] = useState(null);
+    const [recordingLoading, setRecordingLoading] = useState(false);
     const isScreenSharing = screens.length > 0;
+
+    // Check initial recording status
+    useEffect(() => {
+        if (isTeacherOrAdmin && lessonId) {
+            checkRecordingStatus();
+        }
+    }, [lessonId, isTeacherOrAdmin]);
+
+    const checkRecordingStatus = async () => {
+        try {
+            const res = await videoRoomAPI.getRecordingStatus(lessonId);
+            setIsRecording(res.data.is_recording);
+            setRecordingId(res.data.recording_id);
+        } catch (e) {
+            console.error('Failed to check recording status:', e);
+        }
+    };
 
     useEffect(() => {
         if (localParticipant) {
@@ -179,8 +199,48 @@ const ControlBar = ({ onLeave, isFullscreen, onToggleFullscreen }) => {
         }
     };
 
+    const toggleRecording = async () => {
+        setRecordingLoading(true);
+        try {
+            if (isRecording && recordingId) {
+                // Stop recording
+                const res = await videoRoomAPI.stopRecording(lessonId, recordingId);
+                if (res.data.success) {
+                    setIsRecording(false);
+                    setRecordingId(null);
+                    toast.success('Recording stopped. It will be available in Watch Replay shortly.');
+                } else {
+                    toast.error(res.data.message || 'Failed to stop recording');
+                }
+            } else {
+                // Start recording
+                const res = await videoRoomAPI.startRecording(lessonId);
+                if (res.data.success) {
+                    setIsRecording(true);
+                    setRecordingId(res.data.recording_id);
+                    toast.success('Recording started!');
+                } else {
+                    toast.error(res.data.message || 'Failed to start recording');
+                }
+            }
+        } catch (e) {
+            console.error('Recording toggle error:', e);
+            toast.error('Failed to toggle recording');
+        } finally {
+            setRecordingLoading(false);
+        }
+    };
+
     return (
         <div className="flex items-center justify-center gap-2 p-3 bg-gray-900/90 backdrop-blur rounded-xl">
+            {/* Recording indicator - visible to all when recording */}
+            {isRecording && (
+                <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-medium animate-pulse">
+                    <Circle className="w-2 h-2 fill-current" />
+                    REC
+                </div>
+            )}
+            
             <Button
                 variant={videoOn ? "secondary" : "destructive"}
                 size="icon"
@@ -210,6 +270,31 @@ const ControlBar = ({ onLeave, isFullscreen, onToggleFullscreen }) => {
             >
                 <Monitor className="w-5 h-5" />
             </Button>
+            
+            {/* Recording button - teachers/admins only */}
+            {isTeacherOrAdmin && (
+                <Button
+                    variant={isRecording ? "destructive" : "secondary"}
+                    size="icon"
+                    onClick={toggleRecording}
+                    disabled={recordingLoading}
+                    className={cn(
+                        "rounded-full w-12 h-12",
+                        isRecording && "animate-pulse"
+                    )}
+                    data-testid="recording-btn"
+                    title={isRecording ? "Stop Recording" : "Start Recording"}
+                >
+                    {recordingLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                        <Circle className={cn(
+                            "w-5 h-5",
+                            isRecording ? "fill-current" : ""
+                        )} />
+                    )}
+                </Button>
+            )}
             
             <Button
                 variant="secondary"
