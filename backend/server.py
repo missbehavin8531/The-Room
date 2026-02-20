@@ -1216,6 +1216,107 @@ async def get_lesson_recordings(lesson_id: str, user: dict = Depends(require_app
             has_recordings=False
         )
 
+@api_router.post("/lessons/{lesson_id}/recording/start", response_model=RecordingControlResponse)
+async def start_lesson_recording(lesson_id: str, user: dict = Depends(require_teacher_or_admin)):
+    """Start recording a lesson's video room (teacher/admin only)"""
+    lesson = await db.lessons.find_one({'id': lesson_id}, {'_id': 0})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    room_name = f"lesson-{lesson_id[:8]}"
+    
+    try:
+        # Check if already recording
+        active = await daily_service.get_active_recording(room_name)
+        if active.get('is_recording'):
+            return RecordingControlResponse(
+                success=False,
+                message="Recording is already in progress",
+                recording_id=active.get('recording_id'),
+                is_recording=True
+            )
+        
+        # Start recording
+        result = await daily_service.start_recording(room_name)
+        
+        if result.get('error'):
+            return RecordingControlResponse(
+                success=False,
+                message=f"Failed to start recording: {result.get('error')}",
+                is_recording=False
+            )
+        
+        return RecordingControlResponse(
+            success=True,
+            message="Recording started successfully",
+            recording_id=result.get('id'),
+            is_recording=True
+        )
+    except Exception as e:
+        logging.error(f"Failed to start recording: {e}")
+        return RecordingControlResponse(
+            success=False,
+            message=f"Error: {str(e)}",
+            is_recording=False
+        )
+
+@api_router.post("/lessons/{lesson_id}/recording/stop", response_model=RecordingControlResponse)
+async def stop_lesson_recording(lesson_id: str, recording_id: str = Query(...), user: dict = Depends(require_teacher_or_admin)):
+    """Stop recording a lesson's video room (teacher/admin only)"""
+    lesson = await db.lessons.find_one({'id': lesson_id}, {'_id': 0})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    room_name = f"lesson-{lesson_id[:8]}"
+    
+    try:
+        result = await daily_service.stop_recording(room_name, recording_id)
+        
+        if result.get('error'):
+            return RecordingControlResponse(
+                success=False,
+                message=f"Failed to stop recording: {result.get('error')}",
+                is_recording=True
+            )
+        
+        return RecordingControlResponse(
+            success=True,
+            message="Recording stopped successfully",
+            recording_id=recording_id,
+            is_recording=False
+        )
+    except Exception as e:
+        logging.error(f"Failed to stop recording: {e}")
+        return RecordingControlResponse(
+            success=False,
+            message=f"Error: {str(e)}",
+            is_recording=True
+        )
+
+@api_router.get("/lessons/{lesson_id}/recording/status")
+async def get_lesson_recording_status(lesson_id: str, user: dict = Depends(require_approved)):
+    """Get the recording status of a lesson's video room"""
+    lesson = await db.lessons.find_one({'id': lesson_id}, {'_id': 0})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    room_name = f"lesson-{lesson_id[:8]}"
+    
+    try:
+        active = await daily_service.get_active_recording(room_name)
+        return {
+            "lesson_id": lesson_id,
+            "is_recording": active.get('is_recording', False),
+            "recording_id": active.get('recording_id')
+        }
+    except Exception as e:
+        logging.error(f"Failed to get recording status: {e}")
+        return {
+            "lesson_id": lesson_id,
+            "is_recording": False,
+            "recording_id": None
+        }
+
 # ============== TEACHER PROMPTS ==============
 
 @api_router.post("/lessons/{lesson_id}/prompts", response_model=TeacherPromptResponse)
