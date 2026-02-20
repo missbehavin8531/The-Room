@@ -271,6 +271,22 @@ class VideoRoomStatus(BaseModel):
     room_url: Optional[str] = None
     participants_count: int = 0
 
+class RecordingResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    room_name: str
+    start_ts: Optional[int] = None
+    duration: Optional[int] = None
+    max_participants: Optional[int] = None
+    download_url: Optional[str] = None
+    status: str = "unknown"
+
+class LessonRecordingsResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    lesson_id: str
+    recordings: List[RecordingResponse] = []
+    has_recordings: bool = False
+
 # ============== DAILY.CO SERVICE ==============
 
 class DailyService:
