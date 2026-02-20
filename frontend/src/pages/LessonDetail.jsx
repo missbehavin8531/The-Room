@@ -7,12 +7,13 @@ import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { Badge } from '../components/ui/badge';
-import { lessonsAPI, commentsAPI, resourcesAPI, attendanceAPI, coursesAPI, teacherPromptsAPI } from '../lib/api';
+import { lessonsAPI, commentsAPI, resourcesAPI, attendanceAPI, coursesAPI, teacherPromptsAPI, videoRoomAPI } from '../lib/api';
 import { formatDate, formatRelativeTime, getYouTubeEmbedUrl, getInitials, formatFileSize, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { EmptyState } from '../components/EmptyState';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
 import { FilePreview } from '../components/FilePreview';
+import { VideoRoom } from '../components/VideoRoom';
 import { 
     ArrowLeft, Video, Calendar, FileText, Image, Presentation,
     Download, Upload, Send, Trash2, Eye, EyeOff, CheckCircle,
