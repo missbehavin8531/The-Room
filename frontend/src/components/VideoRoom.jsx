@@ -6,11 +6,12 @@ import { Card, CardContent } from './ui/card';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { videoRoomAPI } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { getInitials, cn } from '../lib/utils';
 import {
     Video, VideoOff, Mic, MicOff, PhoneOff, Monitor, Users,
-    Loader2, AlertCircle, Maximize2, Minimize2
+    Loader2, AlertCircle, Maximize2, Minimize2, Circle
 } from 'lucide-react';
 
 // Video Tile Component
