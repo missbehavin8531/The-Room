@@ -136,6 +136,10 @@ export const videoRoomAPI = {
     join: (lessonId) => api.post(`/lessons/${lessonId}/video/join`),
     getStatus: (lessonId) => api.get(`/lessons/${lessonId}/video/status`),
     getRecordings: (lessonId) => api.get(`/lessons/${lessonId}/recordings`),
+    // Recording controls (teacher/admin only)
+    startRecording: (lessonId) => api.post(`/lessons/${lessonId}/recording/start`),
+    stopRecording: (lessonId, recordingId) => api.post(`/lessons/${lessonId}/recording/stop?recording_id=${recordingId}`),
+    getRecordingStatus: (lessonId) => api.get(`/lessons/${lessonId}/recording/status`),
 };
 
 // Prompt Responses API (legacy)
