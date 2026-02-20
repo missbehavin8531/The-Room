@@ -287,7 +287,7 @@ class DailyService:
         }
     
     async def get_or_create_room(self, room_name: str) -> dict:
-        """Get existing room or create new one"""
+        """Get existing room or create new one with cloud recording enabled"""
         async with httpx.AsyncClient() as client:
             # Try to get existing room
             try:
@@ -301,7 +301,7 @@ class DailyService:
             except Exception:
                 pass
             
-            # Room doesn't exist, create it
+            # Room doesn't exist, create it with cloud recording enabled
             exp_time = int((datetime.now(timezone.utc) + timedelta(days=30)).timestamp())
             payload = {
                 "name": room_name,
@@ -313,7 +313,8 @@ class DailyService:
                     "start_video_off": False,
                     "start_audio_off": False,
                     "enable_knocking": False,
-                    "max_participants": 100
+                    "max_participants": 100,
+                    "enable_recording": "cloud"  # Enable cloud recording
                 }
             }
             
@@ -359,6 +360,38 @@ class DailyService:
             except Exception:
                 pass
             return {"exists": False, "room": None, "participants": 0}
+    
+    async def get_recordings(self, room_name: str) -> list:
+        """Get cloud recordings for a room"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    f"{self.BASE_URL}/recordings",
+                    params={"room_name": room_name, "limit": 10},
+                    headers=self.headers,
+                    timeout=15.0
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    return data.get('data', [])
+            except Exception as e:
+                logging.error(f"Failed to fetch recordings: {e}")
+            return []
+    
+    async def get_recording_access_link(self, recording_id: str) -> dict:
+        """Get access link for a specific recording"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    f"{self.BASE_URL}/recordings/{recording_id}/access-link",
+                    headers=self.headers,
+                    timeout=10.0
+                )
+                if response.status_code == 200:
+                    return response.json()
+            except Exception as e:
+                logging.error(f"Failed to get recording access link: {e}")
+            return None
     
     def create_meeting_token(self, room_name: str, user_id: str, user_name: str, is_owner: bool = False) -> str:
         """Create a Daily.co meeting token"""
