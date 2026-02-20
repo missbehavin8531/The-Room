@@ -524,6 +524,8 @@ export const VideoRoom = ({ lessonId, onClose }) => {
                         onLeave={leaveRoom}
                         isFullscreen={isFullscreen}
                         onToggleFullscreen={toggleFullscreen}
+                        lessonId={lessonId}
+                        isTeacherOrAdmin={isTeacherOrAdmin}
                     />
                 </DailyProvider>
             </div>
