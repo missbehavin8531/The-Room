@@ -409,6 +409,68 @@ class DailyService:
                 logging.error(f"Failed to get recording access link: {e}")
             return None
     
+    async def start_recording(self, room_name: str) -> dict:
+        """Start cloud recording for a room"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{self.BASE_URL}/rooms/{room_name}/recordings",
+                    json={"type": "cloud"},
+                    headers=self.headers,
+                    timeout=15.0
+                )
+                if response.status_code in [200, 201]:
+                    return response.json()
+                else:
+                    error_msg = response.text
+                    logging.error(f"Failed to start recording: {error_msg}")
+                    return {"error": error_msg, "status_code": response.status_code}
+            except Exception as e:
+                logging.error(f"Failed to start recording: {e}")
+                return {"error": str(e)}
+    
+    async def stop_recording(self, room_name: str, recording_id: str) -> dict:
+        """Stop an active recording"""
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{self.BASE_URL}/rooms/{room_name}/recordings/{recording_id}/stop",
+                    headers=self.headers,
+                    timeout=15.0
+                )
+                if response.status_code in [200, 201]:
+                    return response.json()
+                else:
+                    error_msg = response.text
+                    logging.error(f"Failed to stop recording: {error_msg}")
+                    return {"error": error_msg, "status_code": response.status_code}
+            except Exception as e:
+                logging.error(f"Failed to stop recording: {e}")
+                return {"error": str(e)}
+    
+    async def get_active_recording(self, room_name: str) -> dict:
+        """Check if there's an active recording in the room"""
+        async with httpx.AsyncClient() as client:
+            try:
+                # Get room info to check for active recording
+                response = await client.get(
+                    f"{self.BASE_URL}/rooms/{room_name}",
+                    headers=self.headers,
+                    timeout=10.0
+                )
+                if response.status_code == 200:
+                    room_data = response.json()
+                    # Check active_recording field or recent recordings
+                    recordings = await self.get_recordings(room_name)
+                    # Find any recording that's currently active (no end timestamp)
+                    for rec in recordings:
+                        if rec.get('status') == 'processing' or rec.get('status') == 'started':
+                            return {"is_recording": True, "recording_id": rec.get('id')}
+                    return {"is_recording": False, "recording_id": None}
+            except Exception as e:
+                logging.error(f"Failed to check active recording: {e}")
+            return {"is_recording": False, "recording_id": None}
+    
     def create_meeting_token(self, room_name: str, user_id: str, user_name: str, is_owner: bool = False) -> str:
         """Create a Daily.co meeting token"""
         domain_id = self.domain.replace(".daily.co", "")
