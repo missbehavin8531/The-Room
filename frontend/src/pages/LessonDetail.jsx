@@ -115,6 +115,10 @@ export const LessonDetail = () => {
     // Video room state
     const [showVideoRoom, setShowVideoRoom] = useState(false);
     const [roomStatus, setRoomStatus] = useState(null);
+    
+    // Recordings state
+    const [recordings, setRecordings] = useState([]);
+    const [loadingRecordings, setLoadingRecordings] = useState(false);
 
     useEffect(() => {
         fetchLessonData();
