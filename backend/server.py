@@ -979,6 +979,82 @@ async def get_my_attendance(lesson_id: str, user: dict = Depends(require_approve
     actions = list(set([r['action'] for r in records]))
     return {'actions': actions}
 
+# ============== VIDEO ROOMS (Daily.co) ==============
+
+@api_router.post("/lessons/{lesson_id}/video/join", response_model=VideoRoomResponse)
+async def join_lesson_video_room(lesson_id: str, user: dict = Depends(require_approved)):
+    """Join or create a video room for a lesson"""
+    lesson = await db.lessons.find_one({'id': lesson_id}, {'_id': 0})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    # Create a unique room name based on lesson ID
+    room_name = f"lesson-{lesson_id[:8]}"
+    
+    try:
+        # Get or create the room
+        room_data = await daily_service.get_or_create_room(room_name)
+        
+        # Determine if user is owner (teacher/admin)
+        is_owner = user['role'] in ['teacher', 'admin']
+        
+        # Generate meeting token
+        meeting_token = daily_service.create_meeting_token(
+            room_name=room_name,
+            user_id=user['id'],
+            user_name=user['name'],
+            is_owner=is_owner
+        )
+        
+        # Record attendance
+        existing = await db.attendance.find_one({
+            'lesson_id': lesson_id,
+            'user_id': user['id'],
+            'action': 'joined_video'
+        })
+        if not existing:
+            await db.attendance.insert_one({
+                'id': str(uuid.uuid4()),
+                'user_id': user['id'],
+                'user_name': user['name'],
+                'lesson_id': lesson_id,
+                'action': 'joined_video',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            })
+        
+        return VideoRoomResponse(
+            room_name=room_name,
+            room_url=room_data.get('url', f"https://{DAILY_DOMAIN}/{room_name}"),
+            meeting_token=meeting_token,
+            lesson_id=lesson_id
+        )
+    except Exception as e:
+        logging.error(f"Failed to join video room: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to join video room: {str(e)}")
+
+@api_router.get("/lessons/{lesson_id}/video/status", response_model=VideoRoomStatus)
+async def get_lesson_video_status(lesson_id: str, user: dict = Depends(require_approved)):
+    """Get the status of a lesson's video room"""
+    lesson = await db.lessons.find_one({'id': lesson_id}, {'_id': 0})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    room_name = f"lesson-{lesson_id[:8]}"
+    
+    try:
+        status = await daily_service.get_room_status(room_name)
+        if status['exists']:
+            return VideoRoomStatus(
+                room_exists=True,
+                room_name=room_name,
+                room_url=status['room'].get('url'),
+                participants_count=status['participants']
+            )
+        return VideoRoomStatus(room_exists=False)
+    except Exception as e:
+        logging.error(f"Failed to get room status: {e}")
+        return VideoRoomStatus(room_exists=False)
+
 # ============== TEACHER PROMPTS ==============
 
 @api_router.post("/lessons/{lesson_id}/prompts", response_model=TeacherPromptResponse)
