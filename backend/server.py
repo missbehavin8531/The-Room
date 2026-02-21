@@ -105,6 +105,7 @@ class LessonBase(BaseModel):
     lesson_date: Optional[str] = None
     teacher_notes: Optional[str] = None  # Notes shown during/after replay
     reading_plan: Optional[str] = None  # Scripture/reading for the week
+    hosting_method: str = "both"  # "in_app", "zoom", or "both"
     order: int = 0
 
 class LessonCreate(LessonBase):
@@ -121,6 +122,7 @@ class LessonResponse(BaseModel):
     lesson_date: Optional[str] = None
     teacher_notes: Optional[str] = None
     reading_plan: Optional[str] = None
+    hosting_method: str = "both"
     order: int
     created_at: str
     resources: List[dict] = []
