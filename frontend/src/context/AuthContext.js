@@ -58,10 +58,18 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
     };
 
+    // Mark user's onboarding as complete (updates local state)
+    const completeOnboarding = () => {
+        if (user) {
+            setUser({ ...user, onboarding_complete: true });
+        }
+    };
+
     const isApproved = user?.is_approved === true;
     const isAdmin = user?.role === 'admin';
     const isTeacher = user?.role === 'teacher';
     const isTeacherOrAdmin = isAdmin || isTeacher;
+    const needsOnboarding = isAuthenticated && isApproved && user?.onboarding_complete === false;
 
     return (
         <AuthContext.Provider
@@ -73,10 +81,12 @@ export const AuthProvider = ({ children }) => {
                 isAdmin,
                 isTeacher,
                 isTeacherOrAdmin,
+                needsOnboarding,
                 login,
                 register,
                 logout,
                 checkAuth,
+                completeOnboarding,
             }}
         >
             {children}
