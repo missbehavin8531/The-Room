@@ -1990,6 +1990,8 @@ async def seed_data():
         'thumbnail_url': 'https://images.unsplash.com/photo-1610070835951-156b6921281d?w=800',
         'teacher_id': teacher_id,
         'teacher_name': 'Sarah Johnson',
+        'is_published': True,
+        'unlock_type': 'sequential',
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.courses.insert_one(course)
