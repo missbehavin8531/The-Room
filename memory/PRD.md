@@ -271,10 +271,8 @@ All core lesson-centric flow, teacher management, and video conferencing impleme
 - `/app/test_reports/iteration_6.json` - Daily.co video integration tests (100% pass)
 - `/app/test_reports/iteration_7.json` - Cloud recordings feature tests (100% pass)
 - `/app/test_reports/iteration_8.json` - Branding & hosting method tests (100% pass)
-- `/app/backend/tests/test_p1_features.py` - Comprehensive P1 API tests
-- `/app/backend/tests/test_video_room.py` - Video room API tests
-- `/app/backend/tests/test_recordings.py` - Recordings API tests
-- `/app/backend/tests/test_hosting_method.py` - Hosting method API tests
+- `/app/test_reports/iteration_9.json` - MVP polish tests (100% pass)
+- `/app/backend/tests/` - Various API test files
 
 ## 3rd Party Integrations
 - **Daily.co** - Embedded video conferencing (API key in backend .env)
