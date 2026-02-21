@@ -9,11 +9,12 @@ import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import {
     ArrowLeft, ArrowRight, Check, BookOpen, 
-    Loader2, FileText, Users, X, Sparkles
+    Loader2, FileText, Users, X, Sparkles, Calendar, ListOrdered
 } from 'lucide-react';
 
 const STEPS = [
     { id: 'basics', title: 'Course Details', icon: FileText },
+    { id: 'settings', title: 'Settings', icon: ListOrdered },
     { id: 'review', title: 'Review & Create', icon: Check },
 ];
 
@@ -26,6 +27,7 @@ export const CourseWizard = ({ onClose, onSuccess }) => {
         description: '',
         thumbnail_url: '',
         is_published: false,
+        unlock_type: 'sequential',
     });
     
     const updateField = (field, value) => {
