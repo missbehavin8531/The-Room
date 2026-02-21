@@ -1746,6 +1746,7 @@ async def seed_data():
             'teacher_notes': lesson_data.get('teacher_notes'),
             'reading_plan': lesson_data.get('reading_plan'),
             'zoom_link': 'https://zoom.us/j/1234567890' if lesson_data['order'] == 1 else None,
+            'hosting_method': 'both',  # Default to both options
             'discussion_locked': False,
             'created_at': datetime.now(timezone.utc).isoformat()
         }
