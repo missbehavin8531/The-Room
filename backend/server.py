@@ -604,6 +604,36 @@ async def get_me(user: dict = Depends(get_current_user)):
         created_at=user['created_at']
     )
 
+@api_router.get("/auth/onboarding-status")
+async def get_onboarding_status(user: dict = Depends(get_current_user)):
+    """Check if user has completed onboarding"""
+    onboarding = await db.user_onboarding.find_one({'user_id': user['id']})
+    return {
+        'completed': onboarding.get('completed', False) if onboarding else False,
+        'steps_completed': onboarding.get('steps_completed', []) if onboarding else [],
+        'role': user['role']
+    }
+
+@api_router.post("/auth/onboarding-complete")
+async def complete_onboarding(user: dict = Depends(get_current_user)):
+    """Mark onboarding as complete"""
+    await db.user_onboarding.update_one(
+        {'user_id': user['id']},
+        {'$set': {'completed': True, 'completed_at': datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {'message': 'Onboarding completed'}
+
+@api_router.post("/auth/onboarding-step")
+async def complete_onboarding_step(step: str = Query(...), user: dict = Depends(get_current_user)):
+    """Mark a specific onboarding step as complete"""
+    await db.user_onboarding.update_one(
+        {'user_id': user['id']},
+        {'$addToSet': {'steps_completed': step}},
+        upsert=True
+    )
+    return {'message': f'Step {step} completed'}
+
 # ============== USER MANAGEMENT ==============
 
 @api_router.get("/users", response_model=List[UserResponse])
