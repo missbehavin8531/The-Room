@@ -753,45 +753,101 @@ async def create_lesson(data: LessonCreate, user: dict = Depends(require_teacher
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     
+    # Get next order number
+    last_lesson = await db.lessons.find_one(
+        {'course_id': data.course_id},
+        sort=[('order', -1)]
+    )
+    next_order = (last_lesson.get('order', 0) + 1) if last_lesson else 1
+    
     lesson_id = str(uuid.uuid4())
     lesson = {
         'id': lesson_id,
         'course_id': data.course_id,
         'title': data.title,
         'description': data.description,
-        'youtube_url': data.youtube_url,
-        'zoom_link': data.zoom_link,
         'lesson_date': data.lesson_date,
-        'order': data.order,
+        'teacher_notes': data.teacher_notes,
+        'reading_plan': data.reading_plan,
+        'hosting_method': data.hosting_method or 'in_app',
+        'zoom_link': data.zoom_link,
+        'recording_source': data.recording_source or 'none',
+        'recording_url': data.recording_url,
+        'is_published': data.is_published,
+        'order': data.order if data.order > 0 else next_order,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.lessons.insert_one(lesson)
-    return LessonResponse(**lesson, resources=[], prompts=[], user_attendance=[])
+    return LessonResponse(**lesson, resources=[], prompts=[], user_attendance=[], is_completed=False, is_unlocked=True)
 
-async def get_lesson_with_details(lesson: dict, user_id: str):
-    """Helper to get lesson with all related data"""
+async def get_lesson_with_details(lesson: dict, user_id: str, user_role: str = 'member'):
+    """Helper to get lesson with all related data including unlock status"""
     resources = await db.resources.find({'lesson_id': lesson['id']}, {'_id': 0}).sort('order', 1).to_list(100)
     prompts = await db.teacher_prompts.find({'lesson_id': lesson['id']}, {'_id': 0}).sort('order', 1).to_list(10)
     attendance_records = await db.attendance.find({'lesson_id': lesson['id'], 'user_id': user_id}, {'_id': 0}).to_list(100)
     user_attendance = list(set([r['action'] for r in attendance_records]))
-    return LessonResponse(**lesson, resources=resources, prompts=prompts, user_attendance=user_attendance)
+    
+    # Check if lesson is completed by user
+    completion = await db.lesson_completions.find_one({'lesson_id': lesson['id'], 'user_id': user_id})
+    is_completed = completion is not None
+    
+    # Check if lesson is unlocked (sequential logic)
+    is_unlocked = True
+    if user_role not in ['teacher', 'admin']:
+        # Get previous lesson in order
+        prev_lesson = await db.lessons.find_one(
+            {'course_id': lesson['course_id'], 'order': {'$lt': lesson.get('order', 0)}, 'is_published': True},
+            sort=[('order', -1)]
+        )
+        if prev_lesson:
+            # Check if previous lesson is completed
+            prev_completion = await db.lesson_completions.find_one({
+                'lesson_id': prev_lesson['id'],
+                'user_id': user_id
+            })
+            is_unlocked = prev_completion is not None
+        # First lesson is always unlocked
+        if lesson.get('order', 1) == 1:
+            is_unlocked = True
+    
+    # Backward compatibility: map recording_url to youtube_url if needed
+    youtube_url = lesson.get('youtube_url') or (lesson.get('recording_url') if lesson.get('recording_source') == 'youtube' else None)
+    
+    return LessonResponse(
+        **{k: v for k, v in lesson.items() if k != 'youtube_url'},
+        youtube_url=youtube_url,
+        resources=resources,
+        prompts=prompts,
+        user_attendance=user_attendance,
+        is_completed=is_completed,
+        is_unlocked=is_unlocked
+    )
 
 @api_router.get("/courses/{course_id}/lessons", response_model=List[LessonResponse])
 async def get_course_lessons(course_id: str, user: dict = Depends(require_approved)):
-    lessons = await db.lessons.find({'course_id': course_id}, {'_id': 0}).sort('order', 1).to_list(1000)
+    # Teachers see all lessons, members only see published ones
+    query = {'course_id': course_id}
+    if user['role'] not in ['teacher', 'admin']:
+        query['is_published'] = True
+    
+    lessons = await db.lessons.find(query, {'_id': 0}).sort('order', 1).to_list(1000)
     result = []
     for lesson in lessons:
-        lesson_data = await get_lesson_with_details(lesson, user['id'])
+        lesson_data = await get_lesson_with_details(lesson, user['id'], user['role'])
         result.append(lesson_data)
     return result
 
 @api_router.get("/lessons/all", response_model=List[LessonResponse])
 async def get_all_lessons(user: dict = Depends(require_approved)):
     """Get all lessons across all courses (for calendar view)"""
-    lessons = await db.lessons.find({}, {'_id': 0}).sort('lesson_date', 1).to_list(1000)
+    query = {}
+    if user['role'] not in ['teacher', 'admin']:
+        query['is_published'] = True
+    
+    lessons = await db.lessons.find(query, {'_id': 0}).sort('lesson_date', 1).to_list(1000)
     result = []
     for lesson in lessons:
-        lesson_data = await get_lesson_with_details(lesson, user['id'])
+        lesson_data = await get_lesson_with_details(lesson, user['id'], user['role'])
         result.append(lesson_data)
     return result
 
@@ -800,21 +856,25 @@ async def get_lesson(lesson_id: str, user: dict = Depends(require_approved)):
     lesson = await db.lessons.find_one({'id': lesson_id}, {'_id': 0})
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
-    return await get_lesson_with_details(lesson, user['id'])
+    
+    # Check access for members
+    if user['role'] not in ['teacher', 'admin']:
+        if not lesson.get('is_published', False):
+            raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    return await get_lesson_with_details(lesson, user['id'], user['role'])
 
 @api_router.get("/lessons/next/upcoming", response_model=Optional[LessonResponse])
 async def get_next_lesson(user: dict = Depends(require_approved)):
     today = datetime.now(timezone.utc).isoformat()[:10]
-    lesson = await db.lessons.find_one(
-        {'lesson_date': {'$gte': today}},
-        {'_id': 0}
-    )
+    query = {'lesson_date': {'$gte': today}, 'is_published': True}
+    lesson = await db.lessons.find_one(query, {'_id': 0})
     if lesson:
-        return await get_lesson_with_details(lesson, user['id'])
-    # Fallback to most recent
-    lesson = await db.lessons.find_one({}, {'_id': 0}, sort=[('created_at', -1)])
+        return await get_lesson_with_details(lesson, user['id'], user['role'])
+    # Fallback to most recent published
+    lesson = await db.lessons.find_one({'is_published': True}, {'_id': 0}, sort=[('created_at', -1)])
     if lesson:
-        return await get_lesson_with_details(lesson, user['id'])
+        return await get_lesson_with_details(lesson, user['id'], user['role'])
     return None
 
 @api_router.put("/lessons/{lesson_id}")
