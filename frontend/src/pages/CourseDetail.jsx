@@ -11,6 +11,7 @@ import { coursesAPI, lessonsAPI } from '../lib/api';
 import { formatDate, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { LessonWizard } from '../components/LessonWizard';
+import { CourseEditor } from '../components/CourseEditor';
 import { 
     ArrowLeft,
     Plus, 
@@ -23,7 +24,9 @@ import {
     CheckCircle,
     Eye,
     EyeOff,
-    Play
+    Play,
+    Settings,
+    ListOrdered
 } from 'lucide-react';
 import {
     AlertDialog,
