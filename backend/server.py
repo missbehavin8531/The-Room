@@ -717,51 +717,189 @@ async def create_course(data: CourseCreate, user: dict = Depends(require_teacher
 
 @api_router.get("/courses", response_model=List[CourseResponse])
 async def get_courses(user: dict = Depends(require_approved)):
-    # Teachers see all courses, members only see published ones
-    query = {}
-    if user['role'] not in ['teacher', 'admin']:
-        query['is_published'] = True
+    """Get all courses with aggregated stats (optimized with MongoDB aggregation)"""
+    user_id = user['id']
+    is_teacher = user['role'] in ['teacher', 'admin']
     
-    courses = await db.courses.find(query, {'_id': 0}).to_list(1000)
-    result = []
-    for c in courses:
-        total_lessons = await db.lessons.count_documents({'course_id': c['id'], 'is_published': True})
-        enrollment_count = await db.enrollments.count_documents({'course_id': c['id']})
-        is_enrolled = await db.enrollments.find_one({'course_id': c['id'], 'user_id': user['id']}) is not None
-        completed_lessons = await db.lesson_completions.count_documents({'course_id': c['id'], 'user_id': user['id']})
-        result.append(CourseResponse(
-            **c,
-            lesson_count=total_lessons,
-            enrollment_count=enrollment_count,
-            is_enrolled=is_enrolled,
-            completed_lessons=completed_lessons,
-            total_lessons=total_lessons
-        ))
-    return result
+    # Build match stage - teachers see all, members see published only
+    match_stage = {} if is_teacher else {'is_published': True}
+    
+    # Use aggregation pipeline to fetch all data in one query
+    pipeline = [
+        {'$match': match_stage},
+        # Lookup lessons count
+        {'$lookup': {
+            'from': 'lessons',
+            'let': {'course_id': '$id'},
+            'pipeline': [
+                {'$match': {
+                    '$expr': {'$and': [
+                        {'$eq': ['$course_id', '$$course_id']},
+                        {'$eq': ['$is_published', True]}
+                    ]}
+                }},
+                {'$count': 'count'}
+            ],
+            'as': 'lesson_stats'
+        }},
+        # Lookup enrollment count
+        {'$lookup': {
+            'from': 'enrollments',
+            'let': {'course_id': '$id'},
+            'pipeline': [
+                {'$match': {'$expr': {'$eq': ['$course_id', '$$course_id']}}},
+                {'$count': 'count'}
+            ],
+            'as': 'enrollment_stats'
+        }},
+        # Lookup user's enrollment
+        {'$lookup': {
+            'from': 'enrollments',
+            'let': {'course_id': '$id'},
+            'pipeline': [
+                {'$match': {
+                    '$expr': {'$and': [
+                        {'$eq': ['$course_id', '$$course_id']},
+                        {'$eq': ['$user_id', user_id]}
+                    ]}
+                }},
+                {'$limit': 1}
+            ],
+            'as': 'user_enrollment'
+        }},
+        # Lookup user's completed lessons
+        {'$lookup': {
+            'from': 'lesson_completions',
+            'let': {'course_id': '$id'},
+            'pipeline': [
+                {'$match': {
+                    '$expr': {'$and': [
+                        {'$eq': ['$course_id', '$$course_id']},
+                        {'$eq': ['$user_id', user_id]}
+                    ]}
+                }},
+                {'$count': 'count'}
+            ],
+            'as': 'completion_stats'
+        }},
+        # Project final fields
+        {'$project': {
+            '_id': 0,
+            'id': 1,
+            'title': 1,
+            'description': 1,
+            'thumbnail_url': 1,
+            'is_published': 1,
+            'unlock_type': 1,
+            'teacher_id': 1,
+            'teacher_name': 1,
+            'created_at': 1,
+            'lesson_count': {'$ifNull': [{'$arrayElemAt': ['$lesson_stats.count', 0]}, 0]},
+            'total_lessons': {'$ifNull': [{'$arrayElemAt': ['$lesson_stats.count', 0]}, 0]},
+            'enrollment_count': {'$ifNull': [{'$arrayElemAt': ['$enrollment_stats.count', 0]}, 0]},
+            'is_enrolled': {'$gt': [{'$size': '$user_enrollment'}, 0]},
+            'completed_lessons': {'$ifNull': [{'$arrayElemAt': ['$completion_stats.count', 0]}, 0]}
+        }}
+    ]
+    
+    courses = await db.courses.aggregate(pipeline).to_list(1000)
+    return [CourseResponse(**c) for c in courses]
 
 @api_router.get("/courses/{course_id}", response_model=CourseResponse)
 async def get_course(course_id: str, user: dict = Depends(require_approved)):
-    course = await db.courses.find_one({'id': course_id}, {'_id': 0})
-    if not course:
+    """Get single course with aggregated stats (optimized with MongoDB aggregation)"""
+    user_id = user['id']
+    is_teacher = user['role'] in ['teacher', 'admin']
+    
+    # Use aggregation for single course too
+    pipeline = [
+        {'$match': {'id': course_id}},
+        # Lookup lessons count
+        {'$lookup': {
+            'from': 'lessons',
+            'let': {'course_id': '$id'},
+            'pipeline': [
+                {'$match': {
+                    '$expr': {'$and': [
+                        {'$eq': ['$course_id', '$$course_id']},
+                        {'$eq': ['$is_published', True]}
+                    ]}
+                }},
+                {'$count': 'count'}
+            ],
+            'as': 'lesson_stats'
+        }},
+        # Lookup enrollment count
+        {'$lookup': {
+            'from': 'enrollments',
+            'let': {'course_id': '$id'},
+            'pipeline': [
+                {'$match': {'$expr': {'$eq': ['$course_id', '$$course_id']}}},
+                {'$count': 'count'}
+            ],
+            'as': 'enrollment_stats'
+        }},
+        # Lookup user's enrollment
+        {'$lookup': {
+            'from': 'enrollments',
+            'let': {'course_id': '$id'},
+            'pipeline': [
+                {'$match': {
+                    '$expr': {'$and': [
+                        {'$eq': ['$course_id', '$$course_id']},
+                        {'$eq': ['$user_id', user_id]}
+                    ]}
+                }},
+                {'$limit': 1}
+            ],
+            'as': 'user_enrollment'
+        }},
+        # Lookup user's completed lessons
+        {'$lookup': {
+            'from': 'lesson_completions',
+            'let': {'course_id': '$id'},
+            'pipeline': [
+                {'$match': {
+                    '$expr': {'$and': [
+                        {'$eq': ['$course_id', '$$course_id']},
+                        {'$eq': ['$user_id', user_id]}
+                    ]}
+                }},
+                {'$count': 'count'}
+            ],
+            'as': 'completion_stats'
+        }},
+        # Project final fields
+        {'$project': {
+            '_id': 0,
+            'id': 1,
+            'title': 1,
+            'description': 1,
+            'thumbnail_url': 1,
+            'is_published': 1,
+            'unlock_type': 1,
+            'teacher_id': 1,
+            'teacher_name': 1,
+            'created_at': 1,
+            'lesson_count': {'$ifNull': [{'$arrayElemAt': ['$lesson_stats.count', 0]}, 0]},
+            'total_lessons': {'$ifNull': [{'$arrayElemAt': ['$lesson_stats.count', 0]}, 0]},
+            'enrollment_count': {'$ifNull': [{'$arrayElemAt': ['$enrollment_stats.count', 0]}, 0]},
+            'is_enrolled': {'$gt': [{'$size': '$user_enrollment'}, 0]},
+            'completed_lessons': {'$ifNull': [{'$arrayElemAt': ['$completion_stats.count', 0]}, 0]}
+        }}
+    ]
+    
+    courses = await db.courses.aggregate(pipeline).to_list(1)
+    if not courses:
         raise HTTPException(status_code=404, detail="Course not found")
     
-    # Check access for members
-    if user['role'] not in ['teacher', 'admin']:
-        if not course.get('is_published', False):
-            raise HTTPException(status_code=404, detail="Course not found")
+    course = courses[0]
     
-    total_lessons = await db.lessons.count_documents({'course_id': course_id, 'is_published': True})
-    enrollment_count = await db.enrollments.count_documents({'course_id': course_id})
-    is_enrolled = await db.enrollments.find_one({'course_id': course_id, 'user_id': user['id']}) is not None
-    completed_lessons = await db.lesson_completions.count_documents({'course_id': course_id, 'user_id': user['id']})
-    return CourseResponse(
-        **course,
-        lesson_count=total_lessons,
-        enrollment_count=enrollment_count,
-        is_enrolled=is_enrolled,
-        completed_lessons=completed_lessons,
-        total_lessons=total_lessons
-    )
+    # Check access for members (unpublished courses)
+    if not is_teacher and not course.get('is_published', False):
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    return CourseResponse(**course)
 
 @api_router.put("/courses/{course_id}")
 async def update_course(course_id: str, data: CourseUpdate, user: dict = Depends(require_teacher_or_admin)):
