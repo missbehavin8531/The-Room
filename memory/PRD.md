@@ -41,6 +41,13 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 
 ## What's Been Implemented
 
+### ✅ Phase 5: Branding & Hosting Method (Feb 2026)
+- [x] **Rebranding** - Changed from "Sunday School" to "The Room" with logo
+- [x] **Hosting Method** - Lesson field for `hosting_method`: "in_app", "zoom", or "both"
+- [x] **Teacher Selection** - Lesson Editor shows Class Hosting Method card with 3 options
+- [x] **Student View** - NOW tab shows only the selected hosting option(s)
+- [x] **Authorization** - Only teachers/admins can change hosting method
+
 ### ✅ Phase 4: Cloud Recording Playback (Feb 2026)
 - [x] **Cloud Recording Enabled** - Daily.co rooms created with `enable_recording: "cloud"`
 - [x] **Recordings API** - Fetch recordings from Daily.co via REST API
