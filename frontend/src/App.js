@@ -66,9 +66,20 @@ const PublicRoute = ({ children }) => {
     return children;
 };
 
+// Onboarding Overlay - Shows tutorial for new users
+const OnboardingOverlay = () => {
+    const { needsOnboarding, completeOnboarding } = useAuth();
+    
+    if (!needsOnboarding) return null;
+    
+    return <Onboarding onComplete={completeOnboarding} />;
+};
+
 function AppRoutes() {
     return (
-        <Routes>
+        <>
+            <OnboardingOverlay />
+            <Routes>
             {/* Public Routes */}
             <Route
                 path="/login"
