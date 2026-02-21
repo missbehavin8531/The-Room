@@ -38,6 +38,9 @@ export const authAPI = {
     register: (data) => api.post('/auth/register', data),
     login: (data) => api.post('/auth/login', data),
     getMe: () => api.get('/auth/me'),
+    getOnboardingStatus: () => api.get('/auth/onboarding-status'),
+    completeOnboarding: () => api.post('/auth/onboarding-complete'),
+    completeOnboardingStep: (step) => api.post(`/auth/onboarding-step?step=${step}`),
 };
 
 // Users API
