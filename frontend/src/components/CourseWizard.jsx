@@ -234,6 +234,20 @@ export const CourseWizard = ({ onClose, onSuccess }) => {
                                         <p className="text-sm">{course.description}</p>
                                     </div>
                                 </div>
+                                
+                                <div className="flex items-start gap-3">
+                                    {course.unlock_type === 'scheduled' ? (
+                                        <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
+                                    ) : (
+                                        <ListOrdered className="w-5 h-5 text-muted-foreground mt-0.5" />
+                                    )}
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Unlock Mode</p>
+                                        <p className="font-medium">
+                                            {course.unlock_type === 'scheduled' ? 'Scheduled' : 'Sequential'}
+                                        </p>
+                                    </div>
+                                </div>
                             </CardContent>
                         </Card>
                         
