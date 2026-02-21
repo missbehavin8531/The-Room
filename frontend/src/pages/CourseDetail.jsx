@@ -47,6 +47,7 @@ export const CourseDetail = () => {
     const [lessons, setLessons] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showLessonWizard, setShowLessonWizard] = useState(false);
+    const [showCourseEditor, setShowCourseEditor] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     useEffect(() => {
