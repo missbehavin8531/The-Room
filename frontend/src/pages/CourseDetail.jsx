@@ -271,17 +271,19 @@ export const CourseDetail = () => {
                                                             {lesson.hosting_method === 'zoom' && (
                                                                 <Video className="w-4 h-4 text-blue-500" />
                                                             )}
-                                                )}
-                                                {lesson.resources?.length > 0 && (
-                                                    <span className="bg-muted px-2 py-1 rounded text-xs">
-                                                        {lesson.resources.length} files
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </Link>
-                            ))}
+                                                            {lesson.resources?.length > 0 && (
+                                                                <span className="bg-muted px-2 py-1 rounded text-xs">
+                                                                    {lesson.resources.length} files
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            </Link>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     ) : (
                         <Card className="card-organic p-8 text-center">
