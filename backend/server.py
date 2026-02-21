@@ -1624,8 +1624,11 @@ async def get_participation_stats(user: dict = Depends(require_admin)):
 
 @api_router.post("/seed")
 async def seed_data():
-    # Check if already seeded
-    existing_admin = await db.users.find_one({'email': 'admin@sundayschool.com'})
+    # Check if already seeded (check both old and new email domains)
+    existing_admin = await db.users.find_one({'$or': [
+        {'email': 'admin@theroom.com'},
+        {'email': 'admin@sundayschool.com'}
+    ]})
     if existing_admin:
         return {'message': 'Data already seeded'}
     
@@ -1633,7 +1636,7 @@ async def seed_data():
     admin_id = str(uuid.uuid4())
     admin = {
         'id': admin_id,
-        'email': 'admin@sundayschool.com',
+        'email': 'admin@theroom.com',
         'name': 'Admin User',
         'password': hash_password('admin123'),
         'role': 'admin',
@@ -1647,7 +1650,7 @@ async def seed_data():
     teacher_id = str(uuid.uuid4())
     teacher = {
         'id': teacher_id,
-        'email': 'teacher@sundayschool.com',
+        'email': 'teacher@theroom.com',
         'name': 'Sarah Johnson',
         'password': hash_password('teacher123'),
         'role': 'teacher',
@@ -1661,7 +1664,7 @@ async def seed_data():
     member_id = str(uuid.uuid4())
     member = {
         'id': member_id,
-        'email': 'member@sundayschool.com',
+        'email': 'member@theroom.com',
         'name': 'John Smith',
         'password': hash_password('member123'),
         'role': 'member',
