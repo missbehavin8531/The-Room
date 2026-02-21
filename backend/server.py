@@ -582,6 +582,10 @@ async def login(data: UserLogin):
     if not user or not verify_password(data.password, user['password']):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
+    # Check onboarding status
+    onboarding = await db.user_onboarding.find_one({'user_id': user['id']})
+    onboarding_complete = onboarding.get('completed', False) if onboarding else False
+    
     token = create_token(user['id'], user['email'], user['role'])
     return {
         'token': token,
@@ -590,7 +594,8 @@ async def login(data: UserLogin):
             'email': user['email'],
             'name': user['name'],
             'role': user['role'],
-            'is_approved': user['is_approved']
+            'is_approved': user['is_approved'],
+            'onboarding_complete': onboarding_complete
         }
     }
 
