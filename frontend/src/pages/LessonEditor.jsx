@@ -67,12 +67,14 @@ export const LessonEditor = () => {
             setLesson({
                 title: lessonData.title || '',
                 description: lessonData.description || '',
-                youtube_url: lessonData.youtube_url || '',
                 zoom_link: lessonData.zoom_link || '',
                 lesson_date: lessonData.lesson_date || '',
                 teacher_notes: lessonData.teacher_notes || '',
                 reading_plan: lessonData.reading_plan || '',
-                hosting_method: lessonData.hosting_method || 'both',
+                hosting_method: lessonData.hosting_method || 'in_app',
+                recording_source: lessonData.recording_source || 'none',
+                recording_url: lessonData.recording_url || lessonData.youtube_url || '',
+                is_published: lessonData.is_published || false,
                 order: lessonData.order || 0
             });
             setPrompts(lessonData.prompts || []);
