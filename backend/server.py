@@ -2115,7 +2115,6 @@ async def seed_data():
     return {
         'message': 'Seed data created',
         'credentials': {
-            'admin': {'email': 'admin@theroom.com', 'password': 'admin123'},
             'teacher': {'email': 'teacher@theroom.com', 'password': 'teacher123'},
             'member': {'email': 'member@theroom.com', 'password': 'member123'}
         }
