@@ -142,70 +142,14 @@ export const CourseDetail = () => {
 
                     {isTeacherOrAdmin && (
                         <div className="flex gap-2">
-                            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                                <DialogTrigger asChild>
-                                    <Button className="btn-primary" data-testid="add-lesson-btn">
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Add Lesson
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-md">
-                                    <DialogHeader>
-                                        <DialogTitle className="font-serif">Add New Lesson</DialogTitle>
-                                    </DialogHeader>
-                                    <form onSubmit={handleCreateLesson} className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label>Title</Label>
-                                            <Input
-                                                placeholder="Lesson title"
-                                                value={newLesson.title}
-                                                onChange={(e) => setNewLesson({ ...newLesson, title: e.target.value })}
-                                                data-testid="lesson-title-input"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Description</Label>
-                                            <Textarea
-                                                placeholder="Lesson description"
-                                                value={newLesson.description}
-                                                onChange={(e) => setNewLesson({ ...newLesson, description: e.target.value })}
-                                                rows={3}
-                                                data-testid="lesson-description-input"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>YouTube URL (optional)</Label>
-                                            <Input
-                                                placeholder="https://youtube.com/watch?v=..."
-                                                value={newLesson.youtube_url}
-                                                onChange={(e) => setNewLesson({ ...newLesson, youtube_url: e.target.value })}
-                                                data-testid="lesson-youtube-input"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Zoom Link (optional, overrides course)</Label>
-                                            <Input
-                                                placeholder="https://zoom.us/j/..."
-                                                value={newLesson.zoom_link}
-                                                onChange={(e) => setNewLesson({ ...newLesson, zoom_link: e.target.value })}
-                                                data-testid="lesson-zoom-input"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>Lesson Date</Label>
-                                            <Input
-                                                type="date"
-                                                value={newLesson.lesson_date}
-                                                onChange={(e) => setNewLesson({ ...newLesson, lesson_date: e.target.value })}
-                                                data-testid="lesson-date-input"
-                                            />
-                                        </div>
-                                        <Button type="submit" className="w-full btn-primary" disabled={creating} data-testid="submit-lesson-btn">
-                                            {creating ? 'Creating...' : 'Create Lesson'}
-                                        </Button>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
+                            <Button 
+                                className="btn-primary" 
+                                onClick={() => setShowLessonWizard(true)}
+                                data-testid="add-lesson-btn"
+                            >
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add Lesson
+                            </Button>
 
                             <Button 
                                 variant="outline" 
@@ -235,6 +179,24 @@ export const CourseDetail = () => {
                         </div>
                     )}
                 </div>
+                
+                {/* Course Progress (for members) */}
+                {!isTeacherOrAdmin && course.total_lessons > 0 && (
+                    <Card className="card-organic mb-6">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium">Your Progress</span>
+                                <span className="text-sm text-muted-foreground">
+                                    {course.completed_lessons} of {course.total_lessons} lessons
+                                </span>
+                            </div>
+                            <Progress 
+                                value={(course.completed_lessons / course.total_lessons) * 100} 
+                                className="h-2"
+                            />
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Lessons List */}
                 <div className="space-y-4">
@@ -242,32 +204,73 @@ export const CourseDetail = () => {
                     
                     {lessons.length > 0 ? (
                         <div className="space-y-3 stagger-children">
-                            {lessons.map((lesson, index) => (
-                                <Link 
-                                    key={lesson.id} 
-                                    to={`/lessons/${lesson.id}`}
-                                    data-testid={`lesson-card-${lesson.id}`}
-                                >
-                                    <Card className="card-organic card-hover">
-                                        <CardContent className="p-4 flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                                                <span className="text-primary font-bold">{index + 1}</span>
-                                            </div>
-                                            <div className="flex-grow min-w-0">
-                                                <h3 className="font-semibold truncate">{lesson.title}</h3>
-                                                <p className="text-sm text-muted-foreground line-clamp-1">
-                                                    {lesson.description}
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center gap-2 flex-shrink-0 text-sm text-muted-foreground">
-                                                {lesson.lesson_date && (
-                                                    <span className="hidden md:flex items-center gap-1">
-                                                        <Calendar className="w-4 h-4" />
-                                                        {formatDate(lesson.lesson_date)}
-                                                    </span>
-                                                )}
-                                                {(lesson.zoom_link || course.zoom_link) && (
-                                                    <Video className="w-4 h-4 text-blue-500" />
+                            {lessons.map((lesson, index) => {
+                                const isLocked = !lesson.is_unlocked;
+                                const isCompleted = lesson.is_completed;
+                                const isDraft = !lesson.is_published;
+                                
+                                return (
+                                    <div key={lesson.id}>
+                                        {isLocked && !isTeacherOrAdmin ? (
+                                            <Card className="card-organic opacity-60 cursor-not-allowed" data-testid={`lesson-card-${lesson.id}`}>
+                                                <CardContent className="p-4 flex items-center gap-4">
+                                                    <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center flex-shrink-0">
+                                                        <Lock className="w-5 h-5 text-muted-foreground" />
+                                                    </div>
+                                                    <div className="flex-grow min-w-0">
+                                                        <h3 className="font-semibold truncate text-muted-foreground">{lesson.title}</h3>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Complete the previous lesson to unlock
+                                                        </p>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ) : (
+                                            <Link to={`/lessons/${lesson.id}`} data-testid={`lesson-card-${lesson.id}`}>
+                                                <Card className={cn(
+                                                    "card-organic card-hover",
+                                                    isCompleted && "border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10"
+                                                )}>
+                                                    <CardContent className="p-4 flex items-center gap-4">
+                                                        <div className={cn(
+                                                            "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0",
+                                                            isCompleted 
+                                                                ? "bg-green-100 dark:bg-green-900/30"
+                                                                : "bg-primary/10"
+                                                        )}>
+                                                            {isCompleted ? (
+                                                                <CheckCircle className="w-6 h-6 text-green-600" />
+                                                            ) : (
+                                                                <span className="text-primary font-bold">{index + 1}</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-grow min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <h3 className="font-semibold truncate">{lesson.title}</h3>
+                                                                {isDraft && isTeacherOrAdmin && (
+                                                                    <Badge variant="secondary" className="text-xs">
+                                                                        <EyeOff className="w-3 h-3 mr-1" />
+                                                                        Draft
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-sm text-muted-foreground line-clamp-1">
+                                                                {lesson.description}
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 flex-shrink-0 text-sm text-muted-foreground">
+                                                            {lesson.lesson_date && (
+                                                                <span className="hidden md:flex items-center gap-1">
+                                                                    <Calendar className="w-4 h-4" />
+                                                                    {formatDate(lesson.lesson_date)}
+                                                                </span>
+                                                            )}
+                                                            {lesson.hosting_method === 'in_app' && (
+                                                                <Video className="w-4 h-4 text-primary" />
+                                                            )}
+                                                            {lesson.hosting_method === 'zoom' && (
+                                                                <Video className="w-4 h-4 text-blue-500" />
+                                                            )}
                                                 )}
                                                 {lesson.resources?.length > 0 && (
                                                     <span className="bg-muted px-2 py-1 rounded text-xs">
