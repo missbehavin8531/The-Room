@@ -299,6 +299,16 @@ export const CourseDetail = () => {
                     )}
                 </div>
             </div>
+            
+            {/* Lesson Creation Wizard */}
+            {showLessonWizard && (
+                <LessonWizard
+                    courseId={courseId}
+                    courseName={course?.title}
+                    onClose={() => setShowLessonWizard(false)}
+                    onSuccess={handleLessonCreated}
+                />
+            )}
         </Layout>
     );
 };
