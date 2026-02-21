@@ -661,8 +661,8 @@ export const LessonDetail = () => {
                             </div>
                         ) : null}
                         
-                        {/* YouTube Video (shown when available, or as fallback when no recordings) */}
-                        {lesson.youtube_url && (
+                        {/* YouTube Video (shown when recording_source is youtube) */}
+                        {(lesson.recording_source === 'youtube' || lesson.youtube_url) && (lesson.recording_url || lesson.youtube_url) && (
                             <div className="space-y-3">
                                 {recordings.length > 0 && (
                                     <h3 className="font-semibold flex items-center gap-2">
@@ -673,7 +673,7 @@ export const LessonDetail = () => {
                                 <Card className="card-organic overflow-hidden">
                                     <div className="youtube-wrapper" onClick={handleWatchReplay}>
                                         <iframe
-                                            src={getYouTubeEmbedUrl(lesson.youtube_url)}
+                                            src={getYouTubeEmbedUrl(lesson.recording_url || lesson.youtube_url)}
                                             title={lesson.title}
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             allowFullScreen
@@ -689,12 +689,47 @@ export const LessonDetail = () => {
                             </div>
                         )}
                         
+                        {/* External Video URL */}
+                        {lesson.recording_source === 'external' && lesson.recording_url && (
+                            <div className="space-y-3">
+                                <Card className="card-organic overflow-hidden">
+                                    <div className="aspect-video bg-black">
+                                        <iframe
+                                            src={lesson.recording_url}
+                                            title={lesson.title}
+                                            className="w-full h-full"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                                            allowFullScreen
+                                            onLoad={handleWatchReplay}
+                                        />
+                                    </div>
+                                    {completedActions.includes('watched_replay') && (
+                                        <div className="p-3 bg-green-50 dark:bg-green-900/20 flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
+                                            <CheckCircle className="w-4 h-4" />
+                                            <span className="text-sm font-medium">Watched</span>
+                                        </div>
+                                    )}
+                                </Card>
+                            </div>
+                        )}
+                        
                         {/* No content available message */}
-                        {!loadingRecordings && recordings.length === 0 && !lesson.youtube_url && (
+                        {!loadingRecordings && recordings.length === 0 && !lesson.youtube_url && !lesson.recording_url && lesson.recording_source !== 'daily' && (
                             <Card className="card-organic">
                                 <CardContent className="p-8 text-center">
                                     <Play className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
                                     <h3 className="text-lg font-medium mb-2">No Replay Available</h3>
+                                    <p className="text-muted-foreground">The teacher hasn't added a recording for this lesson yet.</p>
+                                </CardContent>
+                            </Card>
+                        )}
+                        
+                        {/* Daily.co recordings pending message */}
+                        {!loadingRecordings && recordings.length === 0 && lesson.recording_source === 'daily' && (
+                            <Card className="card-organic">
+                                <CardContent className="p-8 text-center">
+                                    <Play className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                                    <h3 className="text-lg font-medium mb-2">Recording Coming Soon</h3>
                                     <p className="text-muted-foreground">Recordings from live sessions will appear here after they're processed.</p>
                                     <p className="text-sm text-muted-foreground mt-2">Check back after the live session ends.</p>
                                 </CardContent>
