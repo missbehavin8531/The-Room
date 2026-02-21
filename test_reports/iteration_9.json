@@ -1,0 +1,104 @@
+{
+  "summary": "Completed testing of MVP Polish features for 'The Room' app. All 28 backend tests passed. Frontend Lesson Editor correctly shows new hosting_method (in_app/zoom only, no 'both') and recording_source (daily/youtube/external/none) options. Sequential lesson unlock, course/lesson publishing, and visibility controls work correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "LessonWizard component",
+        "issue": "LessonWizard.jsx multi-step wizard not integrated - 'Add Lesson' button shows simple form instead of the step-by-step wizard. The new fields (hosting_method, recording_source) are only accessible in the LessonEditor after creation.",
+        "affected_selectors": [],
+        "priority": "LOW"
+      },
+      {
+        "flow": "CourseWizard component",
+        "issue": "CourseWizard.jsx multi-step wizard not integrated - 'Create Course' button shows simple form instead of the step-by-step wizard.",
+        "affected_selectors": [],
+        "priority": "LOW"
+      }
+    ],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Backend: Lesson creation with hosting_method='in_app' works",
+    "Backend: Lesson creation with hosting_method='zoom' works",
+    "Backend: Teacher can update hosting_method",
+    "Backend: recording_source='none' works",
+    "Backend: recording_source='daily' works",
+    "Backend: recording_source='youtube' with recording_url works",
+    "Backend: recording_source='external' with recording_url works",
+    "Backend: Create draft lesson (is_published=false) works",
+    "Backend: Create published lesson (is_published=true) works",
+    "Backend: Toggle lesson is_published works",
+    "Backend: Create draft course works",
+    "Backend: POST /courses/{id}/publish publishes course and lessons",
+    "Backend: POST /courses/{id}/unpublish works",
+    "Backend: Member cannot see draft course (404)",
+    "Backend: Member can see published course",
+    "Backend: Member cannot see draft lesson (404)",
+    "Backend: POST /lessons/{id}/complete works",
+    "Backend: Already completed lesson returns appropriate message",
+    "Backend: DELETE /lessons/{id}/complete removes completion",
+    "Backend: GET /courses/{id}/progress returns 0% when no lessons completed",
+    "Backend: GET /courses/{id}/progress returns correct partial percentage",
+    "Backend: First lesson always unlocked",
+    "Backend: Second lesson locked until first completed",
+    "Backend: Cannot complete locked lesson (403)",
+    "Backend: Teacher can see all lessons as unlocked (bypass)",
+    "Backend: GET /auth/onboarding-status works",
+    "Backend: POST /auth/onboarding-complete works",
+    "Backend: POST /auth/onboarding-step works",
+    "Frontend: Lesson Editor shows 'In-App Video Room' and 'Zoom Meeting' options (NO 'Both')",
+    "Frontend: Lesson Editor shows recording_source options (Daily, YouTube, External, None)",
+    "Frontend: Lesson Editor publish toggle visible and working",
+    "Frontend: Clicking Zoom shows zoom link input",
+    "Frontend: Clicking YouTube recording shows URL input",
+    "Frontend: Member sees only published courses",
+    "Frontend: Member sees Video Room join option (when hosting_method='in_app')",
+    "Frontend: Member sees YouTube player in NEXT tab (when recording_source='youtube')",
+    "Frontend: Member does not see Edit button (correct access control)",
+    "Frontend: Onboarding component exists and has proper structure"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_mvp_polish.py",
+    "/app/test_reports/pytest/pytest_mvp_polish.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Integrate LessonWizard.jsx component to replace simple 'Add Lesson' dialog for better UX with multi-step flow (Basics → Hosting → Recording → Content → Review)",
+    "OPTIONAL: Integrate CourseWizard.jsx component to replace simple 'Create Course' dialog for better UX with draft/publish options"
+  ],
+  "critical_code_review_comments": [
+    "LessonWizard.jsx and CourseWizard.jsx components exist but are not integrated into the main flows - they could provide better onboarding UX for teachers creating content",
+    "Onboarding.jsx component exists but may need integration point (e.g., first login detection)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_mvp_polish.py"
+  ],
+  "success_rate": {
+    "backend": "100% (28/28 tests passed)",
+    "frontend": "100% (all tested features working)"
+  },
+  "test_credentials": {
+    "member": "member@sundayschool.com / member123",
+    "teacher": "teacher@sundayschool.com / teacher123"
+  },
+  "seed_data_creation": "Test data created and cleaned up during tests (TEST_ prefixed)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "MVP Polish complete. Key changes: hosting_method simplified to 'in_app' OR 'zoom' only (no 'both' option). recording_source field added with 4 options: daily, youtube, external, none. Sequential lesson unlock working - lessons are locked until previous completed (except first lesson). Course/lesson publishing controls visibility for members. LessonEditor.jsx contains all new fields and works correctly. LessonWizard.jsx and CourseWizard.jsx exist but are not yet integrated into the main UI flows - simple dialogs are used instead. Onboarding.jsx component exists for new user tutorial but integration point may need verification.",
+  "key_api_endpoints_tested": [
+    "POST /api/lessons - create with new fields",
+    "PUT /api/lessons/{id} - update hosting_method, recording_source, is_published",
+    "POST /api/lessons/{id}/complete - mark lesson complete",
+    "DELETE /api/lessons/{id}/complete - unmark lesson complete",
+    "GET /api/courses/{id}/progress - get user progress",
+    "POST /api/courses/{id}/publish - publish course and all lessons",
+    "POST /api/courses/{id}/unpublish - unpublish course",
+    "GET /api/auth/onboarding-status",
+    "POST /api/auth/onboarding-complete",
+    "POST /api/auth/onboarding-step?step={step}"
+  ]
+}
