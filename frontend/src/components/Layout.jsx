@@ -150,10 +150,8 @@ export const Layout = ({ children }) => {
             <header className="md:hidden sticky top-0 z-40 bg-white/90 backdrop-blur-lg border-b border-border">
                 <div className="flex items-center justify-between px-4 h-14">
                     <Link to="/" className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                            <BookOpen className="w-4 h-4 text-primary-foreground" />
-                        </div>
-                        <span className="font-serif font-bold">Sunday School</span>
+                        <img src="/logo.png" alt="The Room" className="w-8 h-8 rounded-lg" />
+                        <span className="font-serif font-bold">The Room</span>
                     </Link>
 
                     <DropdownMenu>
