@@ -67,6 +67,13 @@ export const coursesAPI = {
     publish: (id) => api.post(`/courses/${id}/publish`),
     unpublish: (id) => api.post(`/courses/${id}/unpublish`),
     getProgress: (id) => api.get(`/courses/${id}/progress`),
+    uploadCover: (id, file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post(`/courses/${id}/cover`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    },
 };
 
 // Lessons API
