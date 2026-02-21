@@ -596,13 +596,18 @@ async def login(data: UserLogin):
 
 @api_router.get("/auth/me", response_model=UserResponse)
 async def get_me(user: dict = Depends(get_current_user)):
+    # Check onboarding status from user_onboarding collection
+    onboarding = await db.user_onboarding.find_one({'user_id': user['id']})
+    onboarding_complete = onboarding.get('completed', False) if onboarding else False
+    
     return UserResponse(
         id=user['id'],
         email=user['email'],
         name=user['name'],
         role=user['role'],
         is_approved=user['is_approved'],
-        created_at=user['created_at']
+        created_at=user['created_at'],
+        onboarding_complete=onboarding_complete
     )
 
 @api_router.get("/auth/onboarding-status")
