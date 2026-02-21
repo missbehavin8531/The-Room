@@ -57,7 +57,6 @@ export const CourseDetail = () => {
             ]);
             setCourse(courseRes.data);
             setLessons(lessonsRes.data);
-            setNewLesson(prev => ({ ...prev, order: lessonsRes.data.length + 1 }));
         } catch (error) {
             toast.error('Failed to load course');
             navigate('/courses');
@@ -66,35 +65,9 @@ export const CourseDetail = () => {
         }
     };
 
-    const handleCreateLesson = async (e) => {
-        e.preventDefault();
-        if (!newLesson.title || !newLesson.description) {
-            toast.error('Please fill in title and description');
-            return;
-        }
-
-        setCreating(true);
-        try {
-            const response = await lessonsAPI.create({
-                ...newLesson,
-                course_id: courseId
-            });
-            setLessons([...lessons, response.data]);
-            setDialogOpen(false);
-            setNewLesson({
-                title: '',
-                description: '',
-                youtube_url: '',
-                zoom_link: '',
-                lesson_date: '',
-                order: lessons.length + 2
-            });
-            toast.success('Lesson created!');
-        } catch (error) {
-            toast.error('Failed to create lesson');
-        } finally {
-            setCreating(false);
-        }
+    const handleLessonCreated = (newLesson) => {
+        setLessons([...lessons, newLesson]);
+        setShowLessonWizard(false);
     };
 
     const handleDeleteCourse = async () => {
