@@ -75,6 +75,10 @@ export const CourseDetail = () => {
         setShowLessonWizard(false);
     };
 
+    const handleCourseUpdated = (updatedCourse) => {
+        setCourse(updatedCourse);
+    };
+
     const handleDeleteCourse = async () => {
         try {
             await coursesAPI.delete(courseId);
