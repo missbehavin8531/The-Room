@@ -8,6 +8,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
+import { Switch } from '../components/ui/switch';
 import { lessonsAPI, teacherPromptsAPI } from '../lib/api';
 import { toast } from 'sonner';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
@@ -15,19 +16,13 @@ import { cn } from '../lib/utils';
 import { 
     ArrowLeft, Save, Plus, Trash2, GripVertical, 
     MessageSquare, BookOpen, Calendar, Video, 
-    Loader2, AlertCircle, MonitorPlay, ExternalLink
+    Loader2, AlertCircle, MonitorPlay, ExternalLink,
+    Play, Check, X, Eye, EyeOff
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '../components/ui/alert-dialog';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '../components/ui/select';
 
 export const LessonEditor = () => {
     const { lessonId } = useParams();
@@ -40,12 +35,14 @@ export const LessonEditor = () => {
     const [lesson, setLesson] = useState({
         title: '',
         description: '',
-        youtube_url: '',
         zoom_link: '',
         lesson_date: '',
         teacher_notes: '',
         reading_plan: '',
-        hosting_method: 'both',
+        hosting_method: 'in_app',
+        recording_source: 'none',
+        recording_url: '',
+        is_published: false,
         order: 0
     });
     
