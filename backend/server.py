@@ -1945,28 +1945,14 @@ async def get_participation_stats(user: dict = Depends(require_admin)):
 @api_router.post("/seed")
 async def seed_data():
     # Check if already seeded (check both old and new email domains)
-    existing_admin = await db.users.find_one({'$or': [
-        {'email': 'admin@theroom.com'},
-        {'email': 'admin@sundayschool.com'}
+    existing_teacher = await db.users.find_one({'$or': [
+        {'email': 'teacher@theroom.com'},
+        {'email': 'teacher@sundayschool.com'}
     ]})
-    if existing_admin:
+    if existing_teacher:
         return {'message': 'Data already seeded'}
     
-    # Create admin user
-    admin_id = str(uuid.uuid4())
-    admin = {
-        'id': admin_id,
-        'email': 'admin@theroom.com',
-        'name': 'Admin User',
-        'password': hash_password('admin123'),
-        'role': 'admin',
-        'is_approved': True,
-        'is_muted': False,
-        'created_at': datetime.now(timezone.utc).isoformat()
-    }
-    await db.users.insert_one(admin)
-    
-    # Create teacher user
+    # Create teacher user (Teacher is also admin in this app)
     teacher_id = str(uuid.uuid4())
     teacher = {
         'id': teacher_id,
