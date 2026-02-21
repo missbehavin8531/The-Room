@@ -64,6 +64,9 @@ export const coursesAPI = {
     enroll: (id) => api.post(`/courses/${id}/enroll`),
     unenroll: (id) => api.delete(`/courses/${id}/enroll`),
     getEnrollments: (id) => api.get(`/courses/${id}/enrollments`),
+    publish: (id) => api.post(`/courses/${id}/publish`),
+    unpublish: (id) => api.post(`/courses/${id}/unpublish`),
+    getProgress: (id) => api.get(`/courses/${id}/progress`),
 };
 
 // Lessons API
@@ -75,6 +78,8 @@ export const lessonsAPI = {
     create: (data) => api.post('/lessons', data),
     update: (id, data) => api.put(`/lessons/${id}`, data),
     delete: (id) => api.delete(`/lessons/${id}`),
+    markComplete: (id) => api.post(`/lessons/${id}/complete`),
+    unmarkComplete: (id) => api.delete(`/lessons/${id}/complete`),
 };
 
 // Enrollments API
