@@ -15,12 +15,19 @@ import { cn } from '../lib/utils';
 import { 
     ArrowLeft, Save, Plus, Trash2, GripVertical, 
     MessageSquare, BookOpen, Calendar, Video, 
-    Loader2, AlertCircle
+    Loader2, AlertCircle, MonitorPlay, ExternalLink
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '../components/ui/alert-dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '../components/ui/select';
 
 export const LessonEditor = () => {
     const { lessonId } = useParams();
