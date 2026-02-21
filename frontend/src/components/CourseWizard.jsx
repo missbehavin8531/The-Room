@@ -62,12 +62,11 @@ export const CourseWizard = ({ onClose, onSuccess }) => {
             };
             
             const res = await coursesAPI.create(data);
-            toast.success(publish ? 'Course created and published!' : 'Course created as draft');
-            onSuccess?.(res.data);
-            onClose?.();
+            toast.success('Course created! Now let\'s add your first lesson.');
+            // Pass the created course to trigger lesson wizard
+            onSuccess?.(res.data, true); // true = should start lesson wizard
         } catch (error) {
             toast.error(error.response?.data?.detail || 'Failed to create course');
-        } finally {
             setSaving(false);
         }
     };
