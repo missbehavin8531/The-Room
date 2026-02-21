@@ -543,15 +543,15 @@ async def require_approved(user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Account pending approval")
     return user
 
-async def require_teacher_or_admin(user: dict = Depends(require_approved)):
+async def require_teacher(user: dict = Depends(require_approved)):
+    """Teachers have full admin capabilities - consolidated role"""
     if user['role'] not in ['teacher', 'admin']:
-        raise HTTPException(status_code=403, detail="Teacher or Admin access required")
+        raise HTTPException(status_code=403, detail="Teacher access required")
     return user
 
-async def require_admin(user: dict = Depends(require_approved)):
-    if user['role'] != 'admin':
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return user
+# Alias for backward compatibility
+require_teacher_or_admin = require_teacher
+require_admin = require_teacher
 
 # ============== AUTH ROUTES ==============
 
