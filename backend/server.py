@@ -1807,9 +1807,9 @@ async def seed_data():
     return {
         'message': 'Seed data created',
         'credentials': {
-            'admin': {'email': 'admin@sundayschool.com', 'password': 'admin123'},
-            'teacher': {'email': 'teacher@sundayschool.com', 'password': 'teacher123'},
-            'member': {'email': 'member@sundayschool.com', 'password': 'member123'}
+            'admin': {'email': 'admin@theroom.com', 'password': 'admin123'},
+            'teacher': {'email': 'teacher@theroom.com', 'password': 'teacher123'},
+            'member': {'email': 'member@theroom.com', 'password': 'member123'}
         }
     }
 
@@ -1817,7 +1817,7 @@ async def seed_data():
 
 @api_router.get("/")
 async def root():
-    return {"message": "Sunday School Education API", "version": "1.0.0"}
+    return {"message": "The Room API", "version": "1.0.0"}
 
 # Include the router in the main app
 app.include_router(api_router)
