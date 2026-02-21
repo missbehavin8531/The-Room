@@ -1,0 +1,62 @@
+{
+  "summary": "Completed testing of Course unlock_type feature, CourseEditor, and Login demo buttons. All new features working correctly: 1) Login page shows only Teacher/Member demo buttons (no Admin), 2) CourseWizard has 3 steps (Details→Settings→Review) with Sequential/Scheduled unlock mode, 3) Course detail page shows unlock type badge, 4) CourseEditor modal allows cover upload and unlock mode toggle, 5) Course changes persist correctly, 6) Scheduled unlock mode locks/unlocks lessons based on date.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Login page shows Teacher and Member demo buttons",
+    "Login page does NOT show Admin demo button (confirmed removed)",
+    "Teacher login works with teacher@theroom.com / teacher123",
+    "Member login works with member@theroom.com / member123",
+    "Admin demo account doesn't exist (401 on login)",
+    "Course creation with default sequential unlock_type",
+    "Course creation with explicit sequential unlock_type",
+    "Course creation with scheduled unlock_type",
+    "Course update unlock_type from sequential to scheduled",
+    "Course update title and description",
+    "Scheduled lesson with past date is unlocked for members",
+    "Scheduled lesson with future date is locked for members",
+    "Scheduled lesson with today's date is unlocked",
+    "Teachers always see all lessons as unlocked",
+    "Cover upload endpoint exists (POST /api/courses/{id}/cover)",
+    "Cover image upload with PNG works",
+    "Course API accepts unlock_type in request body",
+    "CourseWizard opens with 3 steps: Course Details, Settings, Review",
+    "CourseWizard Settings step shows Sequential and Scheduled options",
+    "CourseWizard Review step shows selected unlock mode",
+    "Course detail page shows unlock type badge (Sequential/Scheduled icon)",
+    "Course detail page has Settings/Edit button for teachers",
+    "CourseEditor modal opens with Edit Course title",
+    "CourseEditor shows cover image upload option",
+    "CourseEditor shows Sequential/Scheduled unlock mode toggle",
+    "CourseEditor Save Changes button works",
+    "Course changes persist after save (unlock type updates)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_course_unlock.py",
+    "/app/test_reports/pytest/pytest_course_unlock.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_course_unlock.py"
+  ],
+  "success_rate": {
+    "backend": "100% (15/15 tests passed)",
+    "frontend": "100% (all UI features verified)"
+  },
+  "test_credentials": {
+    "teacher": "teacher@theroom.com / teacher123",
+    "member": "member@theroom.com / member123"
+  },
+  "seed_data_creation": "Created and cleaned up TEST_ prefixed courses during testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Course unlock_type feature fully implemented. Courses can be created with 'sequential' (default) or 'scheduled' unlock mode. Sequential: lessons unlock one by one after completing previous. Scheduled: lessons unlock based on their lesson_date. CourseEditor allows editing title, description, cover image (upload or URL), unlock_type, and published status. Admin demo user has been removed from the system."
+}
