@@ -73,6 +73,7 @@ class UserResponse(BaseModel):
     role: str
     is_approved: bool
     created_at: str
+    onboarding_complete: bool = False
 
 class CourseBase(BaseModel):
     title: str
