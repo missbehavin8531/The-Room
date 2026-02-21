@@ -655,24 +655,37 @@ async def create_course(data: CourseCreate, user: dict = Depends(require_teacher
         'id': course_id,
         'title': data.title,
         'description': data.description,
-        'zoom_link': data.zoom_link,
         'thumbnail_url': data.thumbnail_url,
+        'is_published': data.is_published,
         'teacher_id': user['id'],
         'teacher_name': user['name'],
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.courses.insert_one(course)
-    return CourseResponse(**course, lesson_count=0, enrollment_count=0, is_enrolled=False)
+    return CourseResponse(**course, lesson_count=0, enrollment_count=0, is_enrolled=False, completed_lessons=0, total_lessons=0)
 
 @api_router.get("/courses", response_model=List[CourseResponse])
 async def get_courses(user: dict = Depends(require_approved)):
-    courses = await db.courses.find({}, {'_id': 0}).to_list(1000)
+    # Teachers see all courses, members only see published ones
+    query = {}
+    if user['role'] not in ['teacher', 'admin']:
+        query['is_published'] = True
+    
+    courses = await db.courses.find(query, {'_id': 0}).to_list(1000)
     result = []
     for c in courses:
-        lesson_count = await db.lessons.count_documents({'course_id': c['id']})
+        total_lessons = await db.lessons.count_documents({'course_id': c['id'], 'is_published': True})
         enrollment_count = await db.enrollments.count_documents({'course_id': c['id']})
         is_enrolled = await db.enrollments.find_one({'course_id': c['id'], 'user_id': user['id']}) is not None
-        result.append(CourseResponse(**c, lesson_count=lesson_count, enrollment_count=enrollment_count, is_enrolled=is_enrolled))
+        completed_lessons = await db.lesson_completions.count_documents({'course_id': c['id'], 'user_id': user['id']})
+        result.append(CourseResponse(
+            **c,
+            lesson_count=total_lessons,
+            enrollment_count=enrollment_count,
+            is_enrolled=is_enrolled,
+            completed_lessons=completed_lessons,
+            total_lessons=total_lessons
+        ))
     return result
 
 @api_router.get("/courses/{course_id}", response_model=CourseResponse)
@@ -680,20 +693,54 @@ async def get_course(course_id: str, user: dict = Depends(require_approved)):
     course = await db.courses.find_one({'id': course_id}, {'_id': 0})
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
-    lesson_count = await db.lessons.count_documents({'course_id': course_id})
+    
+    # Check access for members
+    if user['role'] not in ['teacher', 'admin']:
+        if not course.get('is_published', False):
+            raise HTTPException(status_code=404, detail="Course not found")
+    
+    total_lessons = await db.lessons.count_documents({'course_id': course_id, 'is_published': True})
     enrollment_count = await db.enrollments.count_documents({'course_id': course_id})
     is_enrolled = await db.enrollments.find_one({'course_id': course_id, 'user_id': user['id']}) is not None
-    return CourseResponse(**course, lesson_count=lesson_count, enrollment_count=enrollment_count, is_enrolled=is_enrolled)
+    completed_lessons = await db.lesson_completions.count_documents({'course_id': course_id, 'user_id': user['id']})
+    return CourseResponse(
+        **course,
+        lesson_count=total_lessons,
+        enrollment_count=enrollment_count,
+        is_enrolled=is_enrolled,
+        completed_lessons=completed_lessons,
+        total_lessons=total_lessons
+    )
 
 @api_router.put("/courses/{course_id}")
-async def update_course(course_id: str, data: CourseCreate, user: dict = Depends(require_teacher_or_admin)):
+async def update_course(course_id: str, data: CourseBase, user: dict = Depends(require_teacher_or_admin)):
+    update_data = data.model_dump(exclude_unset=True)
     result = await db.courses.update_one(
         {'id': course_id},
-        {'$set': data.model_dump()}
+        {'$set': update_data}
     )
     if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Course not found")
+        course = await db.courses.find_one({'id': course_id})
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found")
     return {'message': 'Course updated'}
+
+@api_router.post("/courses/{course_id}/publish")
+async def publish_course(course_id: str, user: dict = Depends(require_teacher_or_admin)):
+    """Publish a course and all its lessons"""
+    course = await db.courses.find_one({'id': course_id})
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    await db.courses.update_one({'id': course_id}, {'$set': {'is_published': True}})
+    await db.lessons.update_many({'course_id': course_id}, {'$set': {'is_published': True}})
+    return {'message': 'Course and lessons published'}
+
+@api_router.post("/courses/{course_id}/unpublish")
+async def unpublish_course(course_id: str, user: dict = Depends(require_teacher_or_admin)):
+    """Unpublish a course (set to draft)"""
+    await db.courses.update_one({'id': course_id}, {'$set': {'is_published': False}})
+    return {'message': 'Course unpublished'}
 
 @api_router.delete("/courses/{course_id}")
 async def delete_course(course_id: str, user: dict = Depends(require_teacher_or_admin)):
