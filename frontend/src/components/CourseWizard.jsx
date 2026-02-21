@@ -122,8 +122,84 @@ export const CourseWizard = ({ onClose, onSuccess }) => {
                                 data-testid="course-thumbnail-input"
                             />
                             <p className="text-xs text-muted-foreground">
-                                Image to display on the course card. Leave blank for default.
+                                Image to display on the course card. You can upload an image after creating the course.
                             </p>
+                        </div>
+                    </div>
+                );
+                
+            case 'settings':
+                return (
+                    <div className="space-y-6">
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <ListOrdered className="w-8 h-8 text-blue-600" />
+                            </div>
+                            <h3 className="text-lg font-medium">Course Settings</h3>
+                            <p className="text-sm text-muted-foreground">
+                                Choose how lessons unlock for students.
+                            </p>
+                        </div>
+                        
+                        <div className="space-y-3">
+                            <Label>Lesson Unlock Mode</Label>
+                            <div className="grid gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => updateField('unlock_type', 'sequential')}
+                                    className={cn(
+                                        "p-4 rounded-xl border-2 transition-all text-left flex items-start gap-4",
+                                        course.unlock_type === 'sequential'
+                                            ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                                            : "border-muted hover:border-primary/50"
+                                    )}
+                                    data-testid="unlock-sequential"
+                                >
+                                    <div className={cn(
+                                        "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                                        course.unlock_type === 'sequential' ? "bg-primary text-primary-foreground" : "bg-muted"
+                                    )}>
+                                        <ListOrdered className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium">Sequential</p>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            Students must complete lessons in order. The next lesson unlocks after completing the previous one.
+                                        </p>
+                                    </div>
+                                    {course.unlock_type === 'sequential' && (
+                                        <Check className="w-5 h-5 text-primary flex-shrink-0" />
+                                    )}
+                                </button>
+                                
+                                <button
+                                    type="button"
+                                    onClick={() => updateField('unlock_type', 'scheduled')}
+                                    className={cn(
+                                        "p-4 rounded-xl border-2 transition-all text-left flex items-start gap-4",
+                                        course.unlock_type === 'scheduled'
+                                            ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                                            : "border-muted hover:border-primary/50"
+                                    )}
+                                    data-testid="unlock-scheduled"
+                                >
+                                    <div className={cn(
+                                        "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                                        course.unlock_type === 'scheduled' ? "bg-primary text-primary-foreground" : "bg-muted"
+                                    )}>
+                                        <Calendar className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium">Scheduled</p>
+                                        <p className="text-sm text-muted-foreground mt-1">
+                                            Lessons unlock automatically on their scheduled date. Students can access any unlocked lesson.
+                                        </p>
+                                    </div>
+                                    {course.unlock_type === 'scheduled' && (
+                                        <Check className="w-5 h-5 text-primary flex-shrink-0" />
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 );
