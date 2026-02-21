@@ -879,13 +879,83 @@ async def get_next_lesson(user: dict = Depends(require_approved)):
 
 @api_router.put("/lessons/{lesson_id}")
 async def update_lesson(lesson_id: str, data: LessonBase, user: dict = Depends(require_teacher_or_admin)):
+    update_data = data.model_dump(exclude_unset=True)
     result = await db.lessons.update_one(
         {'id': lesson_id},
-        {'$set': data.model_dump()}
+        {'$set': update_data}
     )
     if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Lesson not found")
+        # Check if lesson exists
+        lesson = await db.lessons.find_one({'id': lesson_id})
+        if not lesson:
+            raise HTTPException(status_code=404, detail="Lesson not found")
     return {'message': 'Lesson updated'}
+
+@api_router.post("/lessons/{lesson_id}/complete")
+async def mark_lesson_complete(lesson_id: str, user: dict = Depends(require_approved)):
+    """Mark a lesson as completed by the current user"""
+    lesson = await db.lessons.find_one({'id': lesson_id}, {'_id': 0})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    # Check if already completed
+    existing = await db.lesson_completions.find_one({
+        'lesson_id': lesson_id,
+        'user_id': user['id']
+    })
+    if existing:
+        return {'message': 'Lesson already completed', 'completed_at': existing['completed_at']}
+    
+    # Check if lesson is unlocked for this user
+    if user['role'] not in ['teacher', 'admin']:
+        prev_lesson = await db.lessons.find_one(
+            {'course_id': lesson['course_id'], 'order': {'$lt': lesson.get('order', 0)}, 'is_published': True},
+            sort=[('order', -1)]
+        )
+        if prev_lesson:
+            prev_completion = await db.lesson_completions.find_one({
+                'lesson_id': prev_lesson['id'],
+                'user_id': user['id']
+            })
+            if not prev_completion and lesson.get('order', 1) > 1:
+                raise HTTPException(status_code=403, detail="Complete the previous lesson first")
+    
+    completion = {
+        'id': str(uuid.uuid4()),
+        'lesson_id': lesson_id,
+        'course_id': lesson['course_id'],
+        'user_id': user['id'],
+        'completed_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.lesson_completions.insert_one(completion)
+    return {'message': 'Lesson marked as complete', 'completed_at': completion['completed_at']}
+
+@api_router.delete("/lessons/{lesson_id}/complete")
+async def unmark_lesson_complete(lesson_id: str, user: dict = Depends(require_approved)):
+    """Remove lesson completion for the current user"""
+    result = await db.lesson_completions.delete_one({
+        'lesson_id': lesson_id,
+        'user_id': user['id']
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Completion not found")
+    return {'message': 'Lesson completion removed'}
+
+@api_router.get("/courses/{course_id}/progress")
+async def get_course_progress(course_id: str, user: dict = Depends(require_approved)):
+    """Get user's progress through a course"""
+    total_lessons = await db.lessons.count_documents({'course_id': course_id, 'is_published': True})
+    completed_lessons = await db.lesson_completions.count_documents({
+        'course_id': course_id,
+        'user_id': user['id']
+    })
+    
+    return {
+        'course_id': course_id,
+        'total_lessons': total_lessons,
+        'completed_lessons': completed_lessons,
+        'progress_percent': round((completed_lessons / total_lessons * 100) if total_lessons > 0 else 0, 1)
+    }
 
 @api_router.delete("/lessons/{lesson_id}")
 async def delete_lesson(lesson_id: str, user: dict = Depends(require_teacher_or_admin)):
@@ -894,6 +964,7 @@ async def delete_lesson(lesson_id: str, user: dict = Depends(require_teacher_or_
         raise HTTPException(status_code=404, detail="Lesson not found")
     await db.comments.delete_many({'lesson_id': lesson_id})
     await db.resources.delete_many({'lesson_id': lesson_id})
+    await db.lesson_completions.delete_many({'lesson_id': lesson_id})
     return {'message': 'Lesson deleted'}
 
 # ============== DISCUSSION/COMMENTS ==============
