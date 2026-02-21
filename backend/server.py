@@ -787,6 +787,66 @@ async def publish_course(course_id: str, user: dict = Depends(require_teacher_or
     await db.lessons.update_many({'course_id': course_id}, {'$set': {'is_published': True}})
     return {'message': 'Course and lessons published'}
 
+@api_router.post("/courses/{course_id}/cover")
+async def upload_course_cover(
+    course_id: str,
+    file: UploadFile = File(...),
+    user: dict = Depends(require_teacher_or_admin)
+):
+    """Upload a cover image for a course"""
+    course = await db.courses.find_one({'id': course_id})
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    # Validate file type - images only
+    allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="File type not allowed. Use JPEG, PNG, GIF, or WebP.")
+    
+    # Check file size (5MB max for images)
+    content = await file.read()
+    max_size = 5 * 1024 * 1024  # 5MB
+    if len(content) > max_size:
+        raise HTTPException(status_code=400, detail="File too large. Max 5MB for cover images.")
+    
+    # Delete old cover if exists
+    if course.get('cover_filename'):
+        old_file_path = UPLOAD_DIR / course['cover_filename']
+        if old_file_path.exists():
+            old_file_path.unlink()
+    
+    # Save file
+    file_ext = Path(file.filename).suffix
+    stored_filename = f"cover_{course_id}{file_ext}"
+    file_path = UPLOAD_DIR / stored_filename
+    
+    with open(file_path, 'wb') as f:
+        f.write(content)
+    
+    # Update course with cover info
+    await db.courses.update_one(
+        {'id': course_id},
+        {'$set': {
+            'cover_filename': stored_filename,
+            'thumbnail_url': f'/api/courses/{course_id}/cover/image'
+        }}
+    )
+    
+    return {'message': 'Cover uploaded', 'thumbnail_url': f'/api/courses/{course_id}/cover/image'}
+
+@api_router.get("/courses/{course_id}/cover/image")
+async def get_course_cover(course_id: str):
+    """Serve the course cover image"""
+    course = await db.courses.find_one({'id': course_id}, {'_id': 0})
+    if not course or not course.get('cover_filename'):
+        raise HTTPException(status_code=404, detail="Cover not found")
+    
+    file_path = UPLOAD_DIR / course['cover_filename']
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Cover file not found")
+    
+    return FileResponse(file_path)
+
 @api_router.post("/courses/{course_id}/unpublish")
 async def unpublish_course(course_id: str, user: dict = Depends(require_teacher_or_admin)):
     """Unpublish a course (set to draft)"""
