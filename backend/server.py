@@ -41,7 +41,7 @@ DAILY_API_KEY = os.environ.get('DAILY_API_KEY', '')
 DAILY_DOMAIN = os.environ.get('DAILY_DOMAIN', '')
 
 # Create the main app
-app = FastAPI(title="Sunday School Education API")
+app = FastAPI(title="The Room API")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
