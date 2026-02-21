@@ -48,9 +48,11 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 - [x] **Course/Lesson Publishing** - Draft/Published toggle for visibility control
 - [x] **Progress Tracking** - Visual progress bar and lesson completion
 - [x] **Role Consolidation** - Teacher = Admin (simplified roles)
-- [x] **Lesson Wizard** - Step-by-step guided lesson creation
-- [x] **Course Wizard** - Step-by-step guided course creation
-- [x] **Onboarding Component** - Tutorial for new teachers and students
+- [x] **Lesson Wizard** - Step-by-step guided lesson creation (5 steps)
+- [x] **Course Wizard** - Step-by-step guided course creation (2 steps)
+- [x] **Wizard Chaining** - LessonWizard auto-opens after CourseWizard
+- [x] **Onboarding Tutorial** - First-time user tutorial (role-specific content)
+- [x] **Onboarding Persistence** - Tutorial state saved in database, shows only once
 
 ### ✅ Phase 5: Branding & Hosting Method (Feb 2026)
 - [x] **Rebranding** - Changed from "Sunday School" to "The Room" with logo
