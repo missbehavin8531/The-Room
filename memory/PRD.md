@@ -41,6 +41,17 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 
 ## What's Been Implemented
 
+### ✅ Phase 6: MVP Polish & Guided Experience (Feb 2026)
+- [x] **Hosting Method Simplified** - Single choice only (In-App or Zoom)
+- [x] **Recording Source** - Multiple options (Daily.co, YouTube, External URL, None)
+- [x] **Sequential Lessons** - Lessons unlock in order after completion
+- [x] **Course/Lesson Publishing** - Draft/Published toggle for visibility control
+- [x] **Progress Tracking** - Visual progress bar and lesson completion
+- [x] **Role Consolidation** - Teacher = Admin (simplified roles)
+- [x] **Lesson Wizard** - Step-by-step guided lesson creation
+- [x] **Course Wizard** - Step-by-step guided course creation
+- [x] **Onboarding Component** - Tutorial for new teachers and students
+
 ### ✅ Phase 5: Branding & Hosting Method (Feb 2026)
 - [x] **Rebranding** - Changed from "Sunday School" to "The Room" with logo
 - [x] **Hosting Method** - Lesson field for `hosting_method`: "in_app", "zoom", or "both"
