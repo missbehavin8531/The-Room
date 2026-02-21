@@ -122,30 +122,38 @@ export const CourseDetail = () => {
                 {/* Course Header */}
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                     <div className="flex-grow">
-                        <h1 className="text-3xl md:text-4xl font-serif font-bold mb-2">
-                            {course.title}
-                        </h1>
+                        <div className="flex items-center gap-3 mb-2">
+                            <h1 className="text-3xl md:text-4xl font-serif font-bold">
+                                {course.title}
+                            </h1>
+                            {isTeacherOrAdmin && !course.is_published && (
+                                <Badge variant="secondary" className="text-xs">
+                                    <EyeOff className="w-3 h-3 mr-1" />
+                                    Draft
+                                </Badge>
+                            )}
+                        </div>
                         <p className="text-muted-foreground mb-4">
                             {course.description}
                         </p>
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                             <span>By {course.teacher_name}</span>
                             <span>•</span>
                             <span>{lessons.length} lessons</span>
-                            {course.zoom_link && (
-                                <>
-                                    <span>•</span>
-                                    <a 
-                                        href={course.zoom_link} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="text-blue-500 flex items-center gap-1 hover:underline"
-                                    >
-                                        <Video className="w-4 h-4" />
-                                        Join Zoom
-                                    </a>
-                                </>
-                            )}
+                            <span>•</span>
+                            <Badge variant="outline" className="text-xs font-normal">
+                                {course.unlock_type === 'scheduled' ? (
+                                    <>
+                                        <Calendar className="w-3 h-3 mr-1" />
+                                        Scheduled
+                                    </>
+                                ) : (
+                                    <>
+                                        <ListOrdered className="w-3 h-3 mr-1" />
+                                        Sequential
+                                    </>
+                                )}
+                            </Badge>
                         </div>
                     </div>
 
@@ -158,6 +166,14 @@ export const CourseDetail = () => {
                             >
                                 <Plus className="w-4 h-4 mr-2" />
                                 Add Lesson
+                            </Button>
+
+                            <Button 
+                                variant="outline"
+                                onClick={() => setShowCourseEditor(true)}
+                                data-testid="edit-course-btn"
+                            >
+                                <Settings className="w-4 h-4" />
                             </Button>
 
                             <Button 
