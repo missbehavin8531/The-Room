@@ -707,6 +707,7 @@ async def create_course(data: CourseCreate, user: dict = Depends(require_teacher
         'description': data.description,
         'thumbnail_url': data.thumbnail_url,
         'is_published': data.is_published,
+        'unlock_type': data.unlock_type,
         'teacher_id': user['id'],
         'teacher_name': user['name'],
         'created_at': datetime.now(timezone.utc).isoformat()
