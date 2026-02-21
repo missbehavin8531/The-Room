@@ -4,11 +4,12 @@ import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Skeleton } from '../components/ui/skeleton';
+import { Badge } from '../components/ui/badge';
+import { Progress } from '../components/ui/progress';
 import { coursesAPI, lessonsAPI } from '../lib/api';
-import { formatDate } from '../lib/utils';
+import { formatDate, cn } from '../lib/utils';
 import { toast } from 'sonner';
+import { LessonWizard } from '../components/LessonWizard';
 import { 
     ArrowLeft,
     Plus, 
@@ -16,15 +17,13 @@ import {
     Calendar,
     BookOpen,
     Trash2,
-    Edit2
+    Edit2,
+    Lock,
+    CheckCircle,
+    Eye,
+    EyeOff,
+    Play
 } from 'lucide-react';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '../components/ui/dialog';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -35,8 +34,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '../components/ui/alert-dialog';
-import { Label } from '../components/ui/label';
-import { Textarea } from '../components/ui/textarea';
 
 export const CourseDetail = () => {
     const { courseId } = useParams();
@@ -45,17 +42,8 @@ export const CourseDetail = () => {
     const [course, setCourse] = useState(null);
     const [lessons, setLessons] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [dialogOpen, setDialogOpen] = useState(false);
+    const [showLessonWizard, setShowLessonWizard] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [newLesson, setNewLesson] = useState({
-        title: '',
-        description: '',
-        youtube_url: '',
-        zoom_link: '',
-        lesson_date: '',
-        order: 0
-    });
-    const [creating, setCreating] = useState(false);
 
     useEffect(() => {
         fetchCourseData();
