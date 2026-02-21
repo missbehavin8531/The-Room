@@ -764,16 +764,16 @@ async def get_course(course_id: str, user: dict = Depends(require_approved)):
     )
 
 @api_router.put("/courses/{course_id}")
-async def update_course(course_id: str, data: CourseBase, user: dict = Depends(require_teacher_or_admin)):
-    update_data = data.model_dump(exclude_unset=True)
+async def update_course(course_id: str, data: CourseUpdate, user: dict = Depends(require_teacher_or_admin)):
+    update_data = data.model_dump(exclude_unset=True, exclude_none=True)
+    if not update_data:
+        return {'message': 'No changes to update'}
     result = await db.courses.update_one(
         {'id': course_id},
         {'$set': update_data}
     )
-    if result.modified_count == 0:
-        course = await db.courses.find_one({'id': course_id})
-        if not course:
-            raise HTTPException(status_code=404, detail="Course not found")
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Course not found")
     return {'message': 'Course updated'}
 
 @api_router.post("/courses/{course_id}/publish")
