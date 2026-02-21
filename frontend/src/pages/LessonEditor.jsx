@@ -75,6 +75,7 @@ export const LessonEditor = () => {
                 lesson_date: lessonData.lesson_date || '',
                 teacher_notes: lessonData.teacher_notes || '',
                 reading_plan: lessonData.reading_plan || '',
+                hosting_method: lessonData.hosting_method || 'both',
                 order: lessonData.order || 0
             });
             setPrompts(lessonData.prompts || []);
