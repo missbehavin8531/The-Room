@@ -251,103 +251,192 @@ export const LessonEditor = () => {
                                 />
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label>YouTube URL</Label>
-                            <Input
-                                value={lesson.youtube_url}
-                                onChange={(e) => setLesson({ ...lesson, youtube_url: e.target.value })}
-                                placeholder="https://youtube.com/watch?v=..."
-                                data-testid="lesson-youtube-input"
+                    </CardContent>
+                </Card>
+
+                {/* Publishing Status */}
+                <Card className="card-organic animate-fade-in" style={{ animationDelay: '0.075s' }}>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                {lesson.is_published ? (
+                                    <Eye className="w-5 h-5 text-green-600" />
+                                ) : (
+                                    <EyeOff className="w-5 h-5 text-muted-foreground" />
+                                )}
+                                <div>
+                                    <p className="font-medium">
+                                        {lesson.is_published ? 'Published' : 'Draft'}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {lesson.is_published 
+                                            ? 'Students can see this lesson' 
+                                            : 'Only you can see this lesson'}
+                                    </p>
+                                </div>
+                            </div>
+                            <Switch
+                                checked={lesson.is_published}
+                                onCheckedChange={(checked) => setLesson({ ...lesson, is_published: checked })}
+                                data-testid="publish-toggle"
                             />
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Hosting Method */}
-                <Card className="card-organic animate-fade-in" style={{ animationDelay: '0.075s' }}>
+                <Card className="card-organic animate-fade-in" style={{ animationDelay: '0.1s' }}>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-lg">
                             <MonitorPlay className="w-5 h-5" />
-                            Class Hosting Method
+                            Live Session Hosting
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <p className="text-sm text-muted-foreground">
-                            Choose how you'll host this class. Students will only see the option(s) you select.
+                            Choose how you'll host the live session. Students will only see this option.
                         </p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <button
                                 type="button"
                                 onClick={() => setLesson({ ...lesson, hosting_method: 'in_app' })}
                                 className={cn(
-                                    "p-4 rounded-xl border-2 transition-all text-left",
+                                    "p-4 rounded-xl border-2 transition-all text-left flex items-start gap-3",
                                     lesson.hosting_method === 'in_app'
-                                        ? "border-primary bg-primary/5"
+                                        ? "border-primary bg-primary/5 ring-2 ring-primary/20"
                                         : "border-muted hover:border-primary/50"
                                 )}
                                 data-testid="hosting-in-app"
                             >
-                                <Video className={cn(
-                                    "w-8 h-8 mb-2",
-                                    lesson.hosting_method === 'in_app' ? "text-primary" : "text-muted-foreground"
-                                )} />
-                                <p className="font-medium">In-App Video</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Use built-in video room
-                                </p>
+                                <div className={cn(
+                                    "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                                    lesson.hosting_method === 'in_app' ? "bg-primary text-primary-foreground" : "bg-muted"
+                                )}>
+                                    <Video className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="font-medium">In-App Video Room</p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        Built-in video with recording, screen share & chat
+                                    </p>
+                                </div>
+                                {lesson.hosting_method === 'in_app' && (
+                                    <Check className="w-5 h-5 text-primary flex-shrink-0" />
+                                )}
                             </button>
                             
                             <button
                                 type="button"
                                 onClick={() => setLesson({ ...lesson, hosting_method: 'zoom' })}
                                 className={cn(
-                                    "p-4 rounded-xl border-2 transition-all text-left",
+                                    "p-4 rounded-xl border-2 transition-all text-left flex items-start gap-3",
                                     lesson.hosting_method === 'zoom'
-                                        ? "border-primary bg-primary/5"
+                                        ? "border-primary bg-primary/5 ring-2 ring-primary/20"
                                         : "border-muted hover:border-primary/50"
                                 )}
                                 data-testid="hosting-zoom"
                             >
-                                <ExternalLink className={cn(
-                                    "w-8 h-8 mb-2",
-                                    lesson.hosting_method === 'zoom' ? "text-primary" : "text-muted-foreground"
-                                )} />
-                                <p className="font-medium">Zoom Only</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    External Zoom meeting
-                                </p>
-                            </button>
-                            
-                            <button
-                                type="button"
-                                onClick={() => setLesson({ ...lesson, hosting_method: 'both' })}
-                                className={cn(
-                                    "p-4 rounded-xl border-2 transition-all text-left",
-                                    lesson.hosting_method === 'both'
-                                        ? "border-primary bg-primary/5"
-                                        : "border-muted hover:border-primary/50"
-                                )}
-                                data-testid="hosting-both"
-                            >
-                                <div className="flex gap-1 mb-2">
-                                    <Video className={cn(
-                                        "w-6 h-6",
-                                        lesson.hosting_method === 'both' ? "text-primary" : "text-muted-foreground"
-                                    )} />
-                                    <ExternalLink className={cn(
-                                        "w-6 h-6",
-                                        lesson.hosting_method === 'both' ? "text-primary" : "text-muted-foreground"
-                                    )} />
+                                <div className={cn(
+                                    "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
+                                    lesson.hosting_method === 'zoom' ? "bg-primary text-primary-foreground" : "bg-muted"
+                                )}>
+                                    <ExternalLink className="w-5 h-5" />
                                 </div>
-                                <p className="font-medium">Both Options</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Students choose method
-                                </p>
+                                <div className="flex-1">
+                                    <p className="font-medium">Zoom Meeting</p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        Use your existing Zoom account
+                                    </p>
+                                </div>
+                                {lesson.hosting_method === 'zoom' && (
+                                    <Check className="w-5 h-5 text-primary flex-shrink-0" />
+                                )}
                             </button>
                         </div>
                         
+                        {lesson.hosting_method === 'zoom' && (
+                            <div className="space-y-2 animate-fade-in">
+                                <Label>Zoom Meeting Link *</Label>
+                                <Input
+                                    value={lesson.zoom_link}
+                                    onChange={(e) => setLesson({ ...lesson, zoom_link: e.target.value })}
+                                    placeholder="https://zoom.us/j/..."
+                                    data-testid="zoom-link-input"
+                                />
+                            </div>
+                        )}
+                        
                         {lesson.hosting_method === 'zoom' && !lesson.zoom_link && (
                             <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
+                                <AlertCircle className="w-4 h-4" />
+                                Add a Zoom link for students to join
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Recording Source */}
+                <Card className="card-organic animate-fade-in" style={{ animationDelay: '0.125s' }}>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <Play className="w-5 h-5" />
+                            Recording / Replay
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                            Where can students watch the replay after the live session?
+                        </p>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {[
+                                { value: 'daily', label: 'In-App Recording', icon: Video, color: 'purple' },
+                                { value: 'youtube', label: 'YouTube', icon: Play, color: 'red' },
+                                { value: 'external', label: 'External URL', icon: ExternalLink, color: 'blue' },
+                                { value: 'none', label: 'None', icon: X, color: 'gray' },
+                            ].map(option => (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => setLesson({ ...lesson, recording_source: option.value })}
+                                    className={cn(
+                                        "p-3 rounded-xl border-2 transition-all text-center",
+                                        lesson.recording_source === option.value
+                                            ? "border-primary bg-primary/5"
+                                            : "border-muted hover:border-primary/50"
+                                    )}
+                                    data-testid={`recording-${option.value}`}
+                                >
+                                    <option.icon className={cn(
+                                        "w-6 h-6 mx-auto mb-1",
+                                        lesson.recording_source === option.value ? "text-primary" : "text-muted-foreground"
+                                    )} />
+                                    <p className="text-xs font-medium">{option.label}</p>
+                                </button>
+                            ))}
+                        </div>
+                        
+                        {(lesson.recording_source === 'youtube' || lesson.recording_source === 'external') && (
+                            <div className="space-y-2 animate-fade-in">
+                                <Label>{lesson.recording_source === 'youtube' ? 'YouTube URL' : 'Video URL'} *</Label>
+                                <Input
+                                    value={lesson.recording_url}
+                                    onChange={(e) => setLesson({ ...lesson, recording_url: e.target.value })}
+                                    placeholder={lesson.recording_source === 'youtube' 
+                                        ? "https://youtube.com/watch?v=..." 
+                                        : "https://..."
+                                    }
+                                    data-testid="recording-url-input"
+                                />
+                            </div>
+                        )}
+                        
+                        {lesson.recording_source === 'daily' && (
+                            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-sm text-purple-700 dark:text-purple-300">
+                                Recordings will be saved automatically when you use the in-app video room and click record.
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
                                 <AlertCircle className="w-4 h-4" />
                                 Don't forget to add a Zoom link above
                             </div>
