@@ -334,6 +334,15 @@ export const CourseDetail = () => {
                     onSuccess={handleLessonCreated}
                 />
             )}
+            
+            {/* Course Editor */}
+            {showCourseEditor && (
+                <CourseEditor
+                    course={course}
+                    onClose={() => setShowCourseEditor(false)}
+                    onSuccess={handleCourseUpdated}
+                />
+            )}
         </Layout>
     );
 };
