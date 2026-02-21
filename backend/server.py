@@ -949,24 +949,43 @@ async def get_lesson_with_details(lesson: dict, user_id: str, user_role: str = '
     completion = await db.lesson_completions.find_one({'lesson_id': lesson['id'], 'user_id': user_id})
     is_completed = completion is not None
     
-    # Check if lesson is unlocked (sequential logic)
+    # Check if lesson is unlocked based on course unlock_type
     is_unlocked = True
     if user_role not in ['teacher', 'admin']:
-        # Get previous lesson in order
-        prev_lesson = await db.lessons.find_one(
-            {'course_id': lesson['course_id'], 'order': {'$lt': lesson.get('order', 0)}, 'is_published': True},
-            sort=[('order', -1)]
-        )
-        if prev_lesson:
-            # Check if previous lesson is completed
-            prev_completion = await db.lesson_completions.find_one({
-                'lesson_id': prev_lesson['id'],
-                'user_id': user_id
-            })
-            is_unlocked = prev_completion is not None
-        # First lesson is always unlocked
-        if lesson.get('order', 1) == 1:
-            is_unlocked = True
+        # Get course to check unlock_type
+        course = await db.courses.find_one({'id': lesson['course_id']}, {'_id': 0})
+        unlock_type = course.get('unlock_type', 'sequential') if course else 'sequential'
+        
+        if unlock_type == 'scheduled':
+            # Lessons unlock based on their scheduled date
+            lesson_date = lesson.get('lesson_date')
+            if lesson_date:
+                try:
+                    # Parse date and compare with today
+                    from datetime import date
+                    lesson_date_obj = date.fromisoformat(lesson_date)
+                    today = date.today()
+                    is_unlocked = lesson_date_obj <= today
+                except (ValueError, TypeError):
+                    is_unlocked = True  # If date parsing fails, unlock by default
+            else:
+                is_unlocked = True  # No date set, unlock by default
+        else:
+            # Sequential unlock: previous lesson must be completed
+            prev_lesson = await db.lessons.find_one(
+                {'course_id': lesson['course_id'], 'order': {'$lt': lesson.get('order', 0)}, 'is_published': True},
+                sort=[('order', -1)]
+            )
+            if prev_lesson:
+                # Check if previous lesson is completed
+                prev_completion = await db.lesson_completions.find_one({
+                    'lesson_id': prev_lesson['id'],
+                    'user_id': user_id
+                })
+                is_unlocked = prev_completion is not None
+            # First lesson is always unlocked
+            if lesson.get('order', 1) == 1:
+                is_unlocked = True
     
     # Backward compatibility: map recording_url to youtube_url if needed
     youtube_url = lesson.get('youtube_url') or (lesson.get('recording_url') if lesson.get('recording_source') == 'youtube' else None)
