@@ -55,19 +55,19 @@ export const Login = () => {
                     <p className="text-xs text-muted-foreground mb-2 font-medium">Quick Demo Login:</p>
                     <div className="flex flex-wrap justify-center gap-2 text-xs">
                         <button 
-                            onClick={() => { setEmail('admin@theroom.com'); setPassword('admin123'); }}
+                            onClick={() => { setEmail('admin@sundayschool.com'); setPassword('admin123'); }}
                             className="px-3 py-1.5 bg-white rounded-full hover:bg-primary hover:text-white transition-colors shadow-sm"
                         >
                             Admin
                         </button>
                         <button 
-                            onClick={() => { setEmail('teacher@theroom.com'); setPassword('teacher123'); }}
+                            onClick={() => { setEmail('teacher@sundayschool.com'); setPassword('teacher123'); }}
                             className="px-3 py-1.5 bg-white rounded-full hover:bg-primary hover:text-white transition-colors shadow-sm"
                         >
                             Teacher
                         </button>
                         <button 
-                            onClick={() => { setEmail('member@theroom.com'); setPassword('member123'); }}
+                            onClick={() => { setEmail('member@sundayschool.com'); setPassword('member123'); }}
                             className="px-3 py-1.5 bg-white rounded-full hover:bg-primary hover:text-white transition-colors shadow-sm"
                         >
                             Member
