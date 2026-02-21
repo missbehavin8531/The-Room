@@ -77,8 +77,8 @@ class UserResponse(BaseModel):
 class CourseBase(BaseModel):
     title: str
     description: str
-    zoom_link: Optional[str] = None
     thumbnail_url: Optional[str] = None
+    is_published: bool = False  # Draft vs Published
 
 class CourseCreate(CourseBase):
     pass
@@ -88,24 +88,31 @@ class CourseResponse(BaseModel):
     id: str
     title: str
     description: str
-    zoom_link: Optional[str] = None
     thumbnail_url: Optional[str] = None
+    is_published: bool = False
     teacher_id: str
     teacher_name: str
     created_at: str
     lesson_count: int = 0
     enrollment_count: int = 0
     is_enrolled: bool = False
+    completed_lessons: int = 0  # For progress tracking
+    total_lessons: int = 0
 
 class LessonBase(BaseModel):
     title: str
     description: str
-    youtube_url: Optional[str] = None
-    zoom_link: Optional[str] = None
     lesson_date: Optional[str] = None
-    teacher_notes: Optional[str] = None  # Notes shown during/after replay
-    reading_plan: Optional[str] = None  # Scripture/reading for the week
-    hosting_method: str = "both"  # "in_app", "zoom", or "both"
+    teacher_notes: Optional[str] = None
+    reading_plan: Optional[str] = None
+    # Hosting: single choice only
+    hosting_method: str = "in_app"  # "in_app" or "zoom"
+    zoom_link: Optional[str] = None
+    # Recording source options
+    recording_source: str = "none"  # "none", "daily", "youtube", "external"
+    recording_url: Optional[str] = None  # YouTube or external URL
+    # Publishing
+    is_published: bool = False
     order: int = 0
 
 class LessonCreate(LessonBase):
@@ -117,17 +124,22 @@ class LessonResponse(BaseModel):
     course_id: str
     title: str
     description: str
-    youtube_url: Optional[str] = None
-    zoom_link: Optional[str] = None
     lesson_date: Optional[str] = None
     teacher_notes: Optional[str] = None
     reading_plan: Optional[str] = None
-    hosting_method: str = "both"
+    hosting_method: str = "in_app"
+    zoom_link: Optional[str] = None
+    recording_source: str = "none"
+    recording_url: Optional[str] = None
+    is_published: bool = False
     order: int
     created_at: str
     resources: List[dict] = []
-    prompts: List[dict] = []  # Teacher prompts for discussion
-    user_attendance: List[str] = []  # Current user's attendance actions
+    prompts: List[dict] = []
+    user_attendance: List[str] = []
+    is_completed: bool = False  # Has current user completed this lesson
+    is_unlocked: bool = True  # Is lesson accessible (sequential unlock)
+    youtube_url: Optional[str] = None  # Backward compatibility
 
 # ============== TEACHER PROMPTS ==============
 
