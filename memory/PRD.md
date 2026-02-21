@@ -274,6 +274,7 @@ All core lesson-centric flow, teacher management, and video conferencing impleme
 - `/app/test_reports/iteration_7.json` - Cloud recordings feature tests (100% pass)
 - `/app/test_reports/iteration_8.json` - Branding & hosting method tests (100% pass)
 - `/app/test_reports/iteration_9.json` - MVP polish tests (100% pass)
+- `/app/test_reports/iteration_10.json` - Onboarding & Wizard flows (100% pass, 22 tests)
 - `/app/backend/tests/` - Various API test files
 
 ## 3rd Party Integrations
