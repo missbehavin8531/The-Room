@@ -80,9 +80,17 @@ class CourseBase(BaseModel):
     description: str
     thumbnail_url: Optional[str] = None
     is_published: bool = False  # Draft vs Published
+    unlock_type: str = "sequential"  # "sequential" or "scheduled"
 
 class CourseCreate(CourseBase):
     pass
+
+class CourseUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    thumbnail_url: Optional[str] = None
+    is_published: Optional[bool] = None
+    unlock_type: Optional[str] = None
 
 class CourseResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -91,6 +99,7 @@ class CourseResponse(BaseModel):
     description: str
     thumbnail_url: Optional[str] = None
     is_published: bool = False
+    unlock_type: str = "sequential"
     teacher_id: str
     teacher_name: str
     created_at: str
