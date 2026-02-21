@@ -437,15 +437,9 @@ export const LessonEditor = () => {
                         )}
                     </CardContent>
                 </Card>
-                                <AlertCircle className="w-4 h-4" />
-                                Don't forget to add a Zoom link above
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
 
                 {/* Teacher Notes */}
-                <Card className="card-organic animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                <Card className="card-organic animate-fade-in" style={{ animationDelay: '0.15s' }}>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-lg">
                             <BookOpen className="w-5 h-5" />
