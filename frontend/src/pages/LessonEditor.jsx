@@ -45,6 +45,7 @@ export const LessonEditor = () => {
         lesson_date: '',
         teacher_notes: '',
         reading_plan: '',
+        hosting_method: 'both',
         order: 0
     });
     
