@@ -1,72 +1,101 @@
 <analysis>**original_problem_statement:**
-Project: Mobile-first Small Group Learning Platform for one church (v1), now named The Room.
+Project: Mobile-first Small Group Learning Platform for one church (v1), named The Room.
 The app's value proposition is: “A weekly discipleship hub: meet live, share resources, discuss, and follow up.”
 
-**Core User Flow:**
-The app must be lesson-centric, revolving around a Now / Next / After experience on a Lesson page.
-- **NOW:** Join Live (in-app video conferencing) + Live Chat.
-- **NEXT:** Watch Replay (YouTube embed / offline recording) + Teacher Notes.
-- **AFTER:** Slides/Resources + Discussion prompt + Reading plan + Attendance tracking.
-
 **PRODUCT REQUIREMENTS:**
-- **Users & Roles:** Admin, Teacher, Member. Admins approve users. Teachers manage content. Members participate.
-- **Onboarding & Auth:** Email/password signup with admin approval required for access.
-- **Lesson-Centric Flow:** Everything revolves around the lesson page. The dashboard should direct users to the current lesson.
-- **In-App Video Conferencing:** Use Daily.co to provide embedded video conferencing with a persistent room per lesson.
-- **Slide/Resource Workflow:** Teachers upload PPT/PDFs. Members can preview in-app or download. Teachers can reorder resources and mark one as the primary deck.
-- **Discipleship Discussion:** Each lesson has structured teacher prompts. Members respond under each prompt. Teachers can pin responses and mark them with a status (e.g., answered).
-- **Attendance:** Members can manually mark I attended. Teachers can view attendance reports per lesson/course.
-- **Safety & Privacy:** No member-to-member DMs. A private Message Teacher feature is allowed. Content is only visible to approved members of the church.
-- **Offline Viewing:** The Watch Replay feature should support viewing recordings for offline lessons.
+- **Users & Roles:** Teacher/Admin and Member. Teacher/Admins can manage content and users. Members participate.
+- **Onboarding & Auth:** Email/password signup with admin approval. A guided onboarding tutorial for new users.
+- **Course & Lesson Creation:** A guided, step-by-step wizard for teachers to create courses and lessons. This includes setting publishing status (draft/published), hosting method, and recording options.
+- **Sequential Learning:** Teachers can enforce that lessons within a course must be completed in order.
+- **Lesson-Centric Flow:** Everything revolves around the lesson page (Now / Next / After).
+  - **NOW:** Join Live session (In-App via Daily.co or external Zoom link).
+  - **NEXT:** Watch Replay. Source can be a Daily.co cloud recording, a YouTube video, or an external URL.
+  - **AFTER:** Access resources and participate in discussions.
+- **In-App Video & Recording:** Use Daily.co for embedded video conferencing. Teachers can manually start/stop cloud recordings.
+- **MVP Polish:** The overall workflow should be cleaned up and polished to a professional, MVP release-candidate level.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A stable, full-stack application rebranded as The Room. The backend is FastAPI with MongoDB, and the frontend is React. The primary user experience has been successfully pivoted to a lesson-centric flow with a Now/Next/After UI on the  page.
+A full-stack application rebranded as The Room (FastAPI backend, React frontend). A major refactoring effort is in progress to create a polished, MVP-ready guided experience.
 
-The most recent update was the integration of **Daily.co for embedded video conferencing**. This feature is now live on the NOW tab of the lesson detail page, allowing users to join a video call directly within the app.
+Key features implemented:
+- **Role Consolidation:** Admin and Teacher roles have been merged into a single Teacher/Admin role.
+- **Guided Creation Wizards:** New  and  components have been created for a step-by-step course and lesson creation process.
+- **Advanced Content Options:** Teachers can now set  status for courses/lessons, choose a single hosting method ( or ), and specify the replay source (, , , ).
+- **Sequential Learning:** The backend and frontend support sequential lesson unlocking. The UI on the course detail page shows a progress bar and visually locks/unlocks lessons based on completion.
+- **Onboarding Component:** A new  component has been created for a guided tour, but it is not yet integrated into the application flow.
+
+The creation wizards and onboarding flow are not yet fully connected end-to-end.
 
 **Last working item**:
-The user asked if the Watch Replay feature could be used for offline lesson viewing recordings. The agent acknowledged the question but has not started implementation.
+The user requested to fix the lesson creation flow, integrate the onboarding tutorial, and test the full new user journey. The agent determined that the Next button in the wizard was correctly disabled until required fields were filled. The agent was in the process of connecting the  to the  and integrating the  component.
 
-- **Last item agent was working:** Clarifying the user's new request to make the Watch Replay feature support recordings for offline viewing.
-- **Status:** NOT STARTED
+- **Last item agent was working:** Integrating the new , , and  components to create a seamless end-to-end user journey for teachers.
+- **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** This will likely require backend changes to handle video storage/retrieval and frontend changes to display it. The agent should use  backend and frontend testing agents after implementation.
+- **Which testing method agent to use?** frontend testing agent. The agent must test the full new user journey: Register -> Onboarding -> Create Course -> Auto-trigger Create Lesson -> View Sequential Lessons.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-There are no known pending issues or bugs.
+- **Issue 1:** The  does not automatically trigger the  after a new course is successfully created, which is required for the new guided workflow. (P0)
+- **Issue 2:** The  tutorial component exists but is not integrated into the application flow. It should be displayed to new users upon their first login. (P0)
+- **Issue 3:** The user perceived the Next button in the  as broken because it was disabled. While this is technically correct behavior (waiting for required fields), it may indicate a UX issue where the disabled state or requirements are not clear enough to the user. (P1)
+
+**Issues Detail:**
+- **Issue 1: Course to Lesson Wizard Flow is Broken**
+  - **Attempted fixes:** The agent created the  and  components but has not yet written the logic in the parent  page to connect them.
+  - **Next debug checklist:**
+    - In , modify the  callback from the .
+    - After a course is created and its ID is returned, immediately set state to open the , passing the new  as a prop.
+  - **Why fix this issue and what will be achieved with the fix?** To fulfill the user's request for a seamless, guided workflow where creating a course immediately leads to creating the first lesson.
+  - **Status:** NOT STARTED
+  - **Is recurring issue?** N
+  - **Should Test frontend/backend/both after fix?** frontend
+  - **Blocked on other issue:** None
+
+- **Issue 2: Onboarding Tutorial is Not Integrated**
+  - **Attempted fixes:** The  component has been created. The backend  model includes an  flag. No integration attempt has been made.
+  - **Next debug checklist:**
+    - In  or a top-level layout component, fetch the current user's status from the .
+    - Conditionally render the  component as a modal/overlay if  is .
+    - The  component should have a Finish or Skip button that calls the  endpoint and updates the user state in the context to hide the tutorial.
+  - **Why fix this issue and what will be achieved with the fix?** To provide a guided introduction for new users, improving usability and meeting a direct user requirement.
+  - **Status:** NOT STARTED
+  - **Is recurring issue?** N
+  - **Should Test frontend/backend/both after fix?** frontend
+  - **Blocked on other issue:** None
 
 **In progress Task List**:
-There are no tasks currently in progress.
+- **Task 1: Complete MVP-Ready Guided Experience**
+  - **Where to resume:** Resume work in  to connect the wizards and  to integrate the onboarding tutorial.
+  - **What will be achieved with this?** A fully polished, end-to-end user flow that meets the user's MVP release candidate requirement.
+  - **Status:** IN PROGRESS
+  - **Should Test frontend/backend/both after fix?** frontend
+  - **Blocked on something:** Blocked on resolving the two pending issues above.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
-- **P0: Implement Offline Lesson Viewing:** Modify the Next: Watch Replay tab to handle recordings for offline viewing, as per the user's latest request. This may involve integrating with Daily.co's recording capabilities or another storage solution.
-- **P1: Implement Private Teacher Feedback:** As suggested in the previous session, add a feature to let teachers provide individual feedback directly to students' responses.
+- **P1: Implement Private Teacher Feedback:** Add a feature to let teachers provide individual feedback directly to students' responses.
+- **P2: Polish UI/UX:** Conduct a general review of the application to identify and fix minor UI/UX inconsistencies to meet the professional level standard.
 
 **Future Tasks:**
 - Implement email notifications for events like user approval or new messages.
 - Implement Push notifications (PWA).
 - Add course completion certificate generation.
-- Implement a more robust resource management system (reordering, marking primary).
+- Implement a more robust resource management system (e.g., drag-and-drop reordering of resources).
 
 **Completed work in this session**
-- **Embedded Video Conferencing (Daily.co):**
-  - **Backend:**
-    - Added Daily.co API key and domain to .
-    - Installed  library.
-    - Added new endpoints in  (, ) to create persistent rooms for each lesson and generate join tokens.
-  - **Frontend:**
-    - Installed  and its peer dependency .
-    - Created a new  component to wrap the Daily.co call frame.
-    - Updated  with functions to call the new video endpoints.
-    - Integrated the  component into the NOW tab of .
-- **Testing:**
-  - Successfully used the testing agent () to validate the complete Daily.co integration, with 100% of tests passing for both frontend and backend.
-- **Documentation:**
-  - Updated  to reflect the completion of the video integration.
+- **Offline Lesson Viewing:** Implemented functionality to fetch and display Daily.co cloud recordings on the NEXT: Watch Replay tab, with a fallback to YouTube/External URL.
+- **Manual Recording Controls:** Added Start/Stop Recording buttons for teachers within the Daily.co  component.
+- **Full Rebranding:** Changed the application name to The Room, updated the logo, and modified seed data emails to use  domain.
+- **Teacher Hosting Options:** Refactored the lesson creation/editing flow to enforce a single choice between In-App Video and Zoom, and updated the student view to conditionally display the correct join button.
+- **MVP Refactor (Foundation):**
+  - **Role Consolidation:** Merged Admin and Teacher roles in the backend.
+  - **Sequential Learning:** Implemented course progress tracking and lesson locking/unlocking. The UI now displays progress and prevents access to future lessons.
+  - **Guided Creation Wizards:** Created  and  for a step-by-step creation flow.
+  - **Advanced Content Controls:** Added  toggles and expanded  options in the backend and lesson creation UI.
+  - **Onboarding Component:** Created the  component.
 
 **Earlier issues found/mentioned but not fixed**
 None.
@@ -80,97 +109,96 @@ None.
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Pydantic, MongoDB ( async driver), Daily-Python SDK.
-- **Frontend:** React, React Router, Tailwind CSS, Shadcn UI, , Daily-React SDK, Jotai.
-- **Authentication:** JWT with email/password, role-based access control.
-- **Architecture:** Single Page Application (SPA) with a RESTful API backend.
+- **Backend:** FastAPI, MongoDB (), Pydantic, Daily-Python SDK.
+- **Frontend:** React, React Router, Tailwind CSS, Shadcn UI, Jotai.
+- **Architecture:** SPA with RESTful API.
+- **New Concepts:**
+  - **Guided Wizards:** Multi-step forms for complex object creation (, ).
+  - **Sequential Content Unlocking:** Business logic to control user progression through a course.
+  - **Role Consolidation:** Simplified user permission model.
 
 **key DB schema**
 - **users:** 
 - **courses:** 
 - **lessons:** 
-- **enrollments:** 
-- **attendance:** 
-- **prompt_responses:** 
-- **resources:** 
-- **messages:** 
-- **chats:** 
+- **lesson_completions:** 
 
 **changes in tech stack**
-- **Backend:** Added  dependency for Daily.co integration.
-- **Frontend:** Added  and  dependencies for the embedded video component.
+None.
 
 **All files of reference**
-- : Updated with Daily.co credentials.
-- : Updated with .
-- : Updated with video room creation and token generation endpoints.
-- : Updated with  and .
-- : Updated with functions for video endpoints.
-- : New file for the Daily.co video component.
-- : Updated to integrate the  component.
-- : Updated with completed work.
+**New Files:**
+- 
+- 
+- 
+
+**Key Modified Files:**
+- : Major updates for new models, role consolidation, sequential logic, wizards, and recording sources.
+- : Added endpoints for onboarding, lesson completion, and updated models.
+- : Refactored to show lesson progress and locked/unlocked states.
+- : Updated to use wizards for creation.
+- : Updated to handle new single  and multiple  options.
+- : UI updated to reflect new single hosting method and recording source options.
+- : Added manual recording controls for teachers.
 
 **Areas that need refactoring**:
-- The warning from the previous session still applies: be cautious when adding complex, deeply nested JSX rendering logic with  or , as it may trigger a Maximum call stack size exceeded error in the dev environment due to a platform-specific babel plugin bug. Isolating complex rendering logic into separate, simple components is the recommended pattern.
+-  is now only used for editing existing lessons, while creation is handled by . This division of logic should be kept in mind.
+-  has grown in complexity with the addition of sequential lesson logic. It could benefit from being broken down into smaller components.
 
 **key api endpoints**
-- 
-- 
-- 
-- 
-- **(New)** : Creates a persistent Daily.co room for a lesson.
-- **(New)** : Generates a join token for a Daily.co room.
+- **New Endpoints:**
+  - : Marks a lesson as complete for the current user.
+  - : Sets the user's onboarding flag to true.
+  - : Manually starts a Daily.co recording.
+  - : Manually stops a Daily.co recording.
+  - : Fetches Daily.co recordings for a lesson.
+- **Updated Endpoints:**
+  - All  endpoints for courses and lessons now return additional progress/status fields.
+  - All / endpoints for courses and lessons now support the new model fields.
 
 **Critical Info for New Agent**
-- The user's highest priority is now to **implement offline viewing** for lesson recordings. You should clarify requirements (e.g., where do recordings come from? Daily.co cloud recordings? Manual uploads?) and then plan the implementation.
-- The Daily.co integration for live video is complete and tested. The credentials are in .
-- Be mindful of the development environment bug related to complex JSX nesting.
+- The top priority is to complete the MVP-Ready guided experience. This involves **connecting the existing components**:  ->  and integrating the  tutorial for new users.
+- After implementing the connected flow, you must perform a thorough **end-to-end test** of the entire new user journey.
+- The user's goal is a professional level and MVP release candidate application, so pay close attention to UI/UX details and ensure the workflow is smooth and intuitive.
 
 **documents and test reports created in this job**
 -  (updated)
 - 
+- 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1. **User**: Is it possible to have video conferencing in the app? What is needed to develop this functionality
-   - Status: ADDRESSED. Agent provided options.
-2. **User**: Implement embedded video using daily.co and I do have an API key
-   - Status: ADDRESSED. Agent requested the key.
-3. **User**: Provided Daily.co API key and domain.
-   - Status: COMPLETED. Agent received credentials.
-4. **Agent**: Acknowledged and started implementation.
-   - Status: COMPLETED.
-5. **Agent**: Installed dependencies.
-   - Status: COMPLETED.
-6. **Agent**: Updated backend code.
-   - Status: COMPLETED.
-7. **Agent**: Created frontend components.
-   - Status: COMPLETED.
-8. **Agent**: Tested and fixed a missing peer dependency ().
-   - Status: COMPLETED.
-9. **Agent**: Ran testing agent to validate the feature.
-   - Status: COMPLETED. All tests passed.
-10. **User**: In the next watch replay can this be a recording for offline lesson viewing.
-    - Status: **PENDING**. This is the next task to be addressed.
+1. **User**: Requested a more connected/guided experience, single hosting choice, more recording options, sequential lessons, and role consolidation to make the app MVP release candidate ready.
+2. **Agent**: Clarified requirements for the MVP refactor.
+3. **User**: Confirmed requirements: all recording options, sequential lessons, onboarding tutorial, and merging teacher/admin roles.
+4. **Agent**: Acknowledged and started the major refactor.
+5. **(Agent working for many steps...)**
+6. **User**: Reported that after starting to create a lesson, there's no next option. Also requested to immediately start the lesson workflow after course creation and integrate the onboarding tutorial.
+7. **Agent**: Investigated the wizard and found the Next button was correctly disabled pending required field input.
+8. **Agent**: Showed screenshots confirming the wizard works when fields are filled.
+9. **Agent**: Stated the plan to connect the wizards and integrate onboarding.
+10. **(End of history)**
 
 **Project Health Check:**
-- **Healthy:** The application is stable and functional. The new video conferencing feature was integrated and tested successfully without regressions.
+- **Partially Broken**: The core creation workflow is disconnected. The new wizard and onboarding components are built but not integrated, breaking the user journey for creating new content.
 
 **3rd Party Integrations**
+- **Daily.co:** Fully integrated for in-app video conferencing and cloud recording. Uses a User API Key.
 - **Zoom:** Stores a URL per lesson. No API integration.
 - **YouTube:** Stores a video URL per lesson for embedding. No API integration.
-- **Daily.co:** Fully integrated for in-app video conferencing. Requires a user-provided API key.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES (used for the Daily.co integration)
+- **Testing agent used after significant changes:** YES (used after each major feature chunk, but not for the final integrated flow).
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** None
 - **Known regressions:** None
 
 **Credentials to test flow:**
-Seed data is created automatically. The  command output will provide the latest credentials. The default credentials are:
-- **Admin:**  / 
-- **Teacher:**  / 
+- **Teacher/Admin:**  / 
 - **Member:**  / 
 
 **What agent forgot to execute**
-Nothing. The agent successfully completed the user's primary request for video conferencing before receiving the new request for offline viewing.</analysis>
+The agent did not complete the user's latest request. The following tasks are outstanding:
+1.  Connecting the  to automatically launch the  after a course is created.
+2.  Integrating the  component into the application flow for new users.
+3.  Performing a full, end-to-end test of the new, combined user journey.</analysis>
