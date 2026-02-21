@@ -264,6 +264,98 @@ export const LessonEditor = () => {
                     </CardContent>
                 </Card>
 
+                {/* Hosting Method */}
+                <Card className="card-organic animate-fade-in" style={{ animationDelay: '0.075s' }}>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <MonitorPlay className="w-5 h-5" />
+                            Class Hosting Method
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                            Choose how you'll host this class. Students will only see the option(s) you select.
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setLesson({ ...lesson, hosting_method: 'in_app' })}
+                                className={cn(
+                                    "p-4 rounded-xl border-2 transition-all text-left",
+                                    lesson.hosting_method === 'in_app'
+                                        ? "border-primary bg-primary/5"
+                                        : "border-muted hover:border-primary/50"
+                                )}
+                                data-testid="hosting-in-app"
+                            >
+                                <Video className={cn(
+                                    "w-8 h-8 mb-2",
+                                    lesson.hosting_method === 'in_app' ? "text-primary" : "text-muted-foreground"
+                                )} />
+                                <p className="font-medium">In-App Video</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Use built-in video room
+                                </p>
+                            </button>
+                            
+                            <button
+                                type="button"
+                                onClick={() => setLesson({ ...lesson, hosting_method: 'zoom' })}
+                                className={cn(
+                                    "p-4 rounded-xl border-2 transition-all text-left",
+                                    lesson.hosting_method === 'zoom'
+                                        ? "border-primary bg-primary/5"
+                                        : "border-muted hover:border-primary/50"
+                                )}
+                                data-testid="hosting-zoom"
+                            >
+                                <ExternalLink className={cn(
+                                    "w-8 h-8 mb-2",
+                                    lesson.hosting_method === 'zoom' ? "text-primary" : "text-muted-foreground"
+                                )} />
+                                <p className="font-medium">Zoom Only</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    External Zoom meeting
+                                </p>
+                            </button>
+                            
+                            <button
+                                type="button"
+                                onClick={() => setLesson({ ...lesson, hosting_method: 'both' })}
+                                className={cn(
+                                    "p-4 rounded-xl border-2 transition-all text-left",
+                                    lesson.hosting_method === 'both'
+                                        ? "border-primary bg-primary/5"
+                                        : "border-muted hover:border-primary/50"
+                                )}
+                                data-testid="hosting-both"
+                            >
+                                <div className="flex gap-1 mb-2">
+                                    <Video className={cn(
+                                        "w-6 h-6",
+                                        lesson.hosting_method === 'both' ? "text-primary" : "text-muted-foreground"
+                                    )} />
+                                    <ExternalLink className={cn(
+                                        "w-6 h-6",
+                                        lesson.hosting_method === 'both' ? "text-primary" : "text-muted-foreground"
+                                    )} />
+                                </div>
+                                <p className="font-medium">Both Options</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Students choose method
+                                </p>
+                            </button>
+                        </div>
+                        
+                        {lesson.hosting_method === 'zoom' && !lesson.zoom_link && (
+                            <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
+                                <AlertCircle className="w-4 h-4" />
+                                Don't forget to add a Zoom link above
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
                 {/* Teacher Notes */}
                 <Card className="card-organic animate-fade-in" style={{ animationDelay: '0.1s' }}>
                     <CardHeader>
