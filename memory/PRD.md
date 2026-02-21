@@ -9,9 +9,8 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 > The app is **lesson-centric**, revolving around a "Now / Next / After" experience on a Lesson page.
 
 ## User Personas
-1. **Admin**: User approval, moderation, reporting
-2. **Teacher**: Course/lesson management, resource uploads, manage discussion prompts, pin replies
-3. **Member**: Complete lesson activities, participate in discussions, mark attendance
+1. **Teacher/Admin**: Course/lesson management, user approval, resource uploads, manage discussion prompts, pin replies
+2. **Member**: Complete lesson activities, participate in discussions, mark attendance
 
 ## Core User Flow: Now / Next / After
 
@@ -41,6 +40,15 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 
 ## What's Been Implemented
 
+### ✅ Phase 7: Course Management & Unlock Modes (Feb 2026)
+- [x] **Admin Removed from Demo** - Only Teacher and Member demo logins
+- [x] **Course Cover Upload** - Upload images for course thumbnails
+- [x] **Course Editor** - Full edit modal for courses (title, description, cover, unlock mode, published status)
+- [x] **Unlock Type Selection** - Teachers choose Sequential or Scheduled mode per course
+- [x] **Sequential Mode** - Lessons unlock one-by-one after completing previous
+- [x] **Scheduled Mode** - Lessons unlock based on their scheduled date
+- [x] **Course Wizard 3 Steps** - Details → Settings → Review
+
 ### ✅ Phase 6: MVP Polish & Guided Experience (Feb 2026)
 - [x] **Hosting Method Simplified** - Single choice only (In-App or Zoom)
 - [x] **Recording Source** - Multiple options (Daily.co, YouTube, External URL, None)
@@ -49,7 +57,7 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 - [x] **Progress Tracking** - Visual progress bar and lesson completion
 - [x] **Role Consolidation** - Teacher = Admin (simplified roles)
 - [x] **Lesson Wizard** - Step-by-step guided lesson creation (5 steps)
-- [x] **Course Wizard** - Step-by-step guided course creation (2 steps)
+- [x] **Course Wizard** - Step-by-step guided course creation (3 steps)
 - [x] **Wizard Chaining** - LessonWizard auto-opens after CourseWizard
 - [x] **Onboarding Tutorial** - First-time user tutorial (role-specific content)
 - [x] **Onboarding Persistence** - Tutorial state saved in database, shows only once
