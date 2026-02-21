@@ -17,6 +17,9 @@ import Chat from './pages/Chat';
 import Messages from './pages/Messages';
 import Admin from './pages/Admin';
 
+// Components
+import { Onboarding } from './components/Onboarding';
+
 // Protected Route Component
 const ProtectedRoute = ({ children, requireAdmin = false, requireTeacher = false }) => {
     const { isAuthenticated, loading, isAdmin, isTeacher } = useAuth();
