@@ -40,6 +40,14 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 
 ## What's Been Implemented
 
+### ✅ Phase 8: Search, Dark Mode Fix, Offline Mode (Mar 2026)
+- [x] **Search Page** - Full search across courses, lessons, and discussions at /search
+- [x] **Search Navigation** - Search link added to main navigation bar
+- [x] **Babel Plugin Fix** - Fixed null reference crash in babel-metadata-plugin.js line 865
+- [x] **Dark Mode Header** - Layout header now responds to dark mode (dark:bg-gray-900/90)
+- [x] **Offline Mode** - Service worker caches static assets and API responses for offline viewing
+- [x] **Search Results Enrichment** - Discussion results now include user_name and descriptions
+
 ### ✅ Phase 7: Course Management & Unlock Modes (Feb 2026)
 - [x] **Admin Removed from Demo** - Only Teacher and Member demo logins
 - [x] **Course Cover Upload** - Upload images for course thumbnails
@@ -124,26 +132,24 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 - [x] Analytics endpoints
 
 ## Demo Credentials
-- **Admin**: admin@sundayschool.com / admin123
-- **Teacher**: teacher@sundayschool.com / teacher123
-- **Member**: member@sundayschool.com / member123
+- **Teacher**: teacher@theroom.com / teacher123
+- **Member**: member@theroom.com / member123
 
 ## Prioritized Backlog
 
-### P0 - Done (MVP + Teacher Features + Video)
-All core lesson-centric flow, teacher management, and video conferencing implemented.
+### P0 - Done (All MVP + Enhancements)
+All core lesson-centric flow, teacher management, video conferencing, progress tracking, settings, attendance reports, search, dark mode, push notifications, email notifications, certificate generation, and offline mode implemented.
 
 ### P1 - Next Priorities
-- [ ] Private teacher feedback on individual responses
-- [ ] Email notifications for upcoming lessons/user approval
+- [ ] Refactor server.py (~3k lines) into modular routes/models
+- [ ] Proper PWA Favicon and App Icons
+- [ ] Private teacher feedback UI improvements
 
 ### P2 - Future Enhancements
 - [ ] Resource reordering with drag-and-drop
 - [ ] Real-time WebSocket for chat
 - [ ] PPT preview via online viewer
-- [ ] Push notifications (mobile PWA)
 - [ ] Video progress tracking
-- [ ] Certificate generation
 - [ ] Multiple church support (multi-tenant)
 
 ## Technical Stack
@@ -284,6 +290,8 @@ All core lesson-centric flow, teacher management, and video conferencing impleme
 - `/app/test_reports/iteration_9.json` - MVP polish tests (100% pass)
 - `/app/test_reports/iteration_10.json` - Onboarding & Wizard flows (100% pass, 22 tests)
 - `/app/test_reports/iteration_11.json` - Course unlock modes & editor (100% pass, 39 tests)
+- `/app/test_reports/iteration_12.json` - Phase 2-4 features: Progress, Settings, Attendance (100% pass, 22 tests)
+- `/app/test_reports/iteration_13.json` - Search, Dark Mode Header, Offline Mode (100% pass, 8 backend + all frontend)
 - `/app/backend/tests/` - Various API test files
 
 ## Phase 2 Enhancements (Feb 2026)
