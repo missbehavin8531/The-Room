@@ -2619,10 +2619,26 @@ async def search(q: str = Query(..., min_length=1), user: dict = Depends(require
         {'_id': 0}
     ).limit(10).to_list(10)
     
+    # Enrich discussions with user names
+    discussion_results = []
+    for r in replies:
+        user_name = ''
+        if r.get('user_id'):
+            reply_user = await db.users.find_one({'id': r['user_id']}, {'_id': 0, 'name': 1})
+            if reply_user:
+                user_name = reply_user.get('name', '')
+        discussion_results.append({
+            'id': r['id'],
+            'content': r['content'][:100],
+            'lesson_id': r.get('lesson_id'),
+            'user_name': user_name,
+            'type': 'discussion'
+        })
+    
     return {
-        'courses': [{'id': c['id'], 'title': c['title'], 'type': 'course'} for c in courses],
-        'lessons': [{'id': l['id'], 'title': l['title'], 'course_id': l.get('course_id'), 'type': 'lesson'} for l in lessons],
-        'discussions': [{'id': r['id'], 'content': r['content'][:100], 'lesson_id': r.get('lesson_id'), 'type': 'discussion'} for r in replies]
+        'courses': [{'id': c['id'], 'title': c['title'], 'description': c.get('description', ''), 'type': 'course'} for c in courses],
+        'lessons': [{'id': l['id'], 'title': l['title'], 'description': l.get('description', ''), 'course_id': l.get('course_id'), 'type': 'lesson'} for l in lessons],
+        'discussions': discussion_results
     }
 
 # ============== ATTENDANCE REPORTS ==============

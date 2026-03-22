@@ -19,6 +19,7 @@ import Admin from './pages/Admin';
 import Progress from './pages/Progress';
 import Settings from './pages/Settings';
 import AttendanceReport from './pages/AttendanceReport';
+import Search from './pages/Search';
 
 // Components
 import { Onboarding } from './components/Onboarding';
@@ -195,6 +196,14 @@ function AppRoutes() {
                 element={
                     <ProtectedRoute requireTeacher>
                         <AttendanceReport />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/search"
+                element={
+                    <ProtectedRoute>
+                        <Search />
                     </ProtectedRoute>
                 }
             />

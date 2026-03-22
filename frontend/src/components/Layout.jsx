@@ -13,7 +13,8 @@ import {
     X,
     Shield,
     TrendingUp,
-    Calendar
+    Calendar,
+    Search as SearchIcon
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
@@ -31,6 +32,7 @@ const navItems = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/courses', icon: BookOpen, label: 'Courses' },
     { path: '/progress', icon: TrendingUp, label: 'Progress' },
+    { path: '/search', icon: SearchIcon, label: 'Search' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/messages', icon: Mail, label: 'Messages' },
 ];
@@ -86,7 +88,7 @@ export const Layout = ({ children }) => {
     return (
         <div className="min-h-screen bg-background">
             {/* Desktop Header */}
-            <header className="hidden md:block sticky top-0 z-40 bg-white/90 backdrop-blur-lg border-b border-border">
+            <header className="hidden md:block sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-b border-border">
                 <div className="container mx-auto px-8">
                     <div className="flex items-center justify-between h-16">
                         {/* Logo */}
@@ -151,7 +153,7 @@ export const Layout = ({ children }) => {
             </header>
 
             {/* Mobile Header */}
-            <header className="md:hidden sticky top-0 z-40 bg-white/90 backdrop-blur-lg border-b border-border">
+            <header className="md:hidden sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-b border-border">
                 <div className="flex items-center justify-between px-4 h-14">
                     <Link to="/" className="flex items-center gap-2">
                         <img src="/logo.png" alt="The Room" className="w-8 h-8 rounded-lg" />
