@@ -18,6 +18,7 @@ import Messages from './pages/Messages';
 import Admin from './pages/Admin';
 import Progress from './pages/Progress';
 import Settings from './pages/Settings';
+import AttendanceReport from './pages/AttendanceReport';
 
 // Components
 import { Onboarding } from './components/Onboarding';
@@ -186,6 +187,14 @@ function AppRoutes() {
                 element={
                     <ProtectedRoute>
                         <Settings />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/attendance"
+                element={
+                    <ProtectedRoute requireTeacher>
+                        <AttendanceReport />
                     </ProtectedRoute>
                 }
             />

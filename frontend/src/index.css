@@ -6,7 +6,7 @@
 
 @layer base {
     :root {
-        /* Organic & Earthy (Calming Sage) Theme */
+        /* Organic & Earthy (Calming Sage) Theme - Light Mode */
         --background: 40 20% 98%;
         --foreground: 120 10% 18%;
         
@@ -42,6 +42,43 @@
         --chart-5: 40 30% 80%;
         
         --radius: 0.75rem;
+    }
+    
+    .dark {
+        /* Dark Mode - Sage Forest Theme */
+        --background: 120 10% 10%;
+        --foreground: 40 20% 95%;
+        
+        --card: 120 10% 14%;
+        --card-foreground: 40 20% 95%;
+        
+        --popover: 120 10% 14%;
+        --popover-foreground: 40 20% 95%;
+        
+        --primary: 113 35% 45%;
+        --primary-foreground: 0 0% 100%;
+        
+        --secondary: 120 10% 18%;
+        --secondary-foreground: 40 20% 90%;
+        
+        --muted: 120 8% 20%;
+        --muted-foreground: 40 10% 60%;
+        
+        --accent: 18 52% 55%;
+        --accent-foreground: 0 0% 100%;
+        
+        --destructive: 0 62% 50%;
+        --destructive-foreground: 0 0% 98%;
+        
+        --border: 120 8% 22%;
+        --input: 120 8% 22%;
+        --ring: 113 35% 45%;
+        
+        --chart-1: 113 35% 50%;
+        --chart-2: 18 52% 60%;
+        --chart-3: 40 18% 50%;
+        --chart-4: 120 20% 40%;
+        --chart-5: 40 30% 60%;
     }
 }
 

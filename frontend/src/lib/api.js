@@ -193,6 +193,24 @@ export const progressAPI = {
     getStudentProgress: () => api.get('/teacher/student-progress'),
 };
 
+// Search API
+export const searchAPI = {
+    search: (query) => api.get('/search', { params: { q: query } }),
+};
+
+// Attendance API
+export const attendanceReportsAPI = {
+    getReport: (courseId, lessonId) => api.get('/attendance/report', { 
+        params: { course_id: courseId, lesson_id: lessonId } 
+    }),
+    getSummary: () => api.get('/attendance/summary'),
+};
+
+// Certificates API
+export const certificatesAPI = {
+    download: (courseId) => `${BACKEND_URL}/api/courses/${courseId}/certificate`,
+};
+
 // Feedback API
 export const feedbackAPI = {
     getMyFeedback: () => api.get('/my-feedback'),

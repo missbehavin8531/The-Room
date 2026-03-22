@@ -1,7 +1,7 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, Form, Query, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -2592,6 +2592,208 @@ async def send_lesson_reminders(background_tasks: BackgroundTasks, user: dict = 
                 emails_queued += 1
     
     return {'message': f'Queued {emails_queued} reminder emails for {len(lessons)} lessons'}
+
+# ============== SEARCH ==============
+
+@api_router.get("/search")
+async def search(q: str = Query(..., min_length=1), user: dict = Depends(require_approved)):
+    """Search across courses, lessons, and discussions"""
+    query_regex = {'$regex': q, '$options': 'i'}
+    is_teacher = user['role'] in ['teacher', 'admin']
+    
+    # Search courses
+    course_query = {'$or': [{'title': query_regex}, {'description': query_regex}]}
+    if not is_teacher:
+        course_query['is_published'] = True
+    courses = await db.courses.find(course_query, {'_id': 0}).limit(10).to_list(10)
+    
+    # Search lessons
+    lesson_query = {'$or': [{'title': query_regex}, {'description': query_regex}]}
+    if not is_teacher:
+        lesson_query['is_published'] = True
+    lessons = await db.lessons.find(lesson_query, {'_id': 0}).limit(10).to_list(10)
+    
+    # Search discussions (prompt replies)
+    replies = await db.prompt_replies.find(
+        {'content': query_regex},
+        {'_id': 0}
+    ).limit(10).to_list(10)
+    
+    return {
+        'courses': [{'id': c['id'], 'title': c['title'], 'type': 'course'} for c in courses],
+        'lessons': [{'id': l['id'], 'title': l['title'], 'course_id': l.get('course_id'), 'type': 'lesson'} for l in lessons],
+        'discussions': [{'id': r['id'], 'content': r['content'][:100], 'lesson_id': r.get('lesson_id'), 'type': 'discussion'} for r in replies]
+    }
+
+# ============== ATTENDANCE REPORTS ==============
+
+@api_router.get("/attendance/report")
+async def get_attendance_report(
+    course_id: Optional[str] = None,
+    lesson_id: Optional[str] = None,
+    user: dict = Depends(require_teacher_or_admin)
+):
+    """Get attendance report for a course or lesson"""
+    query = {}
+    if lesson_id:
+        query['lesson_id'] = lesson_id
+    elif course_id:
+        # Get all lessons for this course
+        lessons = await db.lessons.find({'course_id': course_id}, {'id': 1}).to_list(100)
+        lesson_ids = [l['id'] for l in lessons]
+        query['lesson_id'] = {'$in': lesson_ids}
+    
+    # Get all attendance records
+    attendance = await db.attendance.find(query, {'_id': 0}).to_list(10000)
+    
+    # Aggregate by user
+    user_attendance = {}
+    for record in attendance:
+        uid = record['user_id']
+        if uid not in user_attendance:
+            user_attendance[uid] = {
+                'user_id': uid,
+                'user_name': record.get('user_name', 'Unknown'),
+                'lessons_attended': set(),
+                'actions': []
+            }
+        user_attendance[uid]['lessons_attended'].add(record['lesson_id'])
+        user_attendance[uid]['actions'].append(record['action'])
+    
+    # Convert to list and count
+    report = []
+    for uid, data in user_attendance.items():
+        report.append({
+            'user_id': uid,
+            'user_name': data['user_name'],
+            'lessons_attended': len(data['lessons_attended']),
+            'joined_video': data['actions'].count('joined_video'),
+            'watched_replay': data['actions'].count('watched_replay'),
+            'marked_complete': data['actions'].count('marked_complete')
+        })
+    
+    # Sort by lessons attended
+    report.sort(key=lambda x: x['lessons_attended'], reverse=True)
+    
+    return {'report': report}
+
+@api_router.get("/attendance/summary")
+async def get_attendance_summary(user: dict = Depends(require_teacher_or_admin)):
+    """Get overall attendance summary"""
+    # Get counts
+    total_users = await db.users.count_documents({'role': 'member', 'is_approved': True})
+    total_lessons = await db.lessons.count_documents({'is_published': True})
+    total_attendance = await db.attendance.count_documents({})
+    total_completions = await db.lesson_completions.count_documents({})
+    
+    # Get recent activity (last 7 days)
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    recent_attendance = await db.attendance.count_documents({
+        'recorded_at': {'$gte': week_ago}
+    })
+    
+    return {
+        'total_members': total_users,
+        'total_lessons': total_lessons,
+        'total_attendance_records': total_attendance,
+        'total_completions': total_completions,
+        'attendance_last_7_days': recent_attendance,
+        'avg_attendance_rate': round((total_completions / (total_users * total_lessons) * 100), 1) if total_users and total_lessons else 0
+    }
+
+# ============== CERTIFICATES ==============
+
+@api_router.get("/courses/{course_id}/certificate")
+async def generate_certificate(course_id: str, user: dict = Depends(require_approved)):
+    """Generate PDF certificate for course completion"""
+    from reportlab.lib.pagesizes import letter, landscape
+    from reportlab.lib.units import inch
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.colors import HexColor
+    import io
+    
+    # Check if user completed the course
+    course = await db.courses.find_one({'id': course_id}, {'_id': 0})
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    # Get all lessons for this course
+    total_lessons = await db.lessons.count_documents({'course_id': course_id, 'is_published': True})
+    completed_lessons = await db.lesson_completions.count_documents({
+        'course_id': course_id,
+        'user_id': user['id']
+    })
+    
+    if completed_lessons < total_lessons:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Course not completed. {completed_lessons}/{total_lessons} lessons done."
+        )
+    
+    # Generate PDF
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=landscape(letter))
+    width, height = landscape(letter)
+    
+    # Background color
+    c.setFillColor(HexColor('#f5f5f0'))
+    c.rect(0, 0, width, height, fill=1)
+    
+    # Border
+    c.setStrokeColor(HexColor('#4a5d4a'))
+    c.setLineWidth(3)
+    c.rect(30, 30, width - 60, height - 60, fill=0)
+    
+    # Inner border
+    c.setLineWidth(1)
+    c.rect(40, 40, width - 80, height - 80, fill=0)
+    
+    # Title
+    c.setFillColor(HexColor('#4a5d4a'))
+    c.setFont("Helvetica-Bold", 36)
+    c.drawCentredString(width / 2, height - 120, "Certificate of Completion")
+    
+    # Subtitle
+    c.setFont("Helvetica", 14)
+    c.setFillColor(HexColor('#666666'))
+    c.drawCentredString(width / 2, height - 150, "This is to certify that")
+    
+    # Name
+    c.setFont("Helvetica-Bold", 28)
+    c.setFillColor(HexColor('#333333'))
+    c.drawCentredString(width / 2, height - 200, user['name'])
+    
+    # Completion text
+    c.setFont("Helvetica", 14)
+    c.setFillColor(HexColor('#666666'))
+    c.drawCentredString(width / 2, height - 240, "has successfully completed the course")
+    
+    # Course name
+    c.setFont("Helvetica-Bold", 24)
+    c.setFillColor(HexColor('#4a5d4a'))
+    c.drawCentredString(width / 2, height - 285, course['title'])
+    
+    # Date
+    c.setFont("Helvetica", 12)
+    c.setFillColor(HexColor('#666666'))
+    completion_date = datetime.now(timezone.utc).strftime('%B %d, %Y')
+    c.drawCentredString(width / 2, height - 330, f"Completed on {completion_date}")
+    
+    # The Room branding
+    c.setFont("Helvetica-Bold", 16)
+    c.setFillColor(HexColor('#4a5d4a'))
+    c.drawCentredString(width / 2, 80, "The Room")
+    c.setFont("Helvetica", 10)
+    c.drawCentredString(width / 2, 65, "A weekly discipleship hub")
+    
+    c.save()
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=certificate_{course_id}.pdf"}
+    )
 
 # ============== PUSH NOTIFICATIONS ==============
 

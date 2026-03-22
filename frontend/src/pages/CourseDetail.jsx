@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
 import { Skeleton } from '../components/ui/skeleton';
-import { coursesAPI, lessonsAPI } from '../lib/api';
+import { coursesAPI, lessonsAPI, certificatesAPI } from '../lib/api';
 import { formatDate, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { LessonWizard } from '../components/LessonWizard';
@@ -26,7 +26,9 @@ import {
     EyeOff,
     Play,
     Settings,
-    ListOrdered
+    ListOrdered,
+    Award,
+    Download
 } from 'lucide-react';
 import {
     AlertDialog,
@@ -219,6 +221,28 @@ export const CourseDetail = () => {
                                 value={(course.completed_lessons / course.total_lessons) * 100} 
                                 className="h-2"
                             />
+                            
+                            {/* Certificate Download - show when course is complete */}
+                            {course.completed_lessons === course.total_lessons && course.total_lessons > 0 && (
+                                <div className="mt-4 pt-4 border-t">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Award className="w-5 h-5 text-yellow-500" />
+                                            <span className="font-medium text-green-600">Course Completed!</span>
+                                        </div>
+                                        <a
+                                            href={certificatesAPI.download(courseId)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                                            data-testid="download-certificate-btn"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                            Download Certificate
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 )}

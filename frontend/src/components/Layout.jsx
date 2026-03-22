@@ -12,7 +12,8 @@ import {
     Menu,
     X,
     Shield,
-    TrendingUp
+    TrendingUp,
+    Calendar
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
@@ -35,6 +36,7 @@ const navItems = [
 ];
 
 const adminNavItem = { path: '/admin', icon: Shield, label: 'Admin' };
+const attendanceNavItem = { path: '/attendance', icon: Calendar, label: 'Attendance' };
 
 export const Layout = ({ children }) => {
     const { user, logout, isApproved, isAdmin, isTeacherOrAdmin } = useAuth();
@@ -48,7 +50,7 @@ export const Layout = ({ children }) => {
     };
 
     const allNavItems = isTeacherOrAdmin 
-        ? [...navItems, adminNavItem]
+        ? [...navItems, attendanceNavItem, adminNavItem]
         : navItems;
 
     if (!isApproved) {
