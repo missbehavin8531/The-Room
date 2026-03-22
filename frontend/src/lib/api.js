@@ -176,12 +176,33 @@ export const teacherPromptsAPI = {
     pinReply: (replyId, pinned) => api.put(`/replies/${replyId}/pin?pinned=${pinned}`),
     updateReplyStatus: (replyId, status) => api.put(`/replies/${replyId}/status?status=${status}`),
     deleteReply: (replyId) => api.delete(`/replies/${replyId}`),
+    // Private Feedback
+    createFeedback: (replyId, content) => api.post(`/replies/${replyId}/feedback`, { content }),
+    getFeedbackForReply: (replyId) => api.get(`/replies/${replyId}/feedback`),
 };
 
 // Analytics API
 export const analyticsAPI = {
     getOverview: () => api.get('/analytics'),
     getParticipation: () => api.get('/analytics/participation'),
+};
+
+// Progress API
+export const progressAPI = {
+    getMyProgress: () => api.get('/my-progress'),
+    getStudentProgress: () => api.get('/teacher/student-progress'),
+};
+
+// Feedback API
+export const feedbackAPI = {
+    getMyFeedback: () => api.get('/my-feedback'),
+    getUnreadCount: () => api.get('/my-feedback/unread-count'),
+    markRead: (feedbackId) => api.put(`/feedback/${feedbackId}/read`),
+};
+
+// Notifications API
+export const notificationsAPI = {
+    sendLessonReminders: () => api.post('/notifications/send-lesson-reminders'),
 };
 
 // Seed API

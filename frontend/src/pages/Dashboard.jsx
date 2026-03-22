@@ -264,7 +264,7 @@ export const Dashboard = () => {
                             <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                                 <CheckCircle className="w-8 h-8 text-primary-foreground" />
                             </div>
-                            <h3 className="text-xl font-serif font-bold mb-2">All Done! 🎉</h3>
+                            <h3 className="text-xl font-serif font-bold mb-2">All Done!</h3>
                             <p className="text-muted-foreground">
                                 You've completed all activities for today's lesson. See you next week!
                             </p>

@@ -16,6 +16,7 @@ import TeacherResponses from './pages/TeacherResponses';
 import Chat from './pages/Chat';
 import Messages from './pages/Messages';
 import Admin from './pages/Admin';
+import Progress from './pages/Progress';
 
 // Components
 import { Onboarding } from './components/Onboarding';
@@ -112,6 +113,14 @@ function AppRoutes() {
                 element={
                     <ProtectedRoute>
                         <Courses />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/progress"
+                element={
+                    <ProtectedRoute>
+                        <Progress />
                     </ProtectedRoute>
                 }
             />

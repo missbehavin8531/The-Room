@@ -11,7 +11,8 @@ import {
     User,
     Menu,
     X,
-    Shield
+    Shield,
+    TrendingUp
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
@@ -28,6 +29,7 @@ import { getInitials } from '../lib/utils';
 const navItems = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/courses', icon: BookOpen, label: 'Courses' },
+    { path: '/progress', icon: TrendingUp, label: 'Progress' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/messages', icon: Mail, label: 'Messages' },
 ];

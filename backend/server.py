@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, Form, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, Form, Query, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -7,16 +7,18 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import asyncio
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 import bcrypt
 import jwt
 import shutil
 import httpx
 import time
+import resend
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -39,6 +41,14 @@ MAX_UPLOAD_SIZE = 25 * 1024 * 1024  # 25MB
 # Daily.co Configuration
 DAILY_API_KEY = os.environ.get('DAILY_API_KEY', '')
 DAILY_DOMAIN = os.environ.get('DAILY_DOMAIN', '')
+
+# Resend Email Configuration
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'The Room <onboarding@resend.dev>')
+resend.api_key = RESEND_API_KEY
+
+# Logging
+logger = logging.getLogger(__name__)
 
 # Create the main app
 app = FastAPI(title="The Room API")
@@ -317,6 +327,208 @@ class RecordingControlResponse(BaseModel):
     message: str
     recording_id: Optional[str] = None
     is_recording: bool = False
+
+# ============== PRIVATE FEEDBACK MODELS ==============
+
+class PrivateFeedbackCreate(BaseModel):
+    content: str
+
+class PrivateFeedbackResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    reply_id: str  # The prompt reply this feedback is for
+    teacher_id: str
+    teacher_name: str
+    student_id: str
+    student_name: str
+    content: str
+    created_at: str
+    is_read: bool = False
+
+# ============== PROGRESS MODELS ==============
+
+class CourseProgressResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    course_id: str
+    course_title: str
+    total_lessons: int
+    completed_lessons: int
+    progress_percent: float
+    last_activity: Optional[str] = None
+
+class UserProgressResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    user_id: str
+    user_name: str
+    total_courses_enrolled: int
+    total_lessons_completed: int
+    courses: List[CourseProgressResponse] = []
+    streak_days: int = 0
+    last_activity: Optional[str] = None
+
+# ============== EMAIL SERVICE ==============
+
+class EmailService:
+    """Service for sending emails via Resend"""
+    
+    @staticmethod
+    async def send_email(to: str, subject: str, html: str) -> dict:
+        """Send an email asynchronously"""
+        if not RESEND_API_KEY:
+            logger.warning("RESEND_API_KEY not configured, skipping email")
+            return {"status": "skipped", "reason": "API key not configured"}
+        
+        try:
+            params = {
+                "from": SENDER_EMAIL,
+                "to": [to],
+                "subject": subject,
+                "html": html
+            }
+            result = await asyncio.to_thread(resend.Emails.send, params)
+            logger.info(f"Email sent to {to}: {subject}")
+            return {"status": "sent", "id": result.get("id")}
+        except Exception as e:
+            logger.error(f"Failed to send email to {to}: {str(e)}")
+            return {"status": "error", "error": str(e)}
+    
+    @staticmethod
+    def get_base_template(content: str, title: str = "The Room") -> str:
+        """Wrap content in a styled email template"""
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f0;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f0; padding: 40px 20px;">
+                <tr>
+                    <td align="center">
+                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <!-- Header -->
+                            <tr>
+                                <td style="background-color: #4a5d4a; padding: 30px; text-align: center;">
+                                    <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">{title}</h1>
+                                </td>
+                            </tr>
+                            <!-- Content -->
+                            <tr>
+                                <td style="padding: 40px 30px;">
+                                    {content}
+                                </td>
+                            </tr>
+                            <!-- Footer -->
+                            <tr>
+                                <td style="background-color: #f9f9f6; padding: 20px 30px; text-align: center; border-top: 1px solid #eee;">
+                                    <p style="margin: 0; color: #888; font-size: 12px;">
+                                        The Room - A weekly discipleship hub
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+    
+    @classmethod
+    async def send_welcome_email(cls, user_email: str, user_name: str):
+        """Send welcome email to newly approved user"""
+        content = f"""
+        <h2 style="color: #333; margin-top: 0;">Welcome to The Room, {user_name}!</h2>
+        <p style="color: #555; line-height: 1.6;">
+            Your account has been approved! You can now access all courses and participate in discussions.
+        </p>
+        <p style="color: #555; line-height: 1.6;">
+            Here's what you can do:
+        </p>
+        <ul style="color: #555; line-height: 1.8;">
+            <li>Browse and enroll in courses</li>
+            <li>Join live video sessions</li>
+            <li>Watch lesson replays</li>
+            <li>Participate in discussions</li>
+            <li>Download resources</li>
+        </ul>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="#" style="display: inline-block; background-color: #4a5d4a; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                Start Learning
+            </a>
+        </div>
+        """
+        return await cls.send_email(user_email, "Welcome to The Room!", cls.get_base_template(content))
+    
+    @classmethod
+    async def send_lesson_reminder(cls, user_email: str, user_name: str, lesson_title: str, course_title: str, lesson_date: str):
+        """Send lesson reminder email"""
+        content = f"""
+        <h2 style="color: #333; margin-top: 0;">Upcoming Lesson Reminder</h2>
+        <p style="color: #555; line-height: 1.6;">
+            Hi {user_name},
+        </p>
+        <p style="color: #555; line-height: 1.6;">
+            Don't forget! You have an upcoming lesson:
+        </p>
+        <div style="background-color: #f9f9f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0; color: #333; font-weight: 600; font-size: 18px;">{lesson_title}</p>
+            <p style="margin: 0 0 5px 0; color: #666;">Course: {course_title}</p>
+            <p style="margin: 0; color: #666;">Date: {lesson_date}</p>
+        </div>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="#" style="display: inline-block; background-color: #4a5d4a; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                View Lesson
+            </a>
+        </div>
+        """
+        return await cls.send_email(user_email, f"Reminder: {lesson_title}", cls.get_base_template(content))
+    
+    @classmethod
+    async def send_teacher_reply_notification(cls, user_email: str, user_name: str, teacher_name: str, lesson_title: str, is_private: bool = False):
+        """Notify student when teacher replies to their response"""
+        reply_type = "private feedback" if is_private else "reply"
+        content = f"""
+        <h2 style="color: #333; margin-top: 0;">New {reply_type.title()} from {teacher_name}</h2>
+        <p style="color: #555; line-height: 1.6;">
+            Hi {user_name},
+        </p>
+        <p style="color: #555; line-height: 1.6;">
+            {teacher_name} has sent you a {reply_type} on your response in <strong>{lesson_title}</strong>.
+        </p>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="#" style="display: inline-block; background-color: #4a5d4a; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                View {reply_type.title()}
+            </a>
+        </div>
+        """
+        return await cls.send_email(user_email, f"New {reply_type} from {teacher_name}", cls.get_base_template(content))
+    
+    @classmethod
+    async def send_new_course_notification(cls, user_email: str, user_name: str, course_title: str, course_description: str):
+        """Notify users when a new course is published"""
+        content = f"""
+        <h2 style="color: #333; margin-top: 0;">New Course Available!</h2>
+        <p style="color: #555; line-height: 1.6;">
+            Hi {user_name},
+        </p>
+        <p style="color: #555; line-height: 1.6;">
+            A new course has been published:
+        </p>
+        <div style="background-color: #f9f9f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0; color: #333; font-weight: 600; font-size: 18px;">{course_title}</p>
+            <p style="margin: 0; color: #666;">{course_description[:200]}{'...' if len(course_description) > 200 else ''}</p>
+        </div>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="#" style="display: inline-block; background-color: #4a5d4a; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                Enroll Now
+            </a>
+        </div>
+        """
+        return await cls.send_email(user_email, f"New Course: {course_title}", cls.get_base_template(content))
+
+email_service = EmailService()
 
 # ============== DAILY.CO SERVICE ==============
 
@@ -667,10 +879,24 @@ async def get_pending_users(user: dict = Depends(require_admin)):
     return [UserResponse(**u) for u in users]
 
 @api_router.put("/users/{user_id}/approve")
-async def approve_user(user_id: str, user: dict = Depends(require_admin)):
+async def approve_user(user_id: str, background_tasks: BackgroundTasks, user: dict = Depends(require_admin)):
+    # Get user info before updating
+    user_to_approve = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not user_to_approve:
+        raise HTTPException(status_code=404, detail="User not found")
+    
     result = await db.users.update_one({'id': user_id}, {'$set': {'is_approved': True}})
     if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="User not found or already approved")
+    
+    # Send welcome email
+    if user_to_approve.get('email'):
+        background_tasks.add_task(
+            email_service.send_welcome_email,
+            user_to_approve['email'],
+            user_to_approve['name']
+        )
+    
     return {'message': 'User approved'}
 
 @api_router.put("/users/{user_id}/role")
@@ -2077,6 +2303,281 @@ async def get_participation_stats(user: dict = Depends(require_admin)):
         'top_commenters': [{'user_id': t['_id'], 'user_name': t['user_name'], 'count': t['count']} for t in top_commenters],
         'top_chatters': [{'user_id': t['_id'], 'user_name': t['user_name'], 'count': t['count']} for t in top_chatters]
     }
+
+# ============== PRIVATE FEEDBACK ROUTES ==============
+
+@api_router.post("/replies/{reply_id}/feedback", response_model=PrivateFeedbackResponse)
+async def create_private_feedback(
+    reply_id: str,
+    data: PrivateFeedbackCreate,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(require_teacher_or_admin)
+):
+    """Create private feedback for a student's reply (teacher only)"""
+    # Get the reply to find the student
+    reply = await db.prompt_replies.find_one({'id': reply_id}, {'_id': 0})
+    if not reply:
+        raise HTTPException(status_code=404, detail="Reply not found")
+    
+    # Get the student info
+    student = await db.users.find_one({'id': reply['user_id']}, {'_id': 0})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    # Get the lesson for email notification
+    prompt = await db.teacher_prompts.find_one({'id': reply['prompt_id']}, {'_id': 0})
+    lesson = await db.lessons.find_one({'id': prompt['lesson_id']}, {'_id': 0}) if prompt else None
+    
+    feedback_id = str(uuid.uuid4())
+    feedback = {
+        'id': feedback_id,
+        'reply_id': reply_id,
+        'teacher_id': user['id'],
+        'teacher_name': user['name'],
+        'student_id': reply['user_id'],
+        'student_name': reply['user_name'],
+        'content': data.content,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'is_read': False
+    }
+    await db.private_feedback.insert_one(feedback)
+    
+    # Send email notification to student
+    if student.get('email') and lesson:
+        background_tasks.add_task(
+            email_service.send_teacher_reply_notification,
+            student['email'],
+            student['name'],
+            user['name'],
+            lesson.get('title', 'a lesson'),
+            is_private=True
+        )
+    
+    return PrivateFeedbackResponse(**feedback)
+
+@api_router.get("/replies/{reply_id}/feedback", response_model=List[PrivateFeedbackResponse])
+async def get_feedback_for_reply(reply_id: str, user: dict = Depends(require_approved)):
+    """Get private feedback for a reply (visible to teacher or the student who wrote it)"""
+    reply = await db.prompt_replies.find_one({'id': reply_id}, {'_id': 0})
+    if not reply:
+        raise HTTPException(status_code=404, detail="Reply not found")
+    
+    # Only allow teacher/admin or the student who wrote the reply
+    if user['role'] not in ['teacher', 'admin'] and user['id'] != reply['user_id']:
+        raise HTTPException(status_code=403, detail="Not authorized to view this feedback")
+    
+    feedback = await db.private_feedback.find({'reply_id': reply_id}, {'_id': 0}).sort('created_at', -1).to_list(100)
+    return [PrivateFeedbackResponse(**f) for f in feedback]
+
+@api_router.get("/my-feedback", response_model=List[PrivateFeedbackResponse])
+async def get_my_feedback(user: dict = Depends(require_approved)):
+    """Get all private feedback for the current user (student view)"""
+    feedback = await db.private_feedback.find(
+        {'student_id': user['id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(100)
+    return [PrivateFeedbackResponse(**f) for f in feedback]
+
+@api_router.get("/my-feedback/unread-count")
+async def get_unread_feedback_count(user: dict = Depends(require_approved)):
+    """Get count of unread private feedback"""
+    count = await db.private_feedback.count_documents({
+        'student_id': user['id'],
+        'is_read': False
+    })
+    return {'unread_count': count}
+
+@api_router.put("/feedback/{feedback_id}/read")
+async def mark_feedback_read(feedback_id: str, user: dict = Depends(require_approved)):
+    """Mark private feedback as read"""
+    result = await db.private_feedback.update_one(
+        {'id': feedback_id, 'student_id': user['id']},
+        {'$set': {'is_read': True}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Feedback not found")
+    return {'message': 'Feedback marked as read'}
+
+# ============== PROGRESS DASHBOARD ROUTES ==============
+
+@api_router.get("/my-progress", response_model=UserProgressResponse)
+async def get_my_progress(user: dict = Depends(require_approved)):
+    """Get progress dashboard for current user"""
+    user_id = user['id']
+    
+    # Get all enrolled courses
+    enrollments = await db.enrollments.find({'user_id': user_id}, {'_id': 0}).to_list(100)
+    enrolled_course_ids = [e['course_id'] for e in enrollments]
+    
+    # Get course progress for each enrolled course
+    courses_progress = []
+    for course_id in enrolled_course_ids:
+        course = await db.courses.find_one({'id': course_id}, {'_id': 0})
+        if not course:
+            continue
+        
+        # Count total and completed lessons
+        total_lessons = await db.lessons.count_documents({'course_id': course_id, 'is_published': True})
+        completed_lessons = await db.lesson_completions.count_documents({
+            'course_id': course_id,
+            'user_id': user_id
+        })
+        
+        # Get last activity
+        last_completion = await db.lesson_completions.find_one(
+            {'course_id': course_id, 'user_id': user_id},
+            {'_id': 0},
+            sort=[('completed_at', -1)]
+        )
+        
+        progress_percent = (completed_lessons / total_lessons * 100) if total_lessons > 0 else 0
+        
+        courses_progress.append(CourseProgressResponse(
+            course_id=course_id,
+            course_title=course.get('title', 'Unknown'),
+            total_lessons=total_lessons,
+            completed_lessons=completed_lessons,
+            progress_percent=round(progress_percent, 1),
+            last_activity=last_completion.get('completed_at') if last_completion else None
+        ))
+    
+    # Calculate streak (consecutive days with activity)
+    streak_days = await calculate_streak(user_id)
+    
+    # Get overall last activity
+    last_activity = await db.lesson_completions.find_one(
+        {'user_id': user_id},
+        {'_id': 0},
+        sort=[('completed_at', -1)]
+    )
+    
+    # Total lessons completed
+    total_lessons_completed = await db.lesson_completions.count_documents({'user_id': user_id})
+    
+    return UserProgressResponse(
+        user_id=user_id,
+        user_name=user['name'],
+        total_courses_enrolled=len(enrolled_course_ids),
+        total_lessons_completed=total_lessons_completed,
+        courses=courses_progress,
+        streak_days=streak_days,
+        last_activity=last_activity.get('completed_at') if last_activity else None
+    )
+
+async def calculate_streak(user_id: str) -> int:
+    """Calculate consecutive days streak for a user"""
+    # Get all completion dates
+    completions = await db.lesson_completions.find(
+        {'user_id': user_id},
+        {'_id': 0, 'completed_at': 1}
+    ).sort('completed_at', -1).to_list(365)
+    
+    if not completions:
+        return 0
+    
+    # Extract unique dates
+    dates = set()
+    for c in completions:
+        try:
+            dt = datetime.fromisoformat(c['completed_at'].replace('Z', '+00:00'))
+            dates.add(dt.date())
+        except:
+            pass
+    
+    if not dates:
+        return 0
+    
+    # Count consecutive days from today
+    today = date.today()
+    streak = 0
+    current_date = today
+    
+    # Check if there's activity today or yesterday (to maintain streak)
+    if current_date not in dates and (current_date - timedelta(days=1)) not in dates:
+        return 0
+    
+    # If no activity today, start from yesterday
+    if current_date not in dates:
+        current_date = current_date - timedelta(days=1)
+    
+    while current_date in dates:
+        streak += 1
+        current_date = current_date - timedelta(days=1)
+    
+    return streak
+
+@api_router.get("/teacher/student-progress")
+async def get_student_progress(user: dict = Depends(require_teacher_or_admin)):
+    """Get progress overview of all students (teacher view)"""
+    # Get all members
+    members = await db.users.find(
+        {'role': 'member', 'is_approved': True},
+        {'_id': 0, 'id': 1, 'name': 1, 'email': 1}
+    ).to_list(500)
+    
+    student_progress = []
+    for member in members:
+        # Count enrollments and completions
+        enrollments = await db.enrollments.count_documents({'user_id': member['id']})
+        completions = await db.lesson_completions.count_documents({'user_id': member['id']})
+        
+        # Get last activity
+        last_activity = await db.lesson_completions.find_one(
+            {'user_id': member['id']},
+            {'_id': 0},
+            sort=[('completed_at', -1)]
+        )
+        
+        student_progress.append({
+            'user_id': member['id'],
+            'user_name': member['name'],
+            'email': member['email'],
+            'courses_enrolled': enrollments,
+            'lessons_completed': completions,
+            'last_activity': last_activity.get('completed_at') if last_activity else None
+        })
+    
+    # Sort by lessons completed (descending)
+    student_progress.sort(key=lambda x: x['lessons_completed'], reverse=True)
+    
+    return {'students': student_progress}
+
+# ============== EMAIL NOTIFICATION TRIGGERS ==============
+
+@api_router.post("/notifications/send-lesson-reminders")
+async def send_lesson_reminders(background_tasks: BackgroundTasks, user: dict = Depends(require_teacher_or_admin)):
+    """Send email reminders for upcoming lessons (teacher can trigger manually)"""
+    tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).strftime('%Y-%m-%d')
+    
+    # Find lessons scheduled for tomorrow
+    lessons = await db.lessons.find({
+        'lesson_date': tomorrow,
+        'is_published': True
+    }, {'_id': 0}).to_list(100)
+    
+    emails_queued = 0
+    for lesson in lessons:
+        course = await db.courses.find_one({'id': lesson['course_id']}, {'_id': 0})
+        if not course:
+            continue
+        
+        # Get all enrolled users
+        enrollments = await db.enrollments.find({'course_id': lesson['course_id']}, {'_id': 0}).to_list(500)
+        
+        for enrollment in enrollments:
+            enrolled_user = await db.users.find_one({'id': enrollment['user_id']}, {'_id': 0})
+            if enrolled_user and enrolled_user.get('email'):
+                background_tasks.add_task(
+                    email_service.send_lesson_reminder,
+                    enrolled_user['email'],
+                    enrolled_user['name'],
+                    lesson['title'],
+                    course['title'],
+                    lesson['lesson_date']
+                )
+                emails_queued += 1
+    
+    return {'message': f'Queued {emails_queued} reminder emails for {len(lessons)} lessons'}
 
 # ============== SEED DATA ==============
 

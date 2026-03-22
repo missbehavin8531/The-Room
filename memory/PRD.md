@@ -286,6 +286,28 @@ All core lesson-centric flow, teacher management, and video conferencing impleme
 - `/app/test_reports/iteration_11.json` - Course unlock modes & editor (100% pass, 39 tests)
 - `/app/backend/tests/` - Various API test files
 
+## Phase 1 Enhancements (Feb 2026)
+### Implemented:
+- **Email Service** - Resend integration for transactional emails (backend ready, needs API key)
+- **Private Teacher Feedback** - Backend API for teachers to send private feedback to students
+- **Progress Dashboard** - New /progress page with stats (streaks, lessons done, course progress)
+- **Student Progress View** - Teachers can see all students' progress in a table
+- **Welcome Emails** - Sent when users are approved (needs Resend API key)
+- **Lesson Reminder Emails** - Endpoint to send reminders for upcoming lessons
+
+### Backend Endpoints Added:
+- `POST /api/replies/{reply_id}/feedback` - Create private feedback
+- `GET /api/replies/{reply_id}/feedback` - Get feedback for a reply
+- `GET /api/my-feedback` - Get all feedback for current user
+- `GET /api/my-feedback/unread-count` - Get unread feedback count
+- `PUT /api/feedback/{feedback_id}/read` - Mark feedback as read
+- `GET /api/my-progress` - Get user's progress dashboard data
+- `GET /api/teacher/student-progress` - Get all students' progress (teacher only)
+- `POST /api/notifications/send-lesson-reminders` - Send email reminders
+
+### Pending (needs Resend API key):
+- Email notifications are backend-ready but require RESEND_API_KEY in .env
+
 ## 3rd Party Integrations
 - **Daily.co** - Embedded video conferencing (API key in backend .env)
 - **YouTube** - Video embed for lesson replays
