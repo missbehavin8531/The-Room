@@ -17,6 +17,7 @@ import Chat from './pages/Chat';
 import Messages from './pages/Messages';
 import Admin from './pages/Admin';
 import Progress from './pages/Progress';
+import Settings from './pages/Settings';
 
 // Components
 import { Onboarding } from './components/Onboarding';
@@ -177,6 +178,14 @@ function AppRoutes() {
                 element={
                     <ProtectedRoute requireTeacher>
                         <Admin />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/settings"
+                element={
+                    <ProtectedRoute>
+                        <Settings />
                     </ProtectedRoute>
                 }
             />

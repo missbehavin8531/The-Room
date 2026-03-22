@@ -2043,13 +2043,16 @@ async def delete_teacher_prompt(prompt_id: str, user: dict = Depends(require_tea
 # ============== PROMPT REPLIES ==============
 
 @api_router.post("/prompts/{prompt_id}/reply", response_model=PromptReplyResponse)
-async def reply_to_prompt(prompt_id: str, data: PromptReplyCreate, user: dict = Depends(require_approved)):
+async def reply_to_prompt(prompt_id: str, data: PromptReplyCreate, background_tasks: BackgroundTasks, user: dict = Depends(require_approved)):
     prompt = await db.teacher_prompts.find_one({'id': prompt_id})
     if not prompt:
         raise HTTPException(status_code=404, detail="Prompt not found")
     
     if user.get('is_muted'):
         raise HTTPException(status_code=403, detail="You are muted and cannot respond")
+    
+    # Get lesson info for notifications
+    lesson = await db.lessons.find_one({'id': prompt['lesson_id']}, {'_id': 0})
     
     reply_id = str(uuid.uuid4())
     reply = {
@@ -2064,6 +2067,17 @@ async def reply_to_prompt(prompt_id: str, data: PromptReplyCreate, user: dict = 
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.prompt_replies.insert_one(reply)
+    
+    # Process @mentions in the reply
+    if lesson:
+        await notify_mentions(
+            data.content,
+            user['name'],
+            lesson.get('title', 'a lesson'),
+            prompt['lesson_id'],
+            background_tasks
+        )
+    
     return PromptReplyResponse(**reply)
 
 @api_router.get("/prompts/{prompt_id}/replies", response_model=List[PromptReplyResponse])
@@ -2578,6 +2592,211 @@ async def send_lesson_reminders(background_tasks: BackgroundTasks, user: dict = 
                 emails_queued += 1
     
     return {'message': f'Queued {emails_queued} reminder emails for {len(lessons)} lessons'}
+
+# ============== PUSH NOTIFICATIONS ==============
+
+# Web Push Configuration
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', '')
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '')
+VAPID_CLAIMS_EMAIL = os.environ.get('VAPID_CLAIMS_EMAIL', 'admin@theroom.app')
+
+class PushSubscriptionCreate(BaseModel):
+    endpoint: str
+    keys: dict
+
+@api_router.get("/push/vapid-public-key")
+async def get_vapid_public_key():
+    """Get VAPID public key for push subscription"""
+    return {'publicKey': VAPID_PUBLIC_KEY}
+
+@api_router.post("/push/subscribe")
+async def subscribe_to_push(data: PushSubscriptionCreate, user: dict = Depends(require_approved)):
+    """Subscribe to push notifications"""
+    subscription = {
+        'user_id': user['id'],
+        'endpoint': data.endpoint,
+        'keys': data.keys,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Upsert subscription (update if endpoint exists)
+    await db.push_subscriptions.update_one(
+        {'user_id': user['id'], 'endpoint': data.endpoint},
+        {'$set': subscription},
+        upsert=True
+    )
+    
+    return {'message': 'Subscribed to push notifications'}
+
+@api_router.delete("/push/unsubscribe")
+async def unsubscribe_from_push(endpoint: str, user: dict = Depends(require_approved)):
+    """Unsubscribe from push notifications"""
+    await db.push_subscriptions.delete_one({
+        'user_id': user['id'],
+        'endpoint': endpoint
+    })
+    return {'message': 'Unsubscribed from push notifications'}
+
+async def send_push_notification(user_id: str, title: str, body: str, url: str = '/'):
+    """Send push notification to a user"""
+    if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
+        logger.warning("VAPID keys not configured, skipping push notification")
+        return
+    
+    try:
+        from pywebpush import webpush, WebPushException
+        import json
+        
+        subscriptions = await db.push_subscriptions.find({'user_id': user_id}, {'_id': 0}).to_list(10)
+        
+        for sub in subscriptions:
+            try:
+                webpush(
+                    subscription_info={
+                        'endpoint': sub['endpoint'],
+                        'keys': sub['keys']
+                    },
+                    data=json.dumps({
+                        'title': title,
+                        'body': body,
+                        'url': url
+                    }),
+                    vapid_private_key=VAPID_PRIVATE_KEY,
+                    vapid_claims={'sub': f'mailto:{VAPID_CLAIMS_EMAIL}'}
+                )
+                logger.info(f"Push notification sent to user {user_id}")
+            except WebPushException as e:
+                if e.response and e.response.status_code == 410:
+                    # Subscription expired, remove it
+                    await db.push_subscriptions.delete_one({'endpoint': sub['endpoint']})
+                logger.error(f"Push notification failed: {e}")
+    except Exception as e:
+        logger.error(f"Failed to send push notification: {e}")
+
+# ============== @MENTIONS ==============
+
+import re
+
+def extract_mentions(text: str) -> list:
+    """Extract @mentions from text"""
+    # Match @username patterns
+    pattern = r'@(\w+)'
+    return re.findall(pattern, text)
+
+async def notify_mentions(text: str, sender_name: str, lesson_title: str, reply_id: str, background_tasks: BackgroundTasks):
+    """Notify users who are mentioned in a reply"""
+    mentions = extract_mentions(text)
+    if not mentions:
+        return
+    
+    for username in mentions:
+        # Find user by name (case-insensitive partial match)
+        user = await db.users.find_one({
+            'name': {'$regex': f'^{username}', '$options': 'i'},
+            'is_approved': True
+        }, {'_id': 0})
+        
+        if user:
+            # Send push notification
+            await send_push_notification(
+                user['id'],
+                f'{sender_name} mentioned you',
+                f'In "{lesson_title}": {text[:100]}...' if len(text) > 100 else f'In "{lesson_title}": {text}',
+                f'/lessons/{reply_id}'
+            )
+            
+            # Also send email if configured
+            if user.get('email'):
+                background_tasks.add_task(
+                    email_service.send_email,
+                    user['email'],
+                    f'{sender_name} mentioned you in The Room',
+                    email_service.get_base_template(f'''
+                        <h2 style="color: #333; margin-top: 0;">You were mentioned!</h2>
+                        <p style="color: #555; line-height: 1.6;">
+                            <strong>{sender_name}</strong> mentioned you in a discussion for <strong>{lesson_title}</strong>:
+                        </p>
+                        <div style="background-color: #f9f9f6; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4a5d4a;">
+                            <p style="margin: 0; color: #555;">{text}</p>
+                        </div>
+                    ''')
+                )
+
+# ============== READING PLAN REMINDERS ==============
+
+class ReadingReminderSettings(BaseModel):
+    enabled: bool = True
+    reminder_time: str = "08:00"  # HH:MM format
+
+@api_router.get("/reading-reminders/settings")
+async def get_reading_reminder_settings(user: dict = Depends(require_approved)):
+    """Get user's reading reminder settings"""
+    settings = await db.reading_reminder_settings.find_one({'user_id': user['id']}, {'_id': 0})
+    if not settings:
+        return {'enabled': False, 'reminder_time': '08:00'}
+    return settings
+
+@api_router.put("/reading-reminders/settings")
+async def update_reading_reminder_settings(data: ReadingReminderSettings, user: dict = Depends(require_approved)):
+    """Update user's reading reminder settings"""
+    await db.reading_reminder_settings.update_one(
+        {'user_id': user['id']},
+        {'$set': {
+            'user_id': user['id'],
+            'enabled': data.enabled,
+            'reminder_time': data.reminder_time,
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    return {'message': 'Settings updated'}
+
+@api_router.post("/reading-reminders/send")
+async def send_reading_reminders(background_tasks: BackgroundTasks, user: dict = Depends(require_teacher_or_admin)):
+    """Send reading plan reminders to all opted-in users (can be called by cron)"""
+    # Get all users with reminders enabled
+    settings = await db.reading_reminder_settings.find({'enabled': True}, {'_id': 0}).to_list(1000)
+    
+    notifications_sent = 0
+    for setting in settings:
+        user_data = await db.users.find_one({'id': setting['user_id']}, {'_id': 0})
+        if not user_data:
+            continue
+        
+        # Send push notification
+        await send_push_notification(
+            setting['user_id'],
+            'Daily Reading Reminder',
+            "Don't forget your daily scripture reading!",
+            '/'
+        )
+        
+        # Send email
+        if user_data.get('email'):
+            background_tasks.add_task(
+                email_service.send_email,
+                user_data['email'],
+                'Daily Reading Reminder - The Room',
+                email_service.get_base_template(f'''
+                    <h2 style="color: #333; margin-top: 0;">Daily Reading Reminder</h2>
+                    <p style="color: #555; line-height: 1.6;">
+                        Hi {user_data['name']},
+                    </p>
+                    <p style="color: #555; line-height: 1.6;">
+                        This is your daily reminder to spend time in God's Word today. 
+                        Check your current lesson for today's reading plan.
+                    </p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="#" style="display: inline-block; background-color: #4a5d4a; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                            View Reading Plan
+                        </a>
+                    </div>
+                ''')
+            )
+        
+        notifications_sent += 1
+    
+    return {'message': f'Sent {notifications_sent} reading reminders'}
 
 # ============== SEED DATA ==============
 

@@ -286,6 +286,28 @@ All core lesson-centric flow, teacher management, and video conferencing impleme
 - `/app/test_reports/iteration_11.json` - Course unlock modes & editor (100% pass, 39 tests)
 - `/app/backend/tests/` - Various API test files
 
+## Phase 2 Enhancements (Feb 2026)
+### Implemented:
+- **Push Notifications (PWA)** - Service worker for web push, subscription management
+- **Settings Page** - New /settings page for notification preferences
+- **Daily Reading Reminders** - Users can enable daily scripture reminders with custom time
+- **@Mentions in Discussions** - Mention users with @username, triggers email + push notification
+- **VAPID Keys** - Generated and configured for web push
+
+### Backend Endpoints Added:
+- `GET /api/push/vapid-public-key` - Get VAPID public key for subscription
+- `POST /api/push/subscribe` - Subscribe to push notifications
+- `DELETE /api/push/unsubscribe` - Unsubscribe from push notifications
+- `GET /api/reading-reminders/settings` - Get user's reminder settings
+- `PUT /api/reading-reminders/settings` - Update reminder settings
+- `POST /api/reading-reminders/send` - Send reading reminders (for cron job)
+
+### Frontend Files Added:
+- `/frontend/public/sw.js` - Service worker for push notifications
+- `/frontend/src/lib/pushService.js` - Push notification service
+- `/frontend/src/components/NotificationSettings.jsx` - Notification settings UI
+- `/frontend/src/pages/Settings.jsx` - Settings page
+
 ## Phase 1 Enhancements (Feb 2026)
 ### Implemented:
 - **Email Service** - Resend integration for transactional emails (backend ready, needs API key)

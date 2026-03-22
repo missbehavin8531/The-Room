@@ -172,6 +172,13 @@ export const Layout = ({ children }) => {
                                 <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
                             </div>
                             <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                                <Link to="/settings" className="flex items-center">
+                                    <Settings className="w-4 h-4 mr-2" />
+                                    Settings
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                                 <LogOut className="w-4 h-4 mr-2" />
                                 Sign Out
