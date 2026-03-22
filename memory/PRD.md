@@ -48,6 +48,24 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 - [x] **Offline Mode** - Service worker caches static assets and API responses for offline viewing
 - [x] **Search Results Enrichment** - Discussion results now include user_name and descriptions
 
+### ✅ Phase 9: Backend Refactoring (Mar 2026)
+- [x] **server.py Split** - Monolithic 3,228-line file → 55-line app factory
+- [x] **database.py** - DB connection, JWT config, file upload config, all env vars
+- [x] **models.py** - All Pydantic models (~310 lines)
+- [x] **auth.py** - Auth routes + dependencies
+- [x] **services/email_service.py** - Resend email integration
+- [x] **services/daily_service.py** - Daily.co video API integration
+- [x] **routes/users.py** - User management
+- [x] **routes/courses.py** - Courses, enrollments, certificates
+- [x] **routes/lessons.py** - Lessons, resources, completions
+- [x] **routes/prompts.py** - Teacher prompts, replies, feedback, @mentions
+- [x] **routes/social.py** - Comments, chat, private messages
+- [x] **routes/attendance.py** - Attendance recording and reports
+- [x] **routes/video.py** - Daily.co video rooms
+- [x] **routes/progress.py** - Progress dashboard, student progress
+- [x] **routes/notifications.py** - Search, analytics, push, email, reminders
+- [x] **routes/seed.py** - Seed data
+
 ### ✅ Phase 7: Course Management & Unlock Modes (Feb 2026)
 - [x] **Admin Removed from Demo** - Only Teacher and Member demo logins
 - [x] **Course Cover Upload** - Upload images for course thumbnails
@@ -137,11 +155,11 @@ A **narrow-wedge mobile-first** "The Room" discipleship web app for one church (
 
 ## Prioritized Backlog
 
-### P0 - Done (All MVP + Enhancements)
-All core lesson-centric flow, teacher management, video conferencing, progress tracking, settings, attendance reports, search, dark mode, push notifications, email notifications, certificate generation, and offline mode implemented.
+### P0 - Done (All MVP + Enhancements + Refactoring)
+All core lesson-centric flow, teacher management, video conferencing, progress tracking, settings, attendance reports, search, dark mode, push notifications, email notifications, certificate generation, offline mode implemented. Backend refactored into modular files.
 
 ### P1 - Next Priorities
-- [ ] Refactor server.py (~3k lines) into modular routes/models
+- [x] ~~Refactor server.py (~3k lines) into modular routes/models~~ DONE
 - [ ] Proper PWA Favicon and App Icons
 - [ ] Private teacher feedback UI improvements
 
@@ -153,11 +171,38 @@ All core lesson-centric flow, teacher management, video conferencing, progress t
 - [ ] Multiple church support (multi-tenant)
 
 ## Technical Stack
-- **Backend**: FastAPI, MongoDB, JWT, bcrypt, httpx
+- **Backend**: FastAPI (modular routes), MongoDB, JWT, bcrypt, httpx
 - **Frontend**: React 19, Tailwind CSS, Shadcn/UI, react-markdown
 - **Video**: Daily.co SDK (@daily-co/daily-js, @daily-co/daily-react, jotai)
+- **Email**: Resend SDK
+- **Push**: PyWebPush with VAPID
+- **PDF**: ReportLab for certificates
 - **Storage**: Local filesystem for uploads
 - **Deployment**: Supervisor-managed services
+
+## Backend Architecture (Post-Refactor)
+```
+/app/backend/
+├── server.py          # App factory, middleware (~55 lines)
+├── database.py        # MongoDB connection, all env config
+├── models.py          # All Pydantic models (~310 lines)
+├── auth.py            # Auth routes + dependencies
+├── services/
+│   ├── email_service.py  # Resend email integration
+│   └── daily_service.py  # Daily.co video API
+├── routes/
+│   ├── users.py          # User management
+│   ├── courses.py        # Courses, enrollments, certificates
+│   ├── lessons.py        # Lessons, resources, completions
+│   ├── prompts.py        # Teacher prompts, replies, feedback
+│   ├── social.py         # Comments, chat, private messages
+│   ├── attendance.py     # Attendance recording + reports
+│   ├── video.py          # Daily.co video rooms
+│   ├── progress.py       # Progress dashboard
+│   ├── notifications.py  # Search, analytics, push, reminders
+│   └── seed.py           # Seed data
+└── tests/
+```
 
 ## API Routes Summary
 
@@ -292,6 +337,7 @@ All core lesson-centric flow, teacher management, video conferencing, progress t
 - `/app/test_reports/iteration_11.json` - Course unlock modes & editor (100% pass, 39 tests)
 - `/app/test_reports/iteration_12.json` - Phase 2-4 features: Progress, Settings, Attendance (100% pass, 22 tests)
 - `/app/test_reports/iteration_13.json` - Search, Dark Mode Header, Offline Mode (100% pass, 8 backend + all frontend)
+- `/app/test_reports/iteration_14.json` - Backend Refactoring validation (100% pass, 22 backend + all frontend)
 - `/app/backend/tests/` - Various API test files
 
 ## Phase 2 Enhancements (Feb 2026)
