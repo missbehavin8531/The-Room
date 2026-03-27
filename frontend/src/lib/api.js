@@ -204,6 +204,14 @@ export const attendanceReportsAPI = {
         params: { course_id: courseId, lesson_id: lessonId } 
     }),
     getSummary: () => api.get('/attendance/summary'),
+    reset: (courseId) => api.delete('/attendance/reset', { params: { course_id: courseId } }),
+    deleteUserAttendance: (userId) => api.delete(`/attendance/user/${userId}`),
+};
+
+// Profile API
+export const profileAPI = {
+    updateName: (name) => api.put('/auth/update-name', { name }),
+    changePassword: (currentPassword, newPassword) => api.put('/auth/change-password', { current_password: currentPassword, new_password: newPassword }),
 };
 
 // Certificates API

@@ -147,6 +147,33 @@ async def complete_onboarding_step(step: str = Query(...), user: dict = Depends(
     return {'message': f'Step {step} completed'}
 
 
+# ============== PROFILE UPDATES ==============
+
+class UpdateNameRequest(BaseModel):
+    name: str
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@router.put("/auth/update-name")
+async def update_name(data: UpdateNameRequest, user: dict = Depends(get_current_user)):
+    if not data.name.strip():
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+    await db.users.update_one({'id': user['id']}, {'$set': {'name': data.name.strip()}})
+    return {'message': 'Name updated successfully', 'name': data.name.strip()}
+
+@router.put("/auth/change-password")
+async def change_password(data: ChangePasswordRequest, user: dict = Depends(get_current_user)):
+    full_user = await db.users.find_one({'id': user['id']}, {'_id': 0})
+    if not verify_password(data.current_password, full_user['password']):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    if len(data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+    await db.users.update_one({'id': user['id']}, {'$set': {'password': hash_password(data.new_password)}})
+    return {'message': 'Password changed successfully'}
+
+
 # ============== PASSWORD RESET ==============
 
 class ForgotPasswordRequest(BaseModel):

@@ -41,7 +41,7 @@ async def approve_user(user_id: str, background_tasks: BackgroundTasks, user: di
     return {'message': 'User approved'}
 
 @router.put("/users/{user_id}/role")
-async def update_user_role(user_id: str, role: str = Query(...), user: dict = Depends(require_admin)):
+async def update_user_role(user_id: str, role: str = Query(...), user: dict = Depends(require_teacher_or_admin)):
     if role not in ['member', 'teacher', 'admin']:
         raise HTTPException(status_code=400, detail="Invalid role")
     result = await db.users.update_one({'id': user_id}, {'$set': {'role': role}})

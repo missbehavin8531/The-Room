@@ -131,3 +131,41 @@ async def get_attendance_summary(user: dict = Depends(require_teacher_or_admin))
         'attendance_last_7_days': recent_attendance,
         'avg_attendance_rate': round((total_completions / (total_users * total_lessons) * 100), 1) if total_users and total_lessons else 0
     }
+
+
+# ============== ATTENDANCE EDIT/RESET ==============
+
+@router.delete("/attendance/reset")
+async def reset_attendance(
+    course_id: Optional[str] = None,
+    user: dict = Depends(require_teacher_or_admin)
+):
+    if course_id:
+        lessons = await db.lessons.find({'course_id': course_id}, {'id': 1}).to_list(100)
+        lesson_ids = [l['id'] for l in lessons]
+        r1 = await db.attendance.delete_many({'lesson_id': {'$in': lesson_ids}})
+        r2 = await db.lesson_completions.delete_many({'course_id': course_id})
+        return {'message': f'Reset attendance for course. Deleted {r1.deleted_count} records and {r2.deleted_count} completions.'}
+    else:
+        r1 = await db.attendance.delete_many({})
+        r2 = await db.lesson_completions.delete_many({})
+        return {'message': f'Reset all attendance. Deleted {r1.deleted_count} records and {r2.deleted_count} completions.'}
+
+@router.delete("/attendance/user/{user_id}")
+async def delete_user_attendance(user_id: str, user: dict = Depends(require_teacher_or_admin)):
+    r1 = await db.attendance.delete_many({'user_id': user_id})
+    r2 = await db.lesson_completions.delete_many({'user_id': user_id})
+    return {'message': f'Deleted {r1.deleted_count} attendance records and {r2.deleted_count} completions for user.'}
+
+@router.put("/attendance/{attendance_id}")
+async def update_attendance_record(
+    attendance_id: str,
+    action: str = Query(...),
+    user: dict = Depends(require_teacher_or_admin)
+):
+    if action not in ['joined_video', 'watched_replay', 'marked_complete']:
+        raise HTTPException(status_code=400, detail="Invalid action type")
+    result = await db.attendance.update_one({'id': attendance_id}, {'$set': {'action': action}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Attendance record not found")
+    return {'message': 'Attendance record updated'}
