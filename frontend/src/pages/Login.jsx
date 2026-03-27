@@ -50,25 +50,6 @@ export const Login = () => {
                     </p>
                 </div>
 
-                {/* Demo credentials - above login form */}
-                <div className="mb-4 p-4 bg-muted/50 rounded-xl text-center animate-fade-in" style={{ animationDelay: '0.05s' }}>
-                    <p className="text-xs text-muted-foreground mb-2 font-medium">Quick Demo Login:</p>
-                    <div className="flex flex-wrap justify-center gap-2 text-xs">
-                        <button 
-                            onClick={() => { setEmail('teacher@theroom.com'); setPassword('teacher123'); }}
-                            className="px-3 py-1.5 bg-white rounded-full hover:bg-primary hover:text-white transition-colors shadow-sm"
-                        >
-                            Teacher
-                        </button>
-                        <button 
-                            onClick={() => { setEmail('member@theroom.com'); setPassword('member123'); }}
-                            className="px-3 py-1.5 bg-white rounded-full hover:bg-primary hover:text-white transition-colors shadow-sm"
-                        >
-                            Member
-                        </button>
-                    </div>
-                </div>
-
                 <Card className="card-organic animate-fade-in" style={{ animationDelay: '0.1s' }}>
                     <CardContent className="p-6">
                         <form onSubmit={handleSubmit} className="space-y-4">
