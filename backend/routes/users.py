@@ -57,7 +57,7 @@ async def mute_user(user_id: str, muted: bool = Query(...), user: dict = Depends
     return {'message': f'User {"muted" if muted else "unmuted"}'}
 
 @router.delete("/users/{user_id}")
-async def delete_user(user_id: str, user: dict = Depends(require_admin)):
+async def delete_user(user_id: str, user: dict = Depends(require_teacher_or_admin)):
     result = await db.users.delete_one({'id': user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="User not found")

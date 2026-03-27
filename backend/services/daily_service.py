@@ -118,7 +118,7 @@ class DailyService:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
-                    f"{self.BASE_URL}/rooms/{room_name}/recordings",
+                    f"{self.BASE_URL}/rooms/{room_name}/recordings/start",
                     json={"type": "cloud"},
                     headers=self.headers,
                     timeout=15.0
@@ -137,7 +137,7 @@ class DailyService:
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
-                    f"{self.BASE_URL}/rooms/{room_name}/recordings/{recording_id}/stop",
+                    f"{self.BASE_URL}/rooms/{room_name}/recordings/stop",
                     headers=self.headers,
                     timeout=15.0
                 )

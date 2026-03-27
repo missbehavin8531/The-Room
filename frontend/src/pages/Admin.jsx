@@ -6,12 +6,12 @@ import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { usersAPI, analyticsAPI, seedAPI } from '../lib/api';
+import { usersAPI, analyticsAPI } from '../lib/api';
 import { formatDate, getInitials, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { 
     Shield, Users, BookOpen, MessageSquare, CheckCircle,
-    UserCheck, UserX, Clock, Volume2, VolumeX, Trash2, Database
+    UserCheck, UserX, Clock, Volume2, VolumeX, Trash2
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import {
@@ -108,16 +108,6 @@ export const Admin = () => {
         setDeleteUserId(null);
     };
 
-    const handleSeedData = async () => {
-        try {
-            await seedAPI.seed();
-            toast.success('Sample data created!');
-            fetchData();
-        } catch (error) {
-            toast.error('Failed to seed data');
-        }
-    };
-
     if (loading) {
         return (
             <Layout>
@@ -148,9 +138,6 @@ export const Admin = () => {
                         </h1>
                         <p className="text-muted-foreground text-sm">Manage users, moderate content, and view analytics</p>
                     </div>
-                    <Button onClick={handleSeedData} variant="outline" data-testid="seed-data-btn">
-                        <Database className="w-4 h-4 mr-2" />Seed Sample Data
-                    </Button>
                 </div>
 
                 {analytics && (
