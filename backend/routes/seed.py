@@ -1,9 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 import uuid
 from datetime import datetime, timezone
 
 from database import db
-from auth import hash_password
+from auth import hash_password, require_teacher_or_admin
 
 router = APIRouter(prefix="/api")
 
@@ -181,3 +181,42 @@ async def seed_data():
 @router.get("/")
 async def root():
     return {"message": "The Room API", "version": "1.0.0"}
+
+
+@router.delete("/admin/cleanup-test-data")
+async def cleanup_test_data(user: dict = Depends(require_teacher_or_admin)):
+    """Delete all non-admin/non-teacher test users and their associated data."""
+    current_user_id = user['id']
+    
+    # Find test users to delete (members only, not the current user)
+    test_users = await db.users.find(
+        {'role': 'member', 'id': {'$ne': current_user_id}},
+        {'_id': 0, 'id': 1, 'name': 1}
+    ).to_list(1000)
+    
+    test_user_ids = [u['id'] for u in test_users]
+    deleted_names = [u['name'] for u in test_users]
+    
+    if not test_user_ids:
+        return {'message': 'No test users to delete', 'deleted': []}
+    
+    # Delete users and all their associated data
+    await db.users.delete_many({'id': {'$in': test_user_ids}})
+    await db.enrollments.delete_many({'user_id': {'$in': test_user_ids}})
+    await db.lesson_completions.delete_many({'user_id': {'$in': test_user_ids}})
+    await db.attendance.delete_many({'user_id': {'$in': test_user_ids}})
+    await db.comments.delete_many({'user_id': {'$in': test_user_ids}})
+    await db.chat_messages.delete_many({'user_id': {'$in': test_user_ids}})
+    await db.prompt_replies.delete_many({'user_id': {'$in': test_user_ids}})
+    await db.prompt_responses.delete_many({'user_id': {'$in': test_user_ids}})
+    await db.private_messages.delete_many({'sender_id': {'$in': test_user_ids}})
+    await db.private_feedback.delete_many({'student_id': {'$in': test_user_ids}})
+    await db.push_subscriptions.delete_many({'user_id': {'$in': test_user_ids}})
+    await db.reading_reminder_settings.delete_many({'user_id': {'$in': test_user_ids}})
+    await db.user_onboarding.delete_many({'user_id': {'$in': test_user_ids}})
+    await db.password_resets.delete_many({'user_id': {'$in': test_user_ids}})
+    
+    return {
+        'message': f'Deleted {len(test_user_ids)} member accounts and all associated data',
+        'deleted': deleted_names
+    }

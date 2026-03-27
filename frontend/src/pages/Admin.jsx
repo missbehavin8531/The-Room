@@ -7,17 +7,18 @@ import { Skeleton } from '../components/ui/skeleton';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { usersAPI, analyticsAPI } from '../lib/api';
+import api from '../lib/api';
 import { formatDate, getInitials, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { 
     Shield, Users, BookOpen, MessageSquare, CheckCircle,
-    UserCheck, UserX, Clock, Volume2, VolumeX, Trash2
+    UserCheck, UserX, Clock, Volume2, VolumeX, Trash2, AlertTriangle
 } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '../components/ui/alert-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
 const getRoleBadge = (role) => {
     const classes = {
@@ -33,13 +34,14 @@ const getRoleBadge = (role) => {
 };
 
 export const Admin = () => {
-    const { user, isAdmin } = useAuth();
+    const { user, isAdmin, isTeacherOrAdmin } = useAuth();
     const [users, setUsers] = useState([]);
     const [pendingUsers, setPendingUsers] = useState([]);
     const [analytics, setAnalytics] = useState(null);
     const [participation, setParticipation] = useState(null);
     const [loading, setLoading] = useState(true);
     const [deleteUserId, setDeleteUserId] = useState(null);
+    const [showCleanupDialog, setShowCleanupDialog] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -108,6 +110,23 @@ export const Admin = () => {
         setDeleteUserId(null);
     };
 
+    const handleCleanupTestData = async () => {
+        try {
+            const res = await api.delete('/admin/cleanup-test-data');
+            const data = res.data;
+            if (data.deleted && data.deleted.length > 0) {
+                toast.success(`Deleted ${data.deleted.length} members: ${data.deleted.join(', ')}`);
+            } else {
+                toast.info('No member accounts to delete');
+            }
+            setShowCleanupDialog(false);
+            fetchData();
+        } catch (error) {
+            toast.error('Failed to cleanup test data');
+            setShowCleanupDialog(false);
+        }
+    };
+
     if (loading) {
         return (
             <Layout>
@@ -138,6 +157,9 @@ export const Admin = () => {
                         </h1>
                         <p className="text-muted-foreground text-sm">Manage users, moderate content, and view analytics</p>
                     </div>
+                    <Button onClick={() => setShowCleanupDialog(true)} variant="destructive" size="sm" data-testid="cleanup-test-data-btn">
+                        <Trash2 className="w-4 h-4 mr-2" />Delete All Members
+                    </Button>
                 </div>
 
                 {analytics && (
@@ -244,7 +266,7 @@ export const Admin = () => {
                                             <p className="text-sm text-muted-foreground truncate">{u.email}</p>
                                         </div>
                                         <div className="flex items-center gap-2 flex-wrap">
-                                            {isAdmin && (
+                                            {isTeacherOrAdmin && (
                                                 <Select value={u.role} onValueChange={(value) => handleUpdateRole(u.id, value)}>
                                                     <SelectTrigger className="w-28" data-testid={`role-select-${u.id}`}><SelectValue /></SelectTrigger>
                                                     <SelectContent>
@@ -257,7 +279,7 @@ export const Admin = () => {
                                             <Button onClick={() => handleMuteUser(u.id, !u.is_muted)} variant="outline" size="sm" data-testid={`mute-${u.id}`}>
                                                 {u.is_muted ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                                             </Button>
-                                            {isAdmin && (
+                                            {isTeacherOrAdmin && (
                                                 <Button onClick={() => setDeleteUserId(u.id)} variant="outline" size="sm" className="text-destructive" data-testid={`delete-${u.id}`}>
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
@@ -333,6 +355,26 @@ export const Admin = () => {
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                <AlertDialog open={showCleanupDialog} onOpenChange={setShowCleanupDialog}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                                <AlertTriangle className="w-5 h-5 text-red-500" />
+                                Delete All Members?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will permanently delete ALL member accounts and their associated data (enrollments, attendance, comments, messages, etc.). Teachers and admins will not be affected. This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleCleanupTestData} className="bg-red-600 hover:bg-red-700">
+                                Delete All Members
+                            </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
