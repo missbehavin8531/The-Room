@@ -20,6 +20,7 @@ import Progress from './pages/Progress';
 import Settings from './pages/Settings';
 import AttendanceReport from './pages/AttendanceReport';
 import Search from './pages/Search';
+import ForgotPassword from './pages/ForgotPassword';
 
 // Components
 import { Onboarding } from './components/Onboarding';
@@ -98,6 +99,14 @@ function AppRoutes() {
                 element={
                     <PublicRoute>
                         <Register />
+                    </PublicRoute>
+                }
+            />
+            <Route
+                path="/forgot-password"
+                element={
+                    <PublicRoute>
+                        <ForgotPassword />
                     </PublicRoute>
                 }
             />

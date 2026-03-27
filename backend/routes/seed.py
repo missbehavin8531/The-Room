@@ -11,6 +11,7 @@ router = APIRouter(prefix="/api")
 @router.post("/seed")
 async def seed_data():
     existing_teacher = await db.users.find_one({'$or': [
+        {'email': 'kirah092804@gmail.com'},
         {'email': 'teacher@theroom.com'},
         {'email': 'teacher@sundayschool.com'}
     ]})
@@ -20,9 +21,9 @@ async def seed_data():
     teacher_id = str(uuid.uuid4())
     teacher = {
         'id': teacher_id,
-        'email': 'teacher@theroom.com',
-        'name': 'Sarah Johnson',
-        'password': hash_password('teacher123'),
+        'email': 'kirah092804@gmail.com',
+        'name': 'Shakira',
+        'password': hash_password('sZ3Og1s$f&ki'),
         'role': 'teacher',
         'is_approved': True,
         'is_muted': False,
@@ -35,7 +36,7 @@ async def seed_data():
         'id': member_id,
         'email': 'member@theroom.com',
         'name': 'John Smith',
-        'password': hash_password('member123'),
+        'password': hash_password('n#WCniSK8S$Z'),
         'role': 'member',
         'is_approved': True,
         'is_muted': False,
@@ -51,7 +52,7 @@ async def seed_data():
         'zoom_link': 'https://zoom.us/j/1234567890',
         'thumbnail_url': 'https://images.unsplash.com/photo-1610070835951-156b6921281d?w=800',
         'teacher_id': teacher_id,
-        'teacher_name': 'Sarah Johnson',
+        'teacher_name': 'Shakira',
         'is_published': True,
         'unlock_type': 'sequential',
         'created_at': datetime.now(timezone.utc).isoformat()
@@ -159,7 +160,7 @@ async def seed_data():
     
     chat_messages = [
         {'user_id': member_id, 'user_name': 'John Smith', 'content': 'Good morning everyone!'},
-        {'user_id': teacher_id, 'user_name': 'Sarah Johnson', 'content': 'Welcome to Sunday School chat! Feel free to ask questions.'},
+        {'user_id': teacher_id, 'user_name': 'Shakira', 'content': 'Welcome to Sunday School chat! Feel free to ask questions.'},
     ]
     for msg in chat_messages:
         await db.chat_messages.insert_one({
@@ -172,8 +173,8 @@ async def seed_data():
     return {
         'message': 'Seed data created',
         'credentials': {
-            'teacher': {'email': 'teacher@theroom.com', 'password': 'teacher123'},
-            'member': {'email': 'member@theroom.com', 'password': 'member123'}
+            'teacher': {'email': 'kirah092804@gmail.com', 'password': 'sZ3Og1s$f&ki'},
+            'member': {'email': 'member@theroom.com', 'password': 'n#WCniSK8S$Z'}
         }
     }
 

@@ -90,7 +90,17 @@ export const Login = () => {
                             </Button>
                         </form>
 
-                        <div className="mt-6 text-center">
+                        <div className="mt-4 text-center">
+                            <Link 
+                                to="/forgot-password" 
+                                className="text-sm text-muted-foreground hover:text-primary hover:underline"
+                                data-testid="forgot-password-link"
+                            >
+                                Forgot your password?
+                            </Link>
+                        </div>
+
+                        <div className="mt-4 text-center">
                             <p className="text-sm text-muted-foreground">
                                 New here?{' '}
                                 <Link 
