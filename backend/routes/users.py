@@ -29,6 +29,47 @@ async def get_pending_users(user: dict = Depends(require_admin)):
     users = await db.users.find(query, {'_id': 0, 'password': 0}).to_list(1000)
     return [UserResponse(**u) for u in users]
 
+
+@router.get("/users/unassigned", response_model=List[UserResponse])
+async def get_unassigned_users(user: dict = Depends(require_admin)):
+    """Get users that are not assigned to any group."""
+    users = await db.users.find(
+        {'$or': [{'group_id': None}, {'group_id': {'$exists': False}}]},
+        {'_id': 0, 'password': 0}
+    ).to_list(1000)
+    return [UserResponse(**u) for u in users]
+
+
+@router.put("/users/{user_id}/assign-group")
+async def assign_user_to_group(user_id: str, group_id: str = Query(...), user: dict = Depends(require_admin)):
+    """Assign a user to a group. Admin can assign to their own group."""
+    admin_group_id = user.get('group_id')
+
+    # Verify the target group exists
+    target_group = await db.groups.find_one({'id': group_id}, {'_id': 0})
+    if not target_group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    # Admin can only assign to their own group
+    if admin_group_id and group_id != admin_group_id:
+        raise HTTPException(status_code=403, detail="You can only assign members to your own group")
+
+    target_user = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    await db.users.update_one(
+        {'id': user_id},
+        {'$set': {'group_id': group_id}}
+    )
+
+    return {
+        'message': f"{target_user['name']} has been added to {target_group['name']}",
+        'user_id': user_id,
+        'group_id': group_id,
+        'group_name': target_group['name']
+    }
+
 @router.put("/users/{user_id}/approve")
 async def approve_user(user_id: str, background_tasks: BackgroundTasks, user: dict = Depends(require_admin)):
     user_to_approve = await db.users.find_one({'id': user_id}, {'_id': 0})

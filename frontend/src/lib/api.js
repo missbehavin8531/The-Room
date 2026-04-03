@@ -47,8 +47,10 @@ export const authAPI = {
 export const usersAPI = {
     getAll: () => api.get('/users'),
     getPending: () => api.get('/users/pending'),
+    getUnassigned: () => api.get('/users/unassigned'),
     approve: (userId) => api.put(`/users/${userId}/approve`),
     updateRole: (userId, role) => api.put(`/users/${userId}/role?role=${role}`),
+    assignGroup: (userId, groupId) => api.put(`/users/${userId}/assign-group?group_id=${groupId}`),
     mute: (userId, muted) => api.put(`/users/${userId}/mute?muted=${muted}`),
     delete: (userId) => api.delete(`/users/${userId}`),
     getTeachers: () => api.get('/teachers'),

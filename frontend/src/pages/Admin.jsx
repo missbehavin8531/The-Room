@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { 
     Shield, Users, BookOpen, MessageSquare, CheckCircle,
     UserCheck, UserX, Clock, Volume2, VolumeX, Trash2, AlertTriangle,
-    Copy, RefreshCw
+    Copy, RefreshCw, UserPlus, Loader2
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -45,6 +45,8 @@ export const Admin = () => {
     const [showCleanupDialog, setShowCleanupDialog] = useState(false);
     const [group, setGroup] = useState(null);
     const [editGroupName, setEditGroupName] = useState('');
+    const [unassignedUsers, setUnassignedUsers] = useState([]);
+    const [assigningUserId, setAssigningUserId] = useState(null);
 
     useEffect(() => {
         fetchData();
@@ -66,10 +68,30 @@ export const Admin = () => {
                 setGroup(groupRes.data);
                 setEditGroupName(groupRes.data.name);
             } catch {}
+
+            try {
+                const unassignedRes = await usersAPI.getUnassigned();
+                setUnassignedUsers(unassignedRes.data);
+            } catch {}
         } catch (error) {
             console.error('Failed to fetch admin data:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAssignToGroup = async (userId) => {
+        if (!group) return;
+        setAssigningUserId(userId);
+        try {
+            const res = await usersAPI.assignGroup(userId, group.id);
+            toast.success(res.data.message);
+            setUnassignedUsers(prev => prev.filter(u => u.id !== userId));
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Failed to assign user');
+        } finally {
+            setAssigningUserId(null);
         }
     };
 
@@ -261,6 +283,40 @@ export const Admin = () => {
                     </TabsContent>
 
                     <TabsContent value="users" className="space-y-4">
+                        {unassignedUsers.length > 0 && (
+                            <Card className="card-organic border-dashed border-2 border-primary/30">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base flex items-center gap-2">
+                                        <UserPlus className="w-4 h-4 text-primary" />
+                                        Unassigned Members ({unassignedUsers.length})
+                                    </CardTitle>
+                                    <p className="text-xs text-muted-foreground">These users haven't been assigned to any group yet.</p>
+                                </CardHeader>
+                                <CardContent className="space-y-2 pt-0">
+                                    {unassignedUsers.map(u => (
+                                        <div key={u.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30" data-testid={`unassigned-user-${u.id}`}>
+                                            <Avatar className="w-8 h-8"><AvatarFallback className="bg-primary/10 text-primary text-xs">{getInitials(u.name)}</AvatarFallback></Avatar>
+                                            <div className="flex-grow min-w-0">
+                                                <p className="text-sm font-medium truncate">{u.name}</p>
+                                                <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                onClick={() => handleAssignToGroup(u.id)}
+                                                disabled={assigningUserId === u.id || !group}
+                                                data-testid={`assign-${u.id}`}
+                                            >
+                                                {assigningUserId === u.id
+                                                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                                                    : <><UserPlus className="w-3.5 h-3.5 mr-1.5" />Add to {group?.name || 'Group'}</>
+                                                }
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
+                        )}
+
                         <div className="space-y-3">
                             {otherUsers.map(u => (
                                 <Card key={u.id} className="card-organic" data-testid={`user-${u.id}`}>
