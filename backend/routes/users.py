@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api")
 
 
 @router.get("/users", response_model=List[UserResponse])
-async def get_users(user: dict = Depends(require_teacher_or_admin)):
+async def get_users(skip: int = Query(0, ge=0), limit: int = Query(200, ge=1, le=500), user: dict = Depends(require_teacher_or_admin)):
     query = {}
     if user['role'] == 'teacher':
         group_id = user.get('group_id')
@@ -20,11 +20,11 @@ async def get_users(user: dict = Depends(require_teacher_or_admin)):
             query['group_id'] = group_id
         else:
             return []
-    users = await db.users.find(query, {'_id': 0, 'password': 0}).to_list(1000)
+    users = await db.users.find(query, {'_id': 0, 'password': 0}).skip(skip).limit(limit).to_list(limit)
     return [UserResponse(**u) for u in users]
 
 @router.get("/users/pending", response_model=List[UserResponse])
-async def get_pending_users(user: dict = Depends(require_teacher_or_admin)):
+async def get_pending_users(skip: int = Query(0, ge=0), limit: int = Query(200, ge=1, le=500), user: dict = Depends(require_teacher_or_admin)):
     query = {'is_approved': False}
     if user['role'] == 'teacher':
         group_id = user.get('group_id')
@@ -32,17 +32,17 @@ async def get_pending_users(user: dict = Depends(require_teacher_or_admin)):
             query['group_id'] = group_id
         else:
             return []
-    users = await db.users.find(query, {'_id': 0, 'password': 0}).to_list(1000)
+    users = await db.users.find(query, {'_id': 0, 'password': 0}).skip(skip).limit(limit).to_list(limit)
     return [UserResponse(**u) for u in users]
 
 
 @router.get("/users/unassigned", response_model=List[UserResponse])
-async def get_unassigned_users(user: dict = Depends(require_admin)):
+async def get_unassigned_users(skip: int = Query(0, ge=0), limit: int = Query(200, ge=1, le=500), user: dict = Depends(require_admin)):
     """Get users that are not assigned to any group."""
     users = await db.users.find(
         {'$or': [{'group_id': None}, {'group_id': {'$exists': False}}]},
         {'_id': 0, 'password': 0}
-    ).to_list(1000)
+    ).skip(skip).limit(limit).to_list(limit)
     return [UserResponse(**u) for u in users]
 
 
