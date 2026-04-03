@@ -9,6 +9,7 @@ import {
     Settings, 
     LogOut,
     User,
+    Users,
     Search as SearchIcon,
     Shield,
     TrendingUp,
@@ -45,6 +46,7 @@ var desktopNavItems = [
 ];
 
 var adminNavItem = { path: '/admin', icon: Shield, label: 'Admin' };
+var teacherNavItem = { path: '/teacher-dashboard', icon: Users, label: 'My Group' };
 var attendanceNavItem = { path: '/attendance', icon: Calendar, label: 'Attendance' };
 
 export var Layout = function Layout(props) {
@@ -54,6 +56,8 @@ export var Layout = function Layout(props) {
     var logout = auth.logout;
     var isApproved = auth.isApproved;
     var isTeacherOrAdmin = auth.isTeacherOrAdmin;
+    var isAdmin = auth.isAdmin;
+    var isTeacher = auth.isTeacher;
     var location = useLocation();
     var navigate = useNavigate();
 
@@ -62,9 +66,11 @@ export var Layout = function Layout(props) {
         navigate('/login');
     }
 
-    var allDesktopNav = isTeacherOrAdmin 
-        ? desktopNavItems.concat([attendanceNavItem, adminNavItem])
-        : desktopNavItems;
+    var extraNav = [];
+    if (isTeacherOrAdmin) extraNav.push(attendanceNavItem);
+    if (isAdmin) extraNav.push(adminNavItem);
+    if (isTeacher && !isAdmin) extraNav.push(teacherNavItem);
+    var allDesktopNav = desktopNavItems.concat(extraNav);
 
     if (!isApproved) {
         return (
@@ -226,10 +232,17 @@ export var Layout = function Layout(props) {
                                     </Link>
                                 </DropdownMenuItem>
                             )}
-                            {isTeacherOrAdmin && (
+                            {isAdmin && (
                                 <DropdownMenuItem asChild>
                                     <Link to="/admin" className="flex items-center">
                                         <Shield className="w-4 h-4 mr-2" />Admin Panel
+                                    </Link>
+                                </DropdownMenuItem>
+                            )}
+                            {isTeacher && !isAdmin && (
+                                <DropdownMenuItem asChild>
+                                    <Link to="/teacher-dashboard" className="flex items-center">
+                                        <Users className="w-4 h-4 mr-2" />My Group
                                     </Link>
                                 </DropdownMenuItem>
                             )}

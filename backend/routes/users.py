@@ -118,10 +118,6 @@ async def update_user_role(user_id: str, role: str = Query(...), background_task
             pass
     
     return {'message': f"Role updated to {role}", 'role': role}
-    result = await db.users.update_one({'id': user_id}, {'$set': {'role': role}})
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
-    return {'message': f'User role updated to {role}'}
 
 @router.put("/users/{user_id}/mute")
 async def mute_user(user_id: str, muted: bool = Query(...), user: dict = Depends(require_teacher_or_admin)):

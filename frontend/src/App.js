@@ -21,13 +21,15 @@ import Settings from './pages/Settings';
 import AttendanceReport from './pages/AttendanceReport';
 import Search from './pages/Search';
 import ForgotPassword from './pages/ForgotPassword';
+import TeacherSetup from './pages/TeacherSetup';
+import TeacherDashboard from './pages/TeacherDashboard';
 
 // Components
 import { Onboarding } from './components/Onboarding';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requireAdmin = false, requireTeacher = false }) => {
-    const { isAuthenticated, loading, isAdmin, isTeacher } = useAuth();
+    const { isAuthenticated, loading, isAdmin, isTeacher, needsGroupSetup } = useAuth();
 
     if (loading) {
         return (
@@ -41,6 +43,10 @@ const ProtectedRoute = ({ children, requireAdmin = false, requireTeacher = false
         return <Navigate to="/login" replace />;
     }
 
+    if (needsGroupSetup) {
+        return <Navigate to="/teacher-setup" replace />;
+    }
+
     if (requireAdmin && !isAdmin) {
         return <Navigate to="/" replace />;
     }
@@ -52,9 +58,32 @@ const ProtectedRoute = ({ children, requireAdmin = false, requireTeacher = false
     return children;
 };
 
+// Route specifically for teacher setup — only accessible when needs_group_setup is true
+const TeacherSetupRoute = ({ children }) => {
+    const { isAuthenticated, loading, needsGroupSetup } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (!needsGroupSetup) {
+        return <Navigate to="/" replace />;
+    }
+
+    return children;
+};
+
 // Public Route Component (redirect to dashboard if authenticated)
 const PublicRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, loading, needsGroupSetup } = useAuth();
 
     if (loading) {
         return (
@@ -65,6 +94,9 @@ const PublicRoute = ({ children }) => {
     }
 
     if (isAuthenticated) {
+        if (needsGroupSetup) {
+            return <Navigate to="/teacher-setup" replace />;
+        }
         return <Navigate to="/" replace />;
     }
 
@@ -108,6 +140,16 @@ function AppRoutes() {
                     <PublicRoute>
                         <ForgotPassword />
                     </PublicRoute>
+                }
+            />
+
+            {/* Teacher Setup Route — only for teachers needing group creation */}
+            <Route
+                path="/teacher-setup"
+                element={
+                    <TeacherSetupRoute>
+                        <TeacherSetup />
+                    </TeacherSetupRoute>
                 }
             />
 
@@ -187,8 +229,16 @@ function AppRoutes() {
             <Route
                 path="/admin"
                 element={
-                    <ProtectedRoute requireTeacher>
+                    <ProtectedRoute requireAdmin>
                         <Admin />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/teacher-dashboard"
+                element={
+                    <ProtectedRoute requireTeacher>
+                        <TeacherDashboard />
                     </ProtectedRoute>
                 }
             />

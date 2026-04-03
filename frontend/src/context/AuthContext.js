@@ -36,6 +36,15 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     };
 
+    const refreshUser = async () => {
+        try {
+            const response = await authAPI.getMe();
+            setUser(response.data);
+        } catch (error) {
+            console.error('Refresh user failed:', error);
+        }
+    };
+
     const login = async (email, password) => {
         const response = await authAPI.login({ email, password });
         const { token, user: userData } = response.data;
@@ -59,7 +68,6 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
     };
 
-    // Mark user's onboarding as complete (updates local state)
     const completeOnboarding = () => {
         if (user) {
             setUser({ ...user, onboarding_complete: true });
@@ -71,6 +79,7 @@ export const AuthProvider = ({ children }) => {
     const isTeacher = user?.role === 'teacher';
     const isTeacherOrAdmin = isAdmin || isTeacher;
     const needsOnboarding = isAuthenticated && isApproved && user?.onboarding_complete === false;
+    const needsGroupSetup = user?.needs_group_setup === true;
 
     return (
         <AuthContext.Provider
@@ -83,10 +92,12 @@ export const AuthProvider = ({ children }) => {
                 isTeacher,
                 isTeacherOrAdmin,
                 needsOnboarding,
+                needsGroupSetup,
                 login,
                 register,
                 logout,
                 checkAuth,
+                refreshUser,
                 completeOnboarding,
             }}
         >

@@ -25,7 +25,11 @@ export const Login = () => {
         try {
             const user = await login(email, password);
             toast.success(`Welcome back, ${user.name.split(' ')[0]}!`);
-            navigate('/');
+            if (user.needs_group_setup) {
+                navigate('/teacher-setup');
+            } else {
+                navigate('/');
+            }
         } catch (error) {
             const message = error.response?.data?.detail || 'Login failed';
             toast.error(message);

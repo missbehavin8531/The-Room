@@ -27,7 +27,6 @@ export const TeacherSetup = () => {
             setCreatedGroup(res.data);
             setStep(2);
             toast.success('Group created!');
-            if (refreshUser) refreshUser();
         } catch (error) {
             toast.error(error.response?.data?.detail || 'Failed to create group');
         } finally {
@@ -35,8 +34,9 @@ export const TeacherSetup = () => {
         }
     };
 
-    const handleFinish = () => {
-        navigate('/courses');
+    const handleFinish = async () => {
+        if (refreshUser) await refreshUser();
+        navigate('/');
     };
 
     return (
