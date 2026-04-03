@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { 
     Shield, Users, BookOpen, MessageSquare, CheckCircle,
     UserCheck, UserX, Clock, Volume2, VolumeX, Trash2, AlertTriangle,
-    Copy, RefreshCw, UserPlus, Loader2
+    Copy, RefreshCw, UserPlus, Loader2, Plus, ChevronDown, ChevronUp, Edit3, X
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -44,9 +44,19 @@ export const Admin = () => {
     const [deleteUserId, setDeleteUserId] = useState(null);
     const [showCleanupDialog, setShowCleanupDialog] = useState(false);
     const [group, setGroup] = useState(null);
+    const [allGroups, setAllGroups] = useState([]);
     const [editGroupName, setEditGroupName] = useState('');
     const [unassignedUsers, setUnassignedUsers] = useState([]);
     const [assigningUserId, setAssigningUserId] = useState(null);
+    const [expandedGroupId, setExpandedGroupId] = useState(null);
+    const [groupMembers, setGroupMembers] = useState({});
+    const [showCreateGroup, setShowCreateGroup] = useState(false);
+    const [newGroupName, setNewGroupName] = useState('');
+    const [creatingGroup, setCreatingGroup] = useState(false);
+    const [editingGroupId, setEditingGroupId] = useState(null);
+    const [editingName, setEditingName] = useState('');
+    const [deletingGroupId, setDeletingGroupId] = useState(null);
+    const [assignTargetGroup, setAssignTargetGroup] = useState(null);
 
     useEffect(() => {
         fetchData();
@@ -70,6 +80,11 @@ export const Admin = () => {
             } catch {}
 
             try {
+                const allGroupsRes = await groupsAPI.getAll();
+                setAllGroups(allGroupsRes.data);
+            } catch {}
+
+            try {
                 const unassignedRes = await usersAPI.getUnassigned();
                 setUnassignedUsers(unassignedRes.data);
             } catch {}
@@ -80,18 +95,72 @@ export const Admin = () => {
         }
     };
 
-    const handleAssignToGroup = async (userId) => {
-        if (!group) return;
+    const handleAssignToGroup = async (userId, groupId) => {
         setAssigningUserId(userId);
         try {
-            const res = await usersAPI.assignGroup(userId, group.id);
+            const targetId = groupId || group?.id;
+            if (!targetId) return;
+            const res = await usersAPI.assignGroup(userId, targetId);
             toast.success(res.data.message);
             setUnassignedUsers(prev => prev.filter(u => u.id !== userId));
+            setAssignTargetGroup(null);
             fetchData();
         } catch (error) {
             toast.error(error.response?.data?.detail || 'Failed to assign user');
         } finally {
             setAssigningUserId(null);
+        }
+    };
+
+    const handleCreateGroup = async () => {
+        if (!newGroupName.trim()) { toast.error('Enter a group name'); return; }
+        setCreatingGroup(true);
+        try {
+            await groupsAPI.create({ name: newGroupName.trim() });
+            toast.success(`Group "${newGroupName}" created`);
+            setNewGroupName('');
+            setShowCreateGroup(false);
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Failed to create group');
+        } finally {
+            setCreatingGroup(false);
+        }
+    };
+
+    const handleDeleteGroup = async (groupId) => {
+        try {
+            const res = await groupsAPI.delete(groupId);
+            toast.success(res.data.message);
+            setDeletingGroupId(null);
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Failed to delete group');
+        }
+    };
+
+    const handleUpdateGroupName = async (groupId, name) => {
+        try {
+            await groupsAPI.update(groupId, { name });
+            toast.success('Group name updated');
+            setEditingGroupId(null);
+            fetchData();
+        } catch { toast.error('Failed to update'); }
+    };
+
+    const toggleGroupMembers = async (groupId) => {
+        if (expandedGroupId === groupId) {
+            setExpandedGroupId(null);
+            return;
+        }
+        setExpandedGroupId(groupId);
+        if (!groupMembers[groupId]) {
+            try {
+                const res = await groupsAPI.getMembers(groupId);
+                setGroupMembers(prev => ({ ...prev, [groupId]: res.data }));
+            } catch {
+                toast.error('Failed to load members');
+            }
         }
     };
 
@@ -290,7 +359,7 @@ export const Admin = () => {
                                         <UserPlus className="w-4 h-4 text-primary" />
                                         Unassigned Members ({unassignedUsers.length})
                                     </CardTitle>
-                                    <p className="text-xs text-muted-foreground">These users haven't been assigned to any group yet.</p>
+                                    <p className="text-xs text-muted-foreground">These members haven't been assigned to a group yet.</p>
                                 </CardHeader>
                                 <CardContent className="space-y-2 pt-0">
                                     {unassignedUsers.map(u => (
@@ -300,17 +369,40 @@ export const Admin = () => {
                                                 <p className="text-sm font-medium truncate">{u.name}</p>
                                                 <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                                             </div>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => handleAssignToGroup(u.id)}
-                                                disabled={assigningUserId === u.id || !group}
-                                                data-testid={`assign-${u.id}`}
-                                            >
-                                                {assigningUserId === u.id
-                                                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                                                    : <><UserPlus className="w-3.5 h-3.5 mr-1.5" />Add to {group?.name || 'Group'}</>
-                                                }
-                                            </Button>
+                                            {allGroups.length > 1 ? (
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    <select
+                                                        className="text-xs px-2 py-1.5 border rounded-lg bg-background text-foreground max-w-[120px]"
+                                                        defaultValue={group?.id || ''}
+                                                        onChange={(e) => setAssignTargetGroup({ userId: u.id, groupId: e.target.value })}
+                                                        data-testid={`assign-select-${u.id}`}
+                                                    >
+                                                        {allGroups.map(g => (
+                                                            <option key={g.id} value={g.id}>{g.name}</option>
+                                                        ))}
+                                                    </select>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => handleAssignToGroup(u.id, assignTargetGroup?.userId === u.id ? assignTargetGroup.groupId : allGroups[0]?.id)}
+                                                        disabled={assigningUserId === u.id}
+                                                        data-testid={`assign-btn-${u.id}`}
+                                                    >
+                                                        {assigningUserId === u.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><UserPlus className="w-3.5 h-3.5 mr-1" />Add</>}
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleAssignToGroup(u.id, group?.id)}
+                                                    disabled={assigningUserId === u.id || !group}
+                                                    data-testid={`assign-btn-${u.id}`}
+                                                >
+                                                    {assigningUserId === u.id
+                                                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                                                        : <><UserPlus className="w-3.5 h-3.5 mr-1.5" />Add to {group?.name || 'Group'}</>
+                                                    }
+                                                </Button>
+                                            )}
                                         </div>
                                     ))}
                                 </CardContent>
@@ -412,96 +504,186 @@ export const Admin = () => {
                     </TabsContent>
 
                     <TabsContent value="group" className="space-y-4">
-                        {group ? (
-                            <div className="space-y-4">
-                                <Card className="card-organic">
-                                    <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Users className="w-5 h-5" /> Group Settings</CardTitle></CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div>
-                                            <label className="text-sm font-medium text-muted-foreground">Group Name</label>
-                                            <div className="flex gap-2 mt-1">
-                                                <input
-                                                    type="text"
-                                                    value={editGroupName}
-                                                    onChange={(e) => setEditGroupName(e.target.value)}
-                                                    className="flex-1 px-3 py-2 border rounded-lg bg-background text-foreground"
-                                                    data-testid="group-name-edit"
-                                                />
+                        {/* Create Group */}
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold">All Groups ({allGroups.length})</h3>
+                            <Button onClick={() => setShowCreateGroup(true)} size="sm" data-testid="create-group-btn">
+                                <Plus className="w-4 h-4 mr-1.5" /> New Group
+                            </Button>
+                        </div>
+
+                        {showCreateGroup && (
+                            <Card className="card-organic border-dashed border-2 border-primary/30 animate-fade-in">
+                                <CardContent className="p-4">
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={newGroupName}
+                                            onChange={(e) => setNewGroupName(e.target.value)}
+                                            placeholder="Group name (e.g. Sunday Study)"
+                                            className="flex-1 px-3 py-2 border rounded-lg bg-background text-foreground text-sm"
+                                            autoFocus
+                                            data-testid="new-group-name-input"
+                                            onKeyDown={(e) => e.key === 'Enter' && handleCreateGroup()}
+                                        />
+                                        <Button size="sm" onClick={handleCreateGroup} disabled={creatingGroup} data-testid="confirm-create-group">
+                                            {creatingGroup ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create'}
+                                        </Button>
+                                        <Button size="sm" variant="ghost" onClick={() => { setShowCreateGroup(false); setNewGroupName(''); }}>
+                                            <X className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Groups List */}
+                        {allGroups.map(g => {
+                            const isExpanded = expandedGroupId === g.id;
+                            const isMyGroup = group && group.id === g.id;
+                            const members = groupMembers[g.id] || [];
+
+                            return (
+                                <Card key={g.id} className={cn("card-organic transition-all", isMyGroup && "ring-2 ring-primary/30")} data-testid={`group-card-${g.id}`}>
+                                    <CardContent className="p-4 space-y-3">
+                                        {/* Group header */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                                                <Users className="w-5 h-5 text-primary" />
+                                            </div>
+                                            <div className="flex-grow min-w-0">
+                                                {editingGroupId === g.id ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <input
+                                                            value={editingName}
+                                                            onChange={(e) => setEditingName(e.target.value)}
+                                                            className="flex-1 px-2 py-1 border rounded bg-background text-foreground text-sm"
+                                                            autoFocus
+                                                            onKeyDown={(e) => e.key === 'Enter' && handleUpdateGroupName(g.id, editingName)}
+                                                            data-testid={`edit-group-name-${g.id}`}
+                                                        />
+                                                        <Button size="sm" variant="ghost" onClick={() => handleUpdateGroupName(g.id, editingName)}>
+                                                            <CheckCircle className="w-4 h-4 text-green-600" />
+                                                        </Button>
+                                                        <Button size="sm" variant="ghost" onClick={() => setEditingGroupId(null)}>
+                                                            <X className="w-4 h-4" />
+                                                        </Button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="font-medium truncate">{g.name}</h4>
+                                                        {isMyGroup && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-medium shrink-0">Your Group</span>}
+                                                    </div>
+                                                )}
+                                                <p className="text-xs text-muted-foreground">{g.member_count} member{g.member_count !== 1 ? 's' : ''}</p>
+                                            </div>
+                                            <div className="flex items-center gap-1 shrink-0">
                                                 <Button
-                                                    size="sm"
-                                                    onClick={async () => {
-                                                        try {
-                                                            await groupsAPI.update(group.id, { name: editGroupName });
-                                                            setGroup({ ...group, name: editGroupName });
-                                                            toast.success('Group name updated');
-                                                        } catch { toast.error('Failed to update'); }
-                                                    }}
-                                                    data-testid="save-group-name-btn"
-                                                >Save</Button>
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-8 w-8"
+                                                    onClick={() => { setEditingGroupId(g.id); setEditingName(g.name); }}
+                                                    data-testid={`edit-group-${g.id}`}
+                                                >
+                                                    <Edit3 className="w-3.5 h-3.5" />
+                                                </Button>
+                                                {!isMyGroup && (
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        className="h-8 w-8 text-destructive hover:text-destructive"
+                                                        onClick={() => setDeletingGroupId(g.id)}
+                                                        data-testid={`delete-group-${g.id}`}
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-8 w-8"
+                                                    onClick={() => toggleGroupMembers(g.id)}
+                                                    data-testid={`toggle-members-${g.id}`}
+                                                >
+                                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                                </Button>
                                             </div>
                                         </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-muted-foreground">Members</label>
-                                            <p className="text-2xl font-bold mt-1">{group.member_count}</p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
 
-                                <Card className="card-organic">
-                                    <CardHeader><CardTitle className="text-lg">Invite Code</CardTitle></CardHeader>
-                                    <CardContent className="space-y-3">
-                                        <p className="text-sm text-muted-foreground">Share this code with new members so they can join your group during registration.</p>
-                                        <div className="flex items-center gap-3 bg-muted/50 p-4 rounded-xl">
-                                            <code className="text-2xl font-mono font-bold tracking-[0.3em] flex-1 text-center" data-testid="invite-code-display">
-                                                {group.invite_code}
-                                            </code>
-                                            <Button
-                                                variant="outline"
-                                                size="icon"
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(group.invite_code);
-                                                    toast.success('Code copied!');
-                                                }}
-                                                data-testid="copy-invite-code-btn"
-                                            >
-                                                <Copy className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="icon"
-                                                onClick={async () => {
-                                                    try {
-                                                        const res = await groupsAPI.regenerateCode(group.id);
-                                                        setGroup({ ...group, invite_code: res.data.invite_code });
-                                                        toast.success('New invite code generated');
-                                                    } catch { toast.error('Failed to regenerate code'); }
-                                                }}
-                                                data-testid="regenerate-code-btn"
-                                            >
-                                                <RefreshCw className="w-4 h-4" />
-                                            </Button>
+                                        {/* Invite code row */}
+                                        <div className="flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-2">
+                                            <span className="text-xs text-muted-foreground shrink-0">Code:</span>
+                                            <code className="font-mono font-bold text-sm tracking-widest" data-testid={`code-${g.id}`}>{g.invite_code}</code>
+                                            <div className="ml-auto flex gap-1">
+                                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { navigator.clipboard.writeText(g.invite_code); toast.success('Copied!'); }} data-testid={`copy-code-${g.id}`}>
+                                                    <Copy className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={async () => {
+                                                    try { const res = await groupsAPI.regenerateCode(g.id); fetchData(); toast.success('New code generated'); } catch { toast.error('Failed'); }
+                                                }} data-testid={`regen-code-${g.id}`}>
+                                                    <RefreshCw className="w-3.5 h-3.5" />
+                                                </Button>
+                                            </div>
                                         </div>
+
+                                        {/* Expanded members list */}
+                                        {isExpanded && (
+                                            <div className="border-t pt-3 space-y-2 animate-fade-in">
+                                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Members</p>
+                                                {members.length === 0 ? (
+                                                    <p className="text-sm text-muted-foreground py-2">No members yet</p>
+                                                ) : (
+                                                    members.map(m => (
+                                                        <div key={m.id} className="flex items-center gap-2 py-1.5">
+                                                            <Avatar className="w-7 h-7"><AvatarFallback className="text-[10px] bg-primary/10 text-primary">{getInitials(m.name)}</AvatarFallback></Avatar>
+                                                            <div className="flex-grow min-w-0">
+                                                                <p className="text-sm truncate">{m.name}</p>
+                                                            </div>
+                                                            <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                                                                m.role === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
+                                                                m.role === 'teacher' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                                                                'bg-muted text-muted-foreground'
+                                                            )}>{m.role}</span>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
-                            </div>
-                        ) : (
+                            );
+                        })}
+
+                        {allGroups.length === 0 && !loading && (
                             <Card className="card-organic">
                                 <CardContent className="p-8 text-center">
                                     <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                                    <h3 className="text-lg font-medium mb-2">No Group Configured</h3>
-                                    <p className="text-muted-foreground text-sm mb-4">Run migration to set up multi-group support.</p>
-                                    <Button onClick={async () => {
-                                        try {
-                                            await groupsAPI.migrate();
-                                            toast.success('Migration complete! Refreshing...');
-                                            fetchData();
-                                        } catch { toast.error('Migration failed'); }
-                                    }} data-testid="migrate-btn">
-                                        Run Migration
+                                    <h3 className="text-lg font-medium mb-2">No Groups Yet</h3>
+                                    <p className="text-muted-foreground text-sm mb-4">Create your first group to get started.</p>
+                                    <Button onClick={() => setShowCreateGroup(true)} data-testid="create-first-group-btn">
+                                        <Plus className="w-4 h-4 mr-2" /> Create Group
                                     </Button>
                                 </CardContent>
                             </Card>
                         )}
+
+                        {/* Delete Group Dialog */}
+                        <AlertDialog open={!!deletingGroupId} onOpenChange={() => setDeletingGroupId(null)}>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Group</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This will delete the group and unassign all its members. Members will need to be reassigned to another group. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteGroup(deletingGroupId)} className="bg-destructive text-destructive-foreground" data-testid="confirm-delete-group">
+                                        Delete Group
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </TabsContent>
                 </Tabs>
 

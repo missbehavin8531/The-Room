@@ -240,9 +240,12 @@ export const seedAPI = {
 
 // Groups API (multi-tenant)
 export const groupsAPI = {
+    getAll: () => api.get('/groups/all'),
     getMy: () => api.get('/groups/my'),
     create: (data) => api.post('/groups', data),
     update: (groupId, data) => api.put(`/groups/${groupId}`, data),
+    delete: (groupId) => api.delete(`/groups/${groupId}`),
+    getMembers: (groupId) => api.get(`/groups/${groupId}/members`),
     getInviteCode: (groupId) => api.get(`/groups/${groupId}/invite-code`),
     regenerateCode: (groupId) => api.post(`/groups/${groupId}/regenerate-code`),
     join: (inviteCode) => api.post(`/groups/join?invite_code=${inviteCode}`),

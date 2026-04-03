@@ -1,11 +1,12 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 import uuid
 import secrets
 from datetime import datetime, timezone
+from typing import List
 
 from database import db
-from models import GroupCreate, GroupUpdate, GroupResponse
-from auth import require_approved, require_teacher_or_admin
+from models import GroupCreate, GroupUpdate, GroupResponse, UserResponse
+from auth import require_approved, require_teacher_or_admin, require_admin
 
 router = APIRouter(prefix="/api")
 
@@ -14,8 +15,19 @@ def generate_invite_code():
     return secrets.token_urlsafe(6).upper()[:8]
 
 
+@router.get("/groups/all", response_model=List[GroupResponse])
+async def list_all_groups(user: dict = Depends(require_admin)):
+    """List all groups with member counts."""
+    groups = await db.groups.find({}, {'_id': 0}).sort('created_at', -1).to_list(500)
+    result = []
+    for g in groups:
+        count = await db.users.count_documents({'group_id': g['id']})
+        result.append(GroupResponse(**g, member_count=count))
+    return result
+
+
 @router.post("/groups", response_model=GroupResponse)
-async def create_group(data: GroupCreate, user: dict = Depends(require_approved)):
+async def create_group(data: GroupCreate, user: dict = Depends(require_admin)):
     group_id = str(uuid.uuid4())
     invite_code = generate_invite_code()
 
@@ -29,14 +41,7 @@ async def create_group(data: GroupCreate, user: dict = Depends(require_approved)
     }
     await db.groups.insert_one(group)
 
-    # Assign creating user to this group and make them admin
-    await db.users.update_one(
-        {'id': user['id']},
-        {'$set': {'group_id': group_id, 'role': 'admin'}}
-    )
-
-    member_count = await db.users.count_documents({'group_id': group_id})
-    return GroupResponse(**group, member_count=member_count)
+    return GroupResponse(**group, member_count=0)
 
 
 @router.get("/groups/my", response_model=GroupResponse)
@@ -54,9 +59,10 @@ async def get_my_group(user: dict = Depends(require_approved)):
 
 
 @router.put("/groups/{group_id}", response_model=GroupResponse)
-async def update_group(group_id: str, data: GroupUpdate, user: dict = Depends(require_teacher_or_admin)):
-    if user.get('group_id') != group_id:
-        raise HTTPException(status_code=403, detail="You can only edit your own group")
+async def update_group(group_id: str, data: GroupUpdate, user: dict = Depends(require_admin)):
+    group = await db.groups.find_one({'id': group_id}, {'_id': 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
 
     update_data = data.model_dump(exclude_unset=True, exclude_none=True)
     if not update_data:
@@ -68,22 +74,58 @@ async def update_group(group_id: str, data: GroupUpdate, user: dict = Depends(re
     return GroupResponse(**group, member_count=member_count)
 
 
-@router.get("/groups/{group_id}/invite-code")
-async def get_invite_code(group_id: str, user: dict = Depends(require_teacher_or_admin)):
-    if user.get('group_id') != group_id:
-        raise HTTPException(status_code=403, detail="You can only view your own group's invite code")
-
+@router.delete("/groups/{group_id}")
+async def delete_group(group_id: str, user: dict = Depends(require_admin)):
+    """Delete a group. Members become unassigned."""
     group = await db.groups.find_one({'id': group_id}, {'_id': 0})
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
 
+    # Prevent deleting admin's own group
+    if user.get('group_id') == group_id:
+        raise HTTPException(status_code=400, detail="You cannot delete your own group")
+
+    # Unassign all members
+    result = await db.users.update_many(
+        {'group_id': group_id},
+        {'$set': {'group_id': None}}
+    )
+
+    await db.groups.delete_one({'id': group_id})
+
+    return {
+        'message': f"Group '{group['name']}' deleted. {result.modified_count} members unassigned.",
+        'members_unassigned': result.modified_count
+    }
+
+
+@router.get("/groups/{group_id}/members", response_model=List[UserResponse])
+async def get_group_members(group_id: str, user: dict = Depends(require_admin)):
+    """Get all members of a specific group."""
+    group = await db.groups.find_one({'id': group_id}, {'_id': 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    members = await db.users.find(
+        {'group_id': group_id},
+        {'_id': 0, 'password': 0}
+    ).to_list(1000)
+    return [UserResponse(**m) for m in members]
+
+
+@router.get("/groups/{group_id}/invite-code")
+async def get_invite_code(group_id: str, user: dict = Depends(require_admin)):
+    group = await db.groups.find_one({'id': group_id}, {'_id': 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
     return {'invite_code': group['invite_code']}
 
 
 @router.post("/groups/{group_id}/regenerate-code")
-async def regenerate_invite_code(group_id: str, user: dict = Depends(require_teacher_or_admin)):
-    if user.get('group_id') != group_id:
-        raise HTTPException(status_code=403, detail="You can only manage your own group")
+async def regenerate_invite_code(group_id: str, user: dict = Depends(require_admin)):
+    group = await db.groups.find_one({'id': group_id}, {'_id': 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
 
     new_code = generate_invite_code()
     await db.groups.update_one({'id': group_id}, {'$set': {'invite_code': new_code}})
