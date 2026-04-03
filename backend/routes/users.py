@@ -12,20 +12,26 @@ router = APIRouter(prefix="/api")
 
 
 @router.get("/users", response_model=List[UserResponse])
-async def get_users(user: dict = Depends(require_admin)):
+async def get_users(user: dict = Depends(require_teacher_or_admin)):
     query = {}
-    group_id = user.get('group_id')
-    if group_id:
-        query['group_id'] = group_id
+    if user['role'] == 'teacher':
+        group_id = user.get('group_id')
+        if group_id:
+            query['group_id'] = group_id
+        else:
+            return []
     users = await db.users.find(query, {'_id': 0, 'password': 0}).to_list(1000)
     return [UserResponse(**u) for u in users]
 
 @router.get("/users/pending", response_model=List[UserResponse])
-async def get_pending_users(user: dict = Depends(require_admin)):
+async def get_pending_users(user: dict = Depends(require_teacher_or_admin)):
     query = {'is_approved': False}
-    group_id = user.get('group_id')
-    if group_id:
-        query['group_id'] = group_id
+    if user['role'] == 'teacher':
+        group_id = user.get('group_id')
+        if group_id:
+            query['group_id'] = group_id
+        else:
+            return []
     users = await db.users.find(query, {'_id': 0, 'password': 0}).to_list(1000)
     return [UserResponse(**u) for u in users]
 
@@ -64,10 +70,15 @@ async def assign_user_to_group(user_id: str, group_id: str = Query(...), user: d
     }
 
 @router.put("/users/{user_id}/approve")
-async def approve_user(user_id: str, background_tasks: BackgroundTasks, user: dict = Depends(require_admin)):
+async def approve_user(user_id: str, background_tasks: BackgroundTasks, user: dict = Depends(require_teacher_or_admin)):
     user_to_approve = await db.users.find_one({'id': user_id}, {'_id': 0})
     if not user_to_approve:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    # Teachers can only approve members in their group
+    if user['role'] == 'teacher':
+        if user.get('group_id') != user_to_approve.get('group_id'):
+            raise HTTPException(status_code=403, detail="You can only approve members in your group")
     
     result = await db.users.update_one({'id': user_id}, {'$set': {'is_approved': True}})
     if result.modified_count == 0:
@@ -83,9 +94,30 @@ async def approve_user(user_id: str, background_tasks: BackgroundTasks, user: di
     return {'message': 'User approved'}
 
 @router.put("/users/{user_id}/role")
-async def update_user_role(user_id: str, role: str = Query(...), user: dict = Depends(require_teacher_or_admin)):
-    if role not in ['member', 'teacher', 'admin']:
-        raise HTTPException(status_code=400, detail="Invalid role")
+async def update_user_role(user_id: str, role: str = Query(...), background_tasks: BackgroundTasks = None, user: dict = Depends(require_admin)):
+    """Only app admin can change roles. When promoting to teacher, sends email."""
+    if role not in ['member', 'teacher']:
+        raise HTTPException(status_code=400, detail="Invalid role. Use 'member' or 'teacher'.")
+    
+    target_user = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    old_role = target_user.get('role')
+    await db.users.update_one({'id': user_id}, {'$set': {'role': role, 'is_approved': True}})
+    
+    # Send email when promoting to teacher
+    if role == 'teacher' and old_role != 'teacher' and target_user.get('email'):
+        try:
+            background_tasks.add_task(
+                email_service.send_teacher_promotion_email,
+                target_user['email'],
+                target_user['name']
+            )
+        except Exception:
+            pass
+    
+    return {'message': f"Role updated to {role}", 'role': role}
     result = await db.users.update_one({'id': user_id}, {'$set': {'role': role}})
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="User not found")

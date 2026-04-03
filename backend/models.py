@@ -34,8 +34,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     name: str
-    group_name: Optional[str] = None
-    invite_code: Optional[str] = None
+    invite_code: str
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -52,6 +51,7 @@ class UserResponse(BaseModel):
     onboarding_complete: bool = False
     group_id: Optional[str] = None
     group_name: Optional[str] = None
+    needs_group_setup: bool = False
 
 
 # ============== COURSE MODELS ==============

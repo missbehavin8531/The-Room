@@ -27,7 +27,13 @@ async def list_all_groups(user: dict = Depends(require_admin)):
 
 
 @router.post("/groups", response_model=GroupResponse)
-async def create_group(data: GroupCreate, user: dict = Depends(require_admin)):
+async def create_group(data: GroupCreate, user: dict = Depends(require_teacher_or_admin)):
+    # Teachers can only own 1 group
+    if user['role'] == 'teacher':
+        existing = await db.groups.find_one({'created_by': user['id']}, {'_id': 0})
+        if existing:
+            raise HTTPException(status_code=400, detail="You already have a group. Teachers are limited to one group.")
+
     group_id = str(uuid.uuid4())
     invite_code = generate_invite_code()
 
@@ -41,7 +47,14 @@ async def create_group(data: GroupCreate, user: dict = Depends(require_admin)):
     }
     await db.groups.insert_one(group)
 
-    return GroupResponse(**group, member_count=0)
+    # If teacher creating their group, assign them to it
+    if user['role'] == 'teacher' and not user.get('group_id'):
+        await db.users.update_one(
+            {'id': user['id']},
+            {'$set': {'group_id': group_id}}
+        )
+
+    return GroupResponse(**group, member_count=1 if user['role'] == 'teacher' else 0)
 
 
 @router.get("/groups/my", response_model=GroupResponse)

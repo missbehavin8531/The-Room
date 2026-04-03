@@ -51,13 +51,17 @@ async def require_approved(user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Account pending approval")
     return user
 
-async def require_teacher(user: dict = Depends(require_approved)):
+async def require_teacher_or_admin(user: dict = Depends(require_approved)):
     if user['role'] not in ['teacher', 'admin']:
-        raise HTTPException(status_code=403, detail="Teacher access required")
+        raise HTTPException(status_code=403, detail="Teacher or admin access required")
     return user
 
-require_teacher_or_admin = require_teacher
-require_admin = require_teacher
+async def require_admin(user: dict = Depends(require_approved)):
+    if user['role'] != 'admin':
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+require_teacher = require_teacher_or_admin
 
 
 # ============== AUTH ROUTES ==============
@@ -68,35 +72,13 @@ async def register(data: UserCreate):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    group_id = None
-    group_name = None
-    role = 'member'
-    is_approved = False
-
-    # Join existing group via invite code
-    if data.invite_code:
-        group = await db.groups.find_one({'invite_code': data.invite_code}, {'_id': 0})
-        if not group:
-            raise HTTPException(status_code=400, detail="Invalid invite code")
-        group_id = group['id']
-        group_name = group['name']
-    # Create a new group
-    elif data.group_name:
-        import secrets
-        group_id = str(uuid.uuid4())
-        invite_code = secrets.token_urlsafe(6).upper()[:8]
-        group = {
-            'id': group_id,
-            'name': data.group_name,
-            'description': '',
-            'invite_code': invite_code,
-            'created_by': None,  # Will be updated below
-            'created_at': datetime.now(timezone.utc).isoformat()
-        }
-        await db.groups.insert_one(group)
-        group_name = data.group_name
-        role = 'admin'
-        is_approved = True
+    # Validate invite code
+    group = await db.groups.find_one({'invite_code': data.invite_code}, {'_id': 0})
+    if not group:
+        raise HTTPException(status_code=400, detail="Invalid invite code. Ask your group leader for the correct code.")
+    
+    group_id = group['id']
+    group_name = group['name']
 
     user_id = str(uuid.uuid4())
     user = {
@@ -104,25 +86,20 @@ async def register(data: UserCreate):
         'email': data.email,
         'name': data.name,
         'password': hash_password(data.password),
-        'role': role,
-        'is_approved': is_approved,
+        'role': 'member',
+        'is_approved': False,
         'is_muted': False,
         'group_id': group_id,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user)
 
-    # Update group created_by if new group was created
-    if data.group_name and group_id:
-        await db.groups.update_one({'id': group_id}, {'$set': {'created_by': user_id}})
-
-    msg = 'Registration successful!'
-    if role == 'admin':
-        msg = 'Registration successful! You are the admin of your new group.'
-    elif not is_approved:
-        msg = 'Registration successful. Please wait for admin approval.'
-
-    return {'message': msg, 'user_id': user_id, 'group_id': group_id, 'group_name': group_name}
+    return {
+        'message': f"Welcome! You've joined {group_name}. Your group leader will approve your account shortly.",
+        'user_id': user_id,
+        'group_id': group_id,
+        'group_name': group_name
+    }
 
 @router.post("/auth/login", response_model=dict)
 async def login(data: UserLogin):
@@ -140,6 +117,9 @@ async def login(data: UserLogin):
         if group:
             group_name = group['name']
     
+    # Check if teacher needs group setup
+    needs_group_setup = (user['role'] == 'teacher' and not group_id)
+    
     token = create_token(user['id'], user['email'], user['role'])
     return {
         'token': token,
@@ -151,7 +131,8 @@ async def login(data: UserLogin):
             'is_approved': user['is_approved'],
             'onboarding_complete': onboarding_complete,
             'group_id': group_id,
-            'group_name': group_name
+            'group_name': group_name,
+            'needs_group_setup': needs_group_setup
         }
     }
 
@@ -167,6 +148,8 @@ async def get_me(user: dict = Depends(get_current_user)):
         if group:
             group_name = group['name']
     
+    needs_group_setup = (user['role'] == 'teacher' and not group_id)
+    
     return UserResponse(
         id=user['id'],
         email=user['email'],
@@ -176,7 +159,8 @@ async def get_me(user: dict = Depends(get_current_user)):
         created_at=user['created_at'],
         onboarding_complete=onboarding_complete,
         group_id=group_id,
-        group_name=group_name
+        group_name=group_name,
+        needs_group_setup=needs_group_setup
     )
 
 @router.get("/auth/onboarding-status")

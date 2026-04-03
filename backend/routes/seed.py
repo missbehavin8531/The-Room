@@ -39,7 +39,7 @@ async def seed_data():
         'role': 'admin',
         'is_approved': True,
         'is_muted': False,
-        'group_id': group_id,
+        'group_id': None,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(teacher)

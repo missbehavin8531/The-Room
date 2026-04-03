@@ -135,4 +135,29 @@ class EmailService:
         return await cls.send_email(user_email, f"New Course: {course_title}", cls.get_base_template(content))
 
 
+    @classmethod
+    async def send_teacher_promotion_email(cls, user_email: str, user_name: str):
+        content = f"""
+        <h2 style="color: #333; margin-top: 0;">You've Been Promoted to Teacher!</h2>
+        <p style="color: #555; line-height: 1.6;">Hi {user_name},</p>
+        <p style="color: #555; line-height: 1.6;">
+            Great news! The app administrator has promoted you to a <strong>Teacher</strong> role in The Room.
+        </p>
+        <p style="color: #555; line-height: 1.6;">Here's what to do next:</p>
+        <ol style="color: #555; line-height: 2;">
+            <li><strong>Log in</strong> to The Room</li>
+            <li><strong>Create your group</strong> — you'll be prompted to name it</li>
+            <li><strong>Share your invite code</strong> with your group members</li>
+            <li><strong>Start adding lessons</strong> to your first course</li>
+        </ol>
+        <p style="color: #555; line-height: 1.6;">
+            As a Teacher, you can create courses, manage lessons, approve members, track attendance, and lead live video sessions.
+        </p>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="#" style="display: inline-block; background-color: #4a5d4a; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">Log In & Get Started</a>
+        </div>
+        """
+        return await cls.send_email(user_email, "You're Now a Teacher on The Room!", cls.get_base_template(content))
+
+
 email_service = EmailService()
