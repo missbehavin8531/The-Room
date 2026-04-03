@@ -23,7 +23,7 @@
 ### Authentication & Onboarding
 - JWT-based custom auth (register, login, password reset)
 - Registration requires invite code (no group creation for members)
-- Guided onboarding tutorial for new users
+- Guided onboarding tutorial for new users (Onboarding.jsx modal)
 - Teacher setup wizard (3-step: Name Group -> Share Invite Code -> Get Started)
 - `needs_group_setup` flag routes newly promoted teachers to setup wizard
 
@@ -39,6 +39,7 @@
 - Lesson management with resources, prompts, discussion
 - Enrollment tracking and progress percentage
 - Video meetings (Daily.co in-app or Zoom external link)
+- **Resource drag-and-drop reordering** (up/down buttons on mobile, drag handles on desktop)
 
 ### Engagement Features
 - Email notifications via Resend (test domain)
@@ -56,6 +57,7 @@
 - Dark mode toggle (Tailwind class-based)
 - Mobile-first responsive design (bottom nav on mobile)
 - PWA support (Service Worker, manifest, app icons)
+- Step-by-step walkthroughs verified on mobile viewports
 
 ---
 
@@ -69,29 +71,35 @@
 │   ├── models.py             # Pydantic models
 │   ├── auth.py               # JWT auth, needs_group_setup logic
 │   ├── routes/
-│   │   ├── groups.py         # Group CRUD, invite codes (teacher limited to 1)
-│   │   ├── users.py          # User management, role promotion, group scoping
+│   │   ├── groups.py         # Group CRUD, invite codes
+│   │   ├── users.py          # User management, role promotion
 │   │   ├── courses.py        # Course CRUD (scoped by group)
-│   │   ├── lessons.py        # Lesson CRUD
+│   │   ├── lessons.py        # Lesson CRUD + Resource reorder
 │   │   ├── attendance.py     # Attendance tracking
 │   │   ├── video.py          # Daily.co video rooms
-│   │   ├── social.py         # Chat, messages (scoped by group)
-│   │   ├── progress.py       # Student progress tracking
+│   │   ├── social.py         # Chat, messages
+│   │   ├── progress.py       # Progress tracking
 │   │   ├── notifications.py  # Push notifications
 │   │   └── seed.py           # Seed data, migration
-│   └── services/
-│       ├── daily_service.py   # Daily.co API wrapper
-│       └── email_service.py   # Resend email wrapper
+│   ├── services/
+│   │   ├── daily_service.py  # Daily.co API wrapper
+│   │   └── email_service.py  # Resend email wrapper
+│   └── tests/
+│       └── test_resource_reorder.py
 ├── frontend/
 │   ├── src/
 │   │   ├── context/AuthContext.js  # Auth state, refreshUser, needsGroupSetup
 │   │   ├── components/
-│   │   │   ├── Layout.jsx          # Nav: Admin sees Admin, Teacher sees My Group
+│   │   │   ├── Layout.jsx          # Nav: Admin=Admin, Teacher=My Group
+│   │   │   ├── Onboarding.jsx      # Step-by-step walkthrough modal
 │   │   │   └── ...
+│   │   ├── lib/
+│   │   │   └── api.js              # resourcesAPI.reorder() added
 │   │   └── pages/
 │   │       ├── TeacherSetup.jsx    # 3-step group creation wizard
 │   │       ├── TeacherDashboard.jsx # Teacher's group management
 │   │       ├── Register.jsx        # 3-step wizard, invite code required
+│   │       ├── LessonDetail.jsx    # Resource drag-drop + up/down reorder
 │   │       ├── Admin.jsx           # Platform admin only
 │   │       └── ...
 │   └── App.js                      # Routes with role-based guards
@@ -107,6 +115,7 @@
 | `users` | id, email, name, role, is_approved, group_id, needs_group_setup (computed) |
 | `courses` | id, title, group_id, teacher_id, unlock_type |
 | `lessons` | id, course_id, title, hosting_method |
+| `resources` | id, lesson_id, original_filename, file_type, order |
 
 ---
 
@@ -120,14 +129,10 @@
 
 - Full auth flow (register, login, forgot password, reset)
 - Multi-group support with data isolation
-- **Role Restructure: Platform Admin / Teacher / Member** (DONE - tested 4/3/2026)
-  - Admin (kirah092804@gmail.com) has global access, sees Admin Panel
-  - Teachers isolated to their group, see "My Group" in nav
-  - `needs_group_setup` flag properly routes teachers to setup wizard
-  - Teachers limited to 1 group (backend enforced)
-  - /admin route restricted to admin-only
-- **Teacher Setup Wizard** (3-step: Name → Invite Code → Get Started) (DONE - tested 4/3/2026)
-- **Frontend Routing** for TeacherSetup and TeacherDashboard (DONE - tested 4/3/2026)
+- Role Restructure: Platform Admin / Teacher / Member (tested 4/3/2026)
+- Teacher Setup Wizard + frontend routing (tested 4/3/2026)
+- **Mobile Walkthrough Verification** — Register, TeacherSetup, Login all verified at 390x844 (DONE - tested 4/3/2026)
+- **Resource Drag-and-Drop Reordering** — PUT /api/resources/reorder, desktop drag + mobile up/down buttons (DONE - tested 4/3/2026)
 - 3-step registration wizard (Name → Invite Code → Email/Password)
 - Course & lesson CRUD with sequential/scheduled unlocking
 - Video rooms via Daily.co REST API + Zoom external link
@@ -148,20 +153,19 @@
 ## Credentials
 - **Platform Admin:** kirah092804@gmail.com / sZ3Og1s$f&ki
 - **Test Teacher (needs setup):** newteacher@test.com / teacher123
+- **Invite Code (The Room group):** VJ3QHHL8
 
 ---
 
 ## Backlog / Future Tasks
 
 ### P1
-- Verify step-by-step walkthrough UI across mobile viewports
 - Offline mode caching in Service Worker
 
 ### P2
-- Resource reordering with drag-and-drop
+- Real-time WebSocket for chat
 
 ### P3
-- Real-time WebSocket for chat
 - PPT preview via online viewer
 - Video progress tracking
 - Group invite share sheet (QR code + shareable link)
