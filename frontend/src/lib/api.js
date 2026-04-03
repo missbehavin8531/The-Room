@@ -132,6 +132,7 @@ export const resourcesAPI = {
     delete: (resourceId) => api.delete(`/resources/${resourceId}`),
     setPrimary: (resourceId) => api.put(`/resources/${resourceId}/primary`),
     updateOrder: (resourceId, order) => api.put(`/resources/${resourceId}/order?order=${order}`),
+    reorder: (items) => api.put('/resources/reorder', items),
     replace: (resourceId, file) => {
         const formData = new FormData();
         formData.append('file', file);

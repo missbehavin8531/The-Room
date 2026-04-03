@@ -18,7 +18,8 @@ import {
     ArrowLeft, Video, Calendar, FileText, Image, Presentation,
     Download, Upload, Send, Trash2, Eye, EyeOff, CheckCircle,
     Loader2, Play, BookOpen, MessageCircle, Clock, ChevronRight,
-    Pin, Star, Users, BookMarked, Edit, BarChart3, AlertCircle
+    Pin, Star, Users, BookMarked, Edit, BarChart3, AlertCircle, GripVertical,
+    ArrowUp, ArrowDown
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -105,6 +106,10 @@ export const LessonDetail = () => {
     const [uploading, setUploading] = useState(false);
     const [previewResource, setPreviewResource] = useState(null);
     const fileInputRef = useRef(null);
+    
+    // Drag-and-drop state for resources
+    const [draggedResource, setDraggedResource] = useState(null);
+    const [dragOverResource, setDragOverResource] = useState(null);
     
     // Attendance state
     const [completedActions, setCompletedActions] = useState([]);
@@ -373,6 +378,76 @@ export const LessonDetail = () => {
             toast.success('Set as primary deck');
         } catch (error) {
             toast.error('Failed to set primary');
+        }
+    };
+
+    const handleResourceDragStart = (e, resource) => {
+        setDraggedResource(resource);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', resource.id);
+    };
+
+    const handleResourceDragOver = (e, resource) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (resource.id !== draggedResource?.id) {
+            setDragOverResource(resource);
+        }
+    };
+
+    const handleResourceDrop = async (e, targetResource) => {
+        e.preventDefault();
+        if (!draggedResource || draggedResource.id === targetResource.id) {
+            setDraggedResource(null);
+            setDragOverResource(null);
+            return;
+        }
+
+        const currentResources = [...(lesson.resources || [])];
+        const dragIdx = currentResources.findIndex(r => r.id === draggedResource.id);
+        const dropIdx = currentResources.findIndex(r => r.id === targetResource.id);
+
+        if (dragIdx === -1 || dropIdx === -1) return;
+
+        const moved = currentResources.splice(dragIdx, 1)[0];
+        currentResources.splice(dropIdx, 0, moved);
+
+        const reordered = currentResources.map((r, i) => ({ ...r, order: i }));
+        setLesson(prev => ({ ...prev, resources: reordered }));
+        setDraggedResource(null);
+        setDragOverResource(null);
+
+        try {
+            await resourcesAPI.reorder(reordered.map((r, i) => ({ id: r.id, order: i })));
+            toast.success('Resources reordered');
+        } catch (error) {
+            toast.error('Failed to save order');
+        }
+    };
+
+    const handleResourceDragEnd = () => {
+        setDraggedResource(null);
+        setDragOverResource(null);
+    };
+
+    const moveResource = async (resourceId, direction) => {
+        const currentResources = [...(lesson.resources || [])];
+        const idx = currentResources.findIndex(r => r.id === resourceId);
+        if (idx === -1) return;
+        const newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= currentResources.length) return;
+
+        const temp = currentResources[idx];
+        currentResources[idx] = currentResources[newIdx];
+        currentResources[newIdx] = temp;
+
+        const reordered = currentResources.map((r, i) => ({ ...r, order: i }));
+        setLesson(prev => ({ ...prev, resources: reordered }));
+
+        try {
+            await resourcesAPI.reorder(reordered.map((r, i) => ({ id: r.id, order: i })));
+        } catch (error) {
+            toast.error('Failed to save order');
         }
     };
 
@@ -790,16 +865,46 @@ export const LessonDetail = () => {
                                 <div className="grid gap-2">
                                     {resources.map((resource) => {
                                         const Icon = getResourceIcon(resource.file_type);
+                                        const isDragging = draggedResource?.id === resource.id;
+                                        const isDragOver = dragOverResource?.id === resource.id;
                                         return (
                                             <Card 
                                                 key={resource.id} 
                                                 className={cn(
                                                     "card-organic transition-all",
-                                                    resource.is_primary && "ring-2 ring-primary"
+                                                    resource.is_primary && "ring-2 ring-primary",
+                                                    isDragging && "opacity-40 scale-95",
+                                                    isDragOver && "ring-2 ring-blue-400 bg-blue-50 dark:bg-blue-900/10"
                                                 )}
+                                                draggable={isTeacherOrAdmin}
+                                                onDragStart={isTeacherOrAdmin ? (e) => handleResourceDragStart(e, resource) : undefined}
+                                                onDragOver={isTeacherOrAdmin ? (e) => handleResourceDragOver(e, resource) : undefined}
+                                                onDrop={isTeacherOrAdmin ? (e) => handleResourceDrop(e, resource) : undefined}
+                                                onDragEnd={isTeacherOrAdmin ? handleResourceDragEnd : undefined}
                                                 data-testid={`resource-${resource.id}`}
                                             >
                                                 <CardContent className="p-3 flex items-center gap-3">
+                                                    {isTeacherOrAdmin && (
+                                                        <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
+                                                            <button 
+                                                                onClick={() => moveResource(resource.id, -1)} 
+                                                                className="p-0.5 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-20"
+                                                                disabled={resources.indexOf(resource) === 0}
+                                                                data-testid={`resource-move-up-${resource.id}`}
+                                                            >
+                                                                <ArrowUp className="w-3 h-3" />
+                                                            </button>
+                                                            <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab active:cursor-grabbing hidden sm:block" />
+                                                            <button 
+                                                                onClick={() => moveResource(resource.id, 1)} 
+                                                                className="p-0.5 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-20"
+                                                                disabled={resources.indexOf(resource) === resources.length - 1}
+                                                                data-testid={`resource-move-down-${resource.id}`}
+                                                            >
+                                                                <ArrowDown className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                     <div className={cn(
                                                         "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
                                                         resource.is_primary ? "bg-primary text-white" : "bg-muted"

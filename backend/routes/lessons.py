@@ -260,6 +260,9 @@ async def upload_resource(
     else:
         file_type = 'image'
     
+    # Calculate next order
+    existing_count = await db.resources.count_documents({'lesson_id': lesson_id})
+    
     resource = {
         'id': resource_id,
         'lesson_id': lesson_id,
@@ -268,6 +271,7 @@ async def upload_resource(
         'file_type': file_type,
         'file_size': len(content),
         'uploaded_by': user['id'],
+        'order': existing_count,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.resources.insert_one(resource)
@@ -321,6 +325,15 @@ async def update_resource_order(resource_id: str, order: int = Query(...), user:
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Resource not found")
     return {'message': 'Order updated'}
+
+@router.put("/resources/reorder")
+async def reorder_resources(items: List[dict], user: dict = Depends(require_teacher_or_admin)):
+    for item in items:
+        await db.resources.update_one(
+            {'id': item['id']},
+            {'$set': {'order': item['order']}}
+        )
+    return {'message': 'Resources reordered'}
 
 @router.put("/resources/{resource_id}/replace")
 async def replace_resource(
