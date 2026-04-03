@@ -38,9 +38,12 @@ async def get_pending_users(skip: int = Query(0, ge=0), limit: int = Query(200, 
 
 @router.get("/users/unassigned", response_model=List[UserResponse])
 async def get_unassigned_users(skip: int = Query(0, ge=0), limit: int = Query(200, ge=1, le=500), user: dict = Depends(require_admin)):
-    """Get users that are not assigned to any group."""
+    """Get non-admin users that are not assigned to any group."""
     users = await db.users.find(
-        {'$or': [{'group_id': None}, {'group_id': {'$exists': False}}]},
+        {'$and': [
+            {'$or': [{'group_id': None}, {'group_id': {'$exists': False}}]},
+            {'role': {'$ne': 'admin'}}
+        ]},
         {'_id': 0, 'password': 0}
     ).skip(skip).limit(limit).to_list(limit)
     return [UserResponse(**u) for u in users]

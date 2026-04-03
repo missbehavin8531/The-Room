@@ -373,7 +373,7 @@ export const Admin = () => {
                                                 <div className="flex items-center gap-1.5 shrink-0">
                                                     <select
                                                         className="text-xs px-2 py-1.5 border rounded-lg bg-background text-foreground max-w-[120px]"
-                                                        defaultValue={group?.id || ''}
+                                                        defaultValue={allGroups[0]?.id || ''}
                                                         onChange={(e) => setAssignTargetGroup({ userId: u.id, groupId: e.target.value })}
                                                         data-testid={`assign-select-${u.id}`}
                                                     >
@@ -393,13 +393,13 @@ export const Admin = () => {
                                             ) : (
                                                 <Button
                                                     size="sm"
-                                                    onClick={() => handleAssignToGroup(u.id, group?.id)}
-                                                    disabled={assigningUserId === u.id || !group}
+                                                    onClick={() => handleAssignToGroup(u.id, group?.id || allGroups[0]?.id)}
+                                                    disabled={assigningUserId === u.id || (!group && allGroups.length === 0)}
                                                     data-testid={`assign-btn-${u.id}`}
                                                 >
                                                     {assigningUserId === u.id
                                                         ? <Loader2 className="w-4 h-4 animate-spin" />
-                                                        : <><UserPlus className="w-3.5 h-3.5 mr-1.5" />Add to {group?.name || 'Group'}</>
+                                                        : <><UserPlus className="w-3.5 h-3.5 mr-1.5" />Add to {group?.name || allGroups[0]?.name || 'Group'}</>
                                                     }
                                                 </Button>
                                             )}
