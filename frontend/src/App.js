@@ -105,9 +105,9 @@ const PublicRoute = ({ children }) => {
 
 // Onboarding Overlay - Shows tutorial for new users
 const OnboardingOverlay = () => {
-    const { needsOnboarding, completeOnboarding } = useAuth();
+    const { needsOnboarding, needsGroupSetup, completeOnboarding } = useAuth();
     
-    if (!needsOnboarding) return null;
+    if (!needsOnboarding || needsGroupSetup) return null;
     
     return <Onboarding onComplete={completeOnboarding} />;
 };
