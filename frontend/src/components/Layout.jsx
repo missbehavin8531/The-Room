@@ -104,7 +104,12 @@ export var Layout = function Layout(props) {
                     <div className="flex items-center justify-between h-16">
                         <Link to="/" className="flex items-center gap-3 shrink-0">
                             <img src="/logo.png" alt="The Room" className="w-10 h-10 rounded-xl" />
-                            <span className="font-serif font-bold text-xl">The Room</span>
+                            <div className="flex flex-col">
+                                <span className="font-serif font-bold text-xl leading-tight">The Room</span>
+                                {user && user.church_name && (
+                                    <span className="text-xs text-muted-foreground leading-tight">{user.church_name}</span>
+                                )}
+                            </div>
                         </Link>
 
                         <nav className="flex items-center gap-1">
@@ -172,7 +177,12 @@ export var Layout = function Layout(props) {
                 <div className="flex items-center justify-between px-4 h-14">
                     <Link to="/" className="flex items-center gap-2">
                         <img src="/logo.png" alt="The Room" className="w-8 h-8 rounded-lg" />
-                        <span className="font-serif font-bold text-lg">The Room</span>
+                        <div className="flex flex-col">
+                            <span className="font-serif font-bold text-lg leading-tight">The Room</span>
+                            {user && user.church_name && (
+                                <span className="text-[10px] text-muted-foreground leading-tight">{user.church_name}</span>
+                            )}
+                        </div>
                     </Link>
 
                     <DropdownMenu>

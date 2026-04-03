@@ -18,18 +18,34 @@ async def seed_data():
     if existing_teacher:
         return {'message': 'Data already seeded'}
     
+    # Create default church
+    church_id = str(uuid.uuid4())
+    church = {
+        'id': church_id,
+        'name': 'The Room Church',
+        'description': 'Default church for The Room platform',
+        'invite_code': 'THEROOM1',
+        'created_by': None,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.churches.insert_one(church)
+    
     teacher_id = str(uuid.uuid4())
     teacher = {
         'id': teacher_id,
         'email': 'kirah092804@gmail.com',
         'name': 'Shakira',
         'password': hash_password('sZ3Og1s$f&ki'),
-        'role': 'teacher',
+        'role': 'admin',
         'is_approved': True,
         'is_muted': False,
+        'church_id': church_id,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(teacher)
+    
+    # Update church created_by
+    await db.churches.update_one({'id': church_id}, {'$set': {'created_by': teacher_id}})
     
     member_id = str(uuid.uuid4())
     member = {
@@ -40,6 +56,7 @@ async def seed_data():
         'role': 'member',
         'is_approved': True,
         'is_muted': False,
+        'church_id': church_id,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(member)
@@ -55,6 +72,7 @@ async def seed_data():
         'teacher_name': 'Shakira',
         'is_published': True,
         'unlock_type': 'sequential',
+        'church_id': church_id,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.courses.insert_one(course)
@@ -183,14 +201,72 @@ async def root():
     return {"message": "The Room API", "version": "1.0.0"}
 
 
+@router.post("/admin/migrate-to-multi-tenant")
+async def migrate_to_multi_tenant(user: dict = Depends(require_teacher_or_admin)):
+    """One-time migration: creates a default church and assigns all existing data to it."""
+    existing_church = await db.churches.find_one({'invite_code': 'THEROOM1'})
+    if existing_church:
+        church_id = existing_church['id']
+    else:
+        church_id = str(uuid.uuid4())
+        church = {
+            'id': church_id,
+            'name': 'The Room Church',
+            'description': 'Default church',
+            'invite_code': 'THEROOM1',
+            'created_by': user['id'],
+            'created_at': datetime.now(timezone.utc).isoformat()
+        }
+        await db.churches.insert_one(church)
+
+    # Assign all users without a church_id
+    result_users = await db.users.update_many(
+        {'church_id': {'$exists': False}},
+        {'$set': {'church_id': church_id}}
+    )
+    # Also handle null church_id
+    result_users2 = await db.users.update_many(
+        {'church_id': None},
+        {'$set': {'church_id': church_id}}
+    )
+
+    # Assign all courses without a church_id
+    result_courses = await db.courses.update_many(
+        {'church_id': {'$exists': False}},
+        {'$set': {'church_id': church_id}}
+    )
+    result_courses2 = await db.courses.update_many(
+        {'church_id': None},
+        {'$set': {'church_id': church_id}}
+    )
+
+    # Assign chat messages
+    await db.chat_messages.update_many(
+        {'church_id': {'$exists': False}},
+        {'$set': {'church_id': church_id}}
+    )
+
+    return {
+        'message': 'Migration complete',
+        'church_id': church_id,
+        'users_updated': result_users.modified_count + result_users2.modified_count,
+        'courses_updated': result_courses.modified_count + result_courses2.modified_count
+    }
+
+
 @router.delete("/admin/cleanup-test-data")
 async def cleanup_test_data(user: dict = Depends(require_teacher_or_admin)):
     """Delete all non-admin/non-teacher test users and their associated data."""
     current_user_id = user['id']
+    church_id = user.get('church_id')
     
-    # Find test users to delete (members only, not the current user)
+    # Find test users to delete (members only, not the current user, same church)
+    query = {'role': 'member', 'id': {'$ne': current_user_id}}
+    if church_id:
+        query['church_id'] = church_id
+    
     test_users = await db.users.find(
-        {'role': 'member', 'id': {'$ne': current_user_id}},
+        query,
         {'_id': 0, 'id': 1, 'name': 1}
     ).to_list(1000)
     

@@ -354,14 +354,41 @@ const MeetingView = ({ onLeave, isFullscreen, onToggleFullscreen, lessonId, isTe
 export const VideoRoom = ({ lessonId, onClose }) => {
     const { isTeacherOrAdmin } = useAuth();
     const [callObject, setCallObject] = useState(null);
-    const [status, setStatus] = useState('idle'); // idle, joining, joined, error
+    const [status, setStatus] = useState('idle'); // idle, checking_permissions, joining, joined, error
     const [error, setError] = useState(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const containerRef = React.useRef(null);
 
+    const checkPermissions = useCallback(async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            stream.getTracks().forEach(t => t.stop());
+            return true;
+        } catch (err) {
+            console.warn('Permission check failed:', err);
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                setError('Camera and microphone access was denied. Please allow access in your browser settings and try again.');
+            } else if (err.name === 'NotFoundError') {
+                setError('No camera or microphone found. You can still join to listen.');
+                return true;
+            } else {
+                setError(`Could not access camera/mic: ${err.message}`);
+            }
+            return false;
+        }
+    }, []);
+
     const joinRoom = useCallback(async () => {
-        setStatus('joining');
+        setStatus('checking_permissions');
         setError(null);
+
+        const hasPermission = await checkPermissions();
+        if (!hasPermission) {
+            setStatus('error');
+            return;
+        }
+
+        setStatus('joining');
 
         try {
             // Get room credentials from backend
@@ -404,7 +431,7 @@ export const VideoRoom = ({ lessonId, onClose }) => {
             setError(err.response?.data?.detail || 'Failed to join video room');
             setStatus('error');
         }
-    }, [lessonId]);
+    }, [lessonId, checkPermissions]);
 
     const leaveRoom = useCallback(async () => {
         if (callObject) {
@@ -474,14 +501,16 @@ export const VideoRoom = ({ lessonId, onClose }) => {
     }
 
     // Joining state
-    if (status === 'joining') {
+    if (status === 'joining' || status === 'checking_permissions') {
         return (
             <Card className="card-organic overflow-hidden">
                 <CardContent className="p-8 text-center">
                     <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-                    <h3 className="text-lg font-medium">Joining video room...</h3>
+                    <h3 className="text-lg font-medium">
+                        {status === 'checking_permissions' ? 'Requesting camera & mic access...' : 'Joining video room...'}
+                    </h3>
                     <p className="text-muted-foreground text-sm mt-2">
-                        Please allow camera and microphone access
+                        Please allow camera and microphone access when prompted
                     </p>
                 </CardContent>
             </Card>
@@ -516,8 +545,9 @@ export const VideoRoom = ({ lessonId, onClose }) => {
                 ref={containerRef}
                 className={cn(
                     "rounded-xl overflow-hidden bg-gray-950",
-                    isFullscreen ? "fixed inset-0 z-50 rounded-none" : "aspect-video"
+                    isFullscreen ? "fixed inset-0 z-50 rounded-none" : "w-full"
                 )}
+                style={isFullscreen ? undefined : { height: 'min(70vh, 500px)' }}
             >
                 <DailyProvider callObject={callObject}>
                     <MeetingView 

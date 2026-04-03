@@ -6,13 +6,14 @@ import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { usersAPI, analyticsAPI } from '../lib/api';
+import { usersAPI, analyticsAPI, churchesAPI } from '../lib/api';
 import api from '../lib/api';
 import { formatDate, getInitials, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { 
     Shield, Users, BookOpen, MessageSquare, CheckCircle,
-    UserCheck, UserX, Clock, Volume2, VolumeX, Trash2, AlertTriangle
+    UserCheck, UserX, Clock, Volume2, VolumeX, Trash2, AlertTriangle,
+    Church, Copy, RefreshCw
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -42,6 +43,8 @@ export const Admin = () => {
     const [loading, setLoading] = useState(true);
     const [deleteUserId, setDeleteUserId] = useState(null);
     const [showCleanupDialog, setShowCleanupDialog] = useState(false);
+    const [church, setChurch] = useState(null);
+    const [editChurchName, setEditChurchName] = useState('');
 
     useEffect(() => {
         fetchData();
@@ -57,6 +60,12 @@ export const Admin = () => {
             setPendingUsers(pendingRes.data);
             setAnalytics(analyticsRes.data);
             setParticipation(participationRes.data);
+            
+            try {
+                const churchRes = await churchesAPI.getMy();
+                setChurch(churchRes.data);
+                setEditChurchName(churchRes.data.name);
+            } catch {}
         } catch (error) {
             console.error('Failed to fetch admin data:', error);
         } finally {
@@ -212,9 +221,10 @@ export const Admin = () => {
                 )}
 
                 <Tabs defaultValue="pending" className="space-y-4">
-                    <TabsList className="grid w-full grid-cols-3 max-w-md">
+                    <TabsList className="grid w-full grid-cols-4 max-w-lg">
                         <TabsTrigger value="pending" data-testid="pending-tab">Pending ({pendingUsers.length})</TabsTrigger>
-                        <TabsTrigger value="users" data-testid="users-tab">All Users</TabsTrigger>
+                        <TabsTrigger value="users" data-testid="users-tab">Users</TabsTrigger>
+                        <TabsTrigger value="church" data-testid="church-tab">Church</TabsTrigger>
                         <TabsTrigger value="stats" data-testid="stats-tab">Stats</TabsTrigger>
                     </TabsList>
 
@@ -340,6 +350,99 @@ export const Admin = () => {
                                         <div><p className="text-3xl font-bold text-primary">{analytics.total_chat_messages}</p><p className="text-sm text-muted-foreground">Chat Messages</p></div>
                                         <div><p className="text-3xl font-bold text-primary">{analytics.attendance_records}</p><p className="text-sm text-muted-foreground">Attendance Records</p></div>
                                     </div>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="church" className="space-y-4">
+                        {church ? (
+                            <div className="space-y-4">
+                                <Card className="card-organic">
+                                    <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Church className="w-5 h-5" /> Church Settings</CardTitle></CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div>
+                                            <label className="text-sm font-medium text-muted-foreground">Church Name</label>
+                                            <div className="flex gap-2 mt-1">
+                                                <input
+                                                    type="text"
+                                                    value={editChurchName}
+                                                    onChange={(e) => setEditChurchName(e.target.value)}
+                                                    className="flex-1 px-3 py-2 border rounded-lg bg-background text-foreground"
+                                                    data-testid="church-name-edit"
+                                                />
+                                                <Button
+                                                    size="sm"
+                                                    onClick={async () => {
+                                                        try {
+                                                            await churchesAPI.update(church.id, { name: editChurchName });
+                                                            setChurch({ ...church, name: editChurchName });
+                                                            toast.success('Church name updated');
+                                                        } catch { toast.error('Failed to update'); }
+                                                    }}
+                                                    data-testid="save-church-name-btn"
+                                                >Save</Button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="text-sm font-medium text-muted-foreground">Members</label>
+                                            <p className="text-2xl font-bold mt-1">{church.member_count}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                <Card className="card-organic">
+                                    <CardHeader><CardTitle className="text-lg">Invite Code</CardTitle></CardHeader>
+                                    <CardContent className="space-y-3">
+                                        <p className="text-sm text-muted-foreground">Share this code with new members so they can join your church during registration.</p>
+                                        <div className="flex items-center gap-3 bg-muted/50 p-4 rounded-xl">
+                                            <code className="text-2xl font-mono font-bold tracking-[0.3em] flex-1 text-center" data-testid="invite-code-display">
+                                                {church.invite_code}
+                                            </code>
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(church.invite_code);
+                                                    toast.success('Code copied!');
+                                                }}
+                                                data-testid="copy-invite-code-btn"
+                                            >
+                                                <Copy className="w-4 h-4" />
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                onClick={async () => {
+                                                    try {
+                                                        const res = await churchesAPI.regenerateCode(church.id);
+                                                        setChurch({ ...church, invite_code: res.data.invite_code });
+                                                        toast.success('New invite code generated');
+                                                    } catch { toast.error('Failed to regenerate code'); }
+                                                }}
+                                                data-testid="regenerate-code-btn"
+                                            >
+                                                <RefreshCw className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        ) : (
+                            <Card className="card-organic">
+                                <CardContent className="p-8 text-center">
+                                    <Church className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                                    <h3 className="text-lg font-medium mb-2">No Church Configured</h3>
+                                    <p className="text-muted-foreground text-sm mb-4">Run migration to set up multi-tenant support.</p>
+                                    <Button onClick={async () => {
+                                        try {
+                                            await churchesAPI.migrate();
+                                            toast.success('Migration complete! Refresh the page.');
+                                            fetchData();
+                                        } catch { toast.error('Migration failed'); }
+                                    }} data-testid="migrate-btn">
+                                        Run Migration
+                                    </Button>
                                 </CardContent>
                             </Card>
                         )}

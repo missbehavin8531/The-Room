@@ -68,19 +68,61 @@ async def register(data: UserCreate):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    church_id = None
+    church_name = None
+    role = 'member'
+    is_approved = False
+
+    # Join existing church via invite code
+    if data.invite_code:
+        church = await db.churches.find_one({'invite_code': data.invite_code}, {'_id': 0})
+        if not church:
+            raise HTTPException(status_code=400, detail="Invalid invite code")
+        church_id = church['id']
+        church_name = church['name']
+    # Create a new church
+    elif data.church_name:
+        import secrets
+        church_id = str(uuid.uuid4())
+        invite_code = secrets.token_urlsafe(6).upper()[:8]
+        church = {
+            'id': church_id,
+            'name': data.church_name,
+            'description': '',
+            'invite_code': invite_code,
+            'created_by': None,  # Will be updated below
+            'created_at': datetime.now(timezone.utc).isoformat()
+        }
+        await db.churches.insert_one(church)
+        church_name = data.church_name
+        role = 'admin'
+        is_approved = True
+
     user_id = str(uuid.uuid4())
     user = {
         'id': user_id,
         'email': data.email,
         'name': data.name,
         'password': hash_password(data.password),
-        'role': 'member',
-        'is_approved': False,
+        'role': role,
+        'is_approved': is_approved,
         'is_muted': False,
+        'church_id': church_id,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user)
-    return {'message': 'Registration successful. Please wait for admin approval.', 'user_id': user_id}
+
+    # Update church created_by if new church was created
+    if data.church_name and church_id:
+        await db.churches.update_one({'id': church_id}, {'$set': {'created_by': user_id}})
+
+    msg = 'Registration successful!'
+    if role == 'admin':
+        msg = 'Registration successful! You are the admin of your new church.'
+    elif not is_approved:
+        msg = 'Registration successful. Please wait for admin approval.'
+
+    return {'message': msg, 'user_id': user_id, 'church_id': church_id, 'church_name': church_name}
 
 @router.post("/auth/login", response_model=dict)
 async def login(data: UserLogin):
@@ -91,6 +133,13 @@ async def login(data: UserLogin):
     onboarding = await db.user_onboarding.find_one({'user_id': user['id']})
     onboarding_complete = onboarding.get('completed', False) if onboarding else False
     
+    church_name = None
+    church_id = user.get('church_id')
+    if church_id:
+        church = await db.churches.find_one({'id': church_id}, {'_id': 0, 'name': 1})
+        if church:
+            church_name = church['name']
+    
     token = create_token(user['id'], user['email'], user['role'])
     return {
         'token': token,
@@ -100,7 +149,9 @@ async def login(data: UserLogin):
             'name': user['name'],
             'role': user['role'],
             'is_approved': user['is_approved'],
-            'onboarding_complete': onboarding_complete
+            'onboarding_complete': onboarding_complete,
+            'church_id': church_id,
+            'church_name': church_name
         }
     }
 
@@ -109,6 +160,13 @@ async def get_me(user: dict = Depends(get_current_user)):
     onboarding = await db.user_onboarding.find_one({'user_id': user['id']})
     onboarding_complete = onboarding.get('completed', False) if onboarding else False
     
+    church_name = None
+    church_id = user.get('church_id')
+    if church_id:
+        church = await db.churches.find_one({'id': church_id}, {'_id': 0, 'name': 1})
+        if church:
+            church_name = church['name']
+    
     return UserResponse(
         id=user['id'],
         email=user['email'],
@@ -116,7 +174,9 @@ async def get_me(user: dict = Depends(get_current_user)):
         role=user['role'],
         is_approved=user['is_approved'],
         created_at=user['created_at'],
-        onboarding_complete=onboarding_complete
+        onboarding_complete=onboarding_complete,
+        church_id=church_id,
+        church_name=church_name
     )
 
 @router.get("/auth/onboarding-status")

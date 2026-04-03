@@ -21,15 +21,28 @@ router = APIRouter(prefix="/api")
 async def search(q: str = Query(..., min_length=1), user: dict = Depends(require_approved)):
     query_regex = {'$regex': q, '$options': 'i'}
     is_teacher = user['role'] in ['teacher', 'admin']
+    church_id = user.get('church_id')
     
     course_query = {'$or': [{'title': query_regex}, {'description': query_regex}]}
     if not is_teacher:
         course_query['is_published'] = True
+    if church_id:
+        course_query['church_id'] = church_id
     courses = await db.courses.find(course_query, {'_id': 0}).limit(10).to_list(10)
+    
+    # Get course_ids for this church to scope lessons
+    church_course_ids = [c['id'] for c in courses] if church_id else None
     
     lesson_query = {'$or': [{'title': query_regex}, {'description': query_regex}]}
     if not is_teacher:
         lesson_query['is_published'] = True
+    if church_course_ids is not None:
+        all_church_courses = await db.courses.find(
+            {'church_id': church_id} if church_id else {},
+            {'_id': 0, 'id': 1}
+        ).to_list(1000)
+        all_church_course_ids = [c['id'] for c in all_church_courses]
+        lesson_query['course_id'] = {'$in': all_church_course_ids}
     lessons = await db.lessons.find(lesson_query, {'_id': 0}).limit(10).to_list(10)
     
     replies = await db.prompt_replies.find(
@@ -63,13 +76,18 @@ async def search(q: str = Query(..., min_length=1), user: dict = Depends(require
 
 @router.get("/analytics", response_model=AnalyticsResponse)
 async def get_analytics(user: dict = Depends(require_admin)):
-    total_users = await db.users.count_documents({})
-    approved_users = await db.users.count_documents({'is_approved': True})
-    pending_users = await db.users.count_documents({'is_approved': False})
-    total_courses = await db.courses.count_documents({})
+    church_id = user.get('church_id')
+    user_query = {'church_id': church_id} if church_id else {}
+    course_query = {'church_id': church_id} if church_id else {}
+    chat_query = {'church_id': church_id} if church_id else {}
+    
+    total_users = await db.users.count_documents(user_query)
+    approved_users = await db.users.count_documents({**user_query, 'is_approved': True})
+    pending_users = await db.users.count_documents({**user_query, 'is_approved': False})
+    total_courses = await db.courses.count_documents(course_query)
     total_lessons = await db.lessons.count_documents({})
     total_comments = await db.comments.count_documents({})
-    total_chat = await db.chat_messages.count_documents({})
+    total_chat = await db.chat_messages.count_documents(chat_query)
     attendance = await db.attendance.count_documents({})
     
     return AnalyticsResponse(

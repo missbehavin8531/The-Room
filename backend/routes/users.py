@@ -13,12 +13,20 @@ router = APIRouter(prefix="/api")
 
 @router.get("/users", response_model=List[UserResponse])
 async def get_users(user: dict = Depends(require_admin)):
-    users = await db.users.find({}, {'_id': 0, 'password': 0}).to_list(1000)
+    query = {}
+    church_id = user.get('church_id')
+    if church_id:
+        query['church_id'] = church_id
+    users = await db.users.find(query, {'_id': 0, 'password': 0}).to_list(1000)
     return [UserResponse(**u) for u in users]
 
 @router.get("/users/pending", response_model=List[UserResponse])
 async def get_pending_users(user: dict = Depends(require_admin)):
-    users = await db.users.find({'is_approved': False}, {'_id': 0, 'password': 0}).to_list(1000)
+    query = {'is_approved': False}
+    church_id = user.get('church_id')
+    if church_id:
+        query['church_id'] = church_id
+    users = await db.users.find(query, {'_id': 0, 'password': 0}).to_list(1000)
     return [UserResponse(**u) for u in users]
 
 @router.put("/users/{user_id}/approve")
@@ -65,5 +73,9 @@ async def delete_user(user_id: str, user: dict = Depends(require_teacher_or_admi
 
 @router.get("/teachers", response_model=List[UserResponse])
 async def get_teachers(user: dict = Depends(require_admin)):
-    teachers = await db.users.find({'role': 'teacher', 'is_approved': True}, {'_id': 0, 'password': 0}).to_list(100)
+    query = {'role': 'teacher', 'is_approved': True}
+    church_id = user.get('church_id')
+    if church_id:
+        query['church_id'] = church_id
+    teachers = await db.users.find(query, {'_id': 0, 'password': 0}).to_list(100)
     return [UserResponse(**t) for t in teachers]

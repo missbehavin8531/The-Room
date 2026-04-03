@@ -25,7 +25,7 @@ async def join_lesson_video_room(lesson_id: str, user: dict = Depends(require_ap
     try:
         room_data = await daily_service.get_or_create_room(room_name)
         is_owner = user['role'] in ['teacher', 'admin']
-        meeting_token = daily_service.create_meeting_token(
+        meeting_token = await daily_service.create_meeting_token(
             room_name=room_name,
             user_id=user['id'],
             user_name=user['name'],

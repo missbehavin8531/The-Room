@@ -2,6 +2,27 @@ from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
 
 
+# ============== CHURCH MODELS ==============
+
+class ChurchCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+class ChurchUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+class ChurchResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    name: str
+    description: Optional[str] = None
+    invite_code: str
+    created_by: str
+    created_at: str
+    member_count: int = 0
+
+
 # ============== AUTH MODELS ==============
 
 class UserBase(BaseModel):
@@ -13,6 +34,8 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     name: str
+    church_name: Optional[str] = None
+    invite_code: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -27,6 +50,8 @@ class UserResponse(BaseModel):
     is_approved: bool
     created_at: str
     onboarding_complete: bool = False
+    church_id: Optional[str] = None
+    church_name: Optional[str] = None
 
 
 # ============== COURSE MODELS ==============

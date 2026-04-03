@@ -1,5 +1,4 @@
 import httpx
-import jwt
 import time
 import logging
 from datetime import datetime, timezone, timedelta
@@ -169,19 +168,34 @@ class DailyService:
                 logging.error(f"Failed to check active recording: {e}")
             return {"is_recording": False, "recording_id": None}
     
-    def create_meeting_token(self, room_name: str, user_id: str, user_name: str, is_owner: bool = False) -> str:
-        domain_id = self.domain.replace(".daily.co", "")
-        payload = {
-            "r": room_name,
-            "d": domain_id,
-            "ud": user_id,
-            "u": user_name,
-            "o": is_owner,
-            "ss": True,
-            "iat": int(time.time()),
-            "exp": int(time.time()) + 7200
-        }
-        return jwt.encode(payload, self.api_key, algorithm="HS256")
+    async def create_meeting_token(self, room_name: str, user_id: str, user_name: str, is_owner: bool = False) -> str:
+        """Create meeting token via Daily.co REST API"""
+        async with httpx.AsyncClient() as client:
+            try:
+                payload = {
+                    "properties": {
+                        "room_name": room_name,
+                        "user_name": user_name,
+                        "user_id": user_id,
+                        "is_owner": is_owner,
+                        "enable_screenshare": True,
+                        "start_video_off": False,
+                        "start_audio_off": False,
+                        "exp": int(time.time()) + 7200
+                    }
+                }
+                response = await client.post(
+                    f"{self.BASE_URL}/meeting-tokens",
+                    json=payload,
+                    headers=self.headers,
+                    timeout=10.0
+                )
+                response.raise_for_status()
+                data = response.json()
+                return data.get("token", "")
+            except Exception as e:
+                logging.error(f"Failed to create meeting token via REST API: {e}")
+                raise Exception(f"Failed to create meeting token: {str(e)}")
 
 
 daily_service = DailyService()

@@ -75,6 +75,7 @@ async def send_chat_message(data: ChatMessageCreate, user: dict = Depends(requir
         'user_name': user['name'],
         'content': data.content,
         'is_hidden': False,
+        'church_id': user.get('church_id'),
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.chat_messages.insert_one(message)
@@ -85,6 +86,9 @@ async def get_chat_messages(limit: int = 100, user: dict = Depends(require_appro
     query = {}
     if user['role'] not in ['teacher', 'admin']:
         query['is_hidden'] = False
+    church_id = user.get('church_id')
+    if church_id:
+        query['church_id'] = church_id
     messages = await db.chat_messages.find(query, {'_id': 0}).sort('created_at', -1).limit(limit).to_list(limit)
     return [ChatMessageResponse(**m) for m in reversed(messages)]
 

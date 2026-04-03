@@ -236,4 +236,16 @@ export const seedAPI = {
     seed: () => api.post('/seed'),
 };
 
+// Churches API
+export const churchesAPI = {
+    getMy: () => api.get('/churches/my'),
+    create: (data) => api.post('/churches', data),
+    update: (churchId, data) => api.put(`/churches/${churchId}`, data),
+    getInviteCode: (churchId) => api.get(`/churches/${churchId}/invite-code`),
+    regenerateCode: (churchId) => api.post(`/churches/${churchId}/regenerate-code`),
+    join: (inviteCode) => api.post(`/churches/join?invite_code=${inviteCode}`),
+    lookup: (inviteCode) => api.get(`/churches/lookup?invite_code=${inviteCode}`),
+    migrate: () => api.post('/admin/migrate-to-multi-tenant'),
+};
+
 export default api;

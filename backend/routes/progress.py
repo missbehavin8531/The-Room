@@ -104,8 +104,13 @@ async def get_my_progress(user: dict = Depends(require_approved)):
 
 @router.get("/teacher/student-progress")
 async def get_student_progress(user: dict = Depends(require_teacher_or_admin)):
+    query = {'role': 'member', 'is_approved': True}
+    church_id = user.get('church_id')
+    if church_id:
+        query['church_id'] = church_id
+    
     members = await db.users.find(
-        {'role': 'member', 'is_approved': True},
+        query,
         {'_id': 0, 'id': 1, 'name': 1, 'email': 1}
     ).to_list(500)
     
