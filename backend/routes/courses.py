@@ -27,7 +27,7 @@ async def create_course(data: CourseCreate, user: dict = Depends(require_teacher
         'unlock_type': data.unlock_type,
         'teacher_id': user['id'],
         'teacher_name': user['name'],
-        'church_id': user.get('church_id'),
+        'group_id': user.get('group_id'),
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.courses.insert_one(course)
@@ -37,13 +37,13 @@ async def create_course(data: CourseCreate, user: dict = Depends(require_teacher
 async def get_courses(user: dict = Depends(require_approved)):
     user_id = user['id']
     is_teacher = user['role'] in ['teacher', 'admin']
-    church_id = user.get('church_id')
+    group_id = user.get('group_id')
     
     match_stage = {}
     if not is_teacher:
         match_stage['is_published'] = True
-    if church_id:
-        match_stage['church_id'] = church_id
+    if group_id:
+        match_stage['group_id'] = group_id
     
     pipeline = [
         {'$match': match_stage},

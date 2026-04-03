@@ -1,0 +1,79 @@
+{
+  "summary": "Completed comprehensive testing of multi-tenant 'group' rename (church -> group). All 20 backend API tests passed. All frontend UI elements verified to use 'group' terminology instead of 'church'.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "POST /api/auth/login returns group_id and group_name (NOT church_id/church_name)",
+    "GET /api/auth/me returns group_id and group_name (NOT church_id/church_name)",
+    "GET /api/groups/lookup?invite_code=XXX returns group info (public endpoint)",
+    "GET /api/groups/lookup with invalid code returns 404",
+    "GET /api/groups/my returns group details with member_count",
+    "PUT /api/groups/{id} updates group name successfully",
+    "POST /api/groups/{id}/regenerate-code generates new invite code",
+    "POST /api/auth/register with group_name creates new group + user as admin (auto-approved)",
+    "POST /api/auth/register with invite_code joins existing group as member",
+    "POST /api/auth/register with invalid invite_code returns 400",
+    "GET /api/courses returns courses scoped to user's group_id",
+    "GET /api/users returns users scoped to user's group_id",
+    "GET /api/analytics returns analytics scoped to group",
+    "Cross-group course isolation verified (Group A courses not visible to Group B)",
+    "Cross-group user isolation verified (Group A users not visible to Group B)",
+    "Login response has no 'church' terminology",
+    "Auth/me response has no 'church' terminology",
+    "Groups/my response has no 'church' terminology",
+    "/api/churches/my endpoint no longer exists (returns 404)",
+    "/api/churches/lookup endpoint no longer exists (returns 404)",
+    "Frontend: Registration page step 2 says 'Your Group'",
+    "Frontend: Registration shows 'Start New Group' and 'Join Existing' options",
+    "Frontend: Admin page has tabs Pending, Members, Group, Stats (NOT Church)",
+    "Frontend: Group tab shows 'Group Settings' title",
+    "Frontend: Group tab shows group name edit input",
+    "Frontend: Group tab shows member count",
+    "Frontend: Group tab shows invite code with copy and regenerate buttons",
+    "Frontend: Header shows group_name subtitle under 'The Room'",
+    "Frontend: No 'church' text found in admin page",
+    "Frontend: No 'church' text found in registration page"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_group_rename.py",
+    "/app/test_reports/pytest/pytest_group_rename.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_group_rename.py"
+  ],
+  "success_rate": {
+    "backend": "100% (20/20 tests passed)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {
+    "admin_group_a": "kirah092804@gmail.com / sZ3Og1s$f&ki (Group: The Room)",
+    "admin_group_b": "pastor.mike@test.com / test1234 (Group: Wednesday Bible Study)",
+    "note": "Invite code changes on each regenerate test - use GET /api/groups/my to get current code"
+  },
+  "seed_data_creation": "Test users created during registration tests (test_creator_*, test_joiner_*)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Multi-tenant 'group' rename complete. Key verifications: 1) All API endpoints use 'group_id' and 'group_name' (NOT church_id/church_name), 2) /api/churches/* endpoints no longer exist (renamed to /api/groups/*), 3) Registration supports creating new group (user becomes admin, auto-approved) or joining via invite code (user becomes member, needs approval), 4) Group management in admin panel (name edit, member count, invite code copy/regenerate), 5) All queries (courses, users, analytics) are scoped to group_id, 6) Cross-group isolation verified - Group A data not visible to Group B, 7) Frontend uses 'group' terminology throughout (registration, admin panel, header).",
+  "mocked_apis": {
+    "Resend email": "Uses test sender domain (onboarding@resend.dev)"
+  },
+  "features_verified": {
+    "group_rename_complete": {
+      "api_terminology": "All endpoints use 'group_id' and 'group_name' - no 'church' keys in responses",
+      "old_endpoints_removed": "/api/churches/* endpoints return 404",
+      "registration_flow": "Step 2 shows 'Your Group', 'Start New Group', 'Join Existing'",
+      "admin_panel": "Tabs: Pending, Members, Group, Stats - Group tab shows Group Settings",
+      "header": "Shows group_name subtitle under 'The Room'",
+      "cross_group_isolation": "Group A data not visible to Group B (courses, users)"
+    }
+  }
+}

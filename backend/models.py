@@ -2,17 +2,17 @@ from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
 
 
-# ============== CHURCH MODELS ==============
+# ============== GROUP (MULTI-TENANT) MODELS ==============
 
-class ChurchCreate(BaseModel):
+class GroupCreate(BaseModel):
     name: str
     description: Optional[str] = None
 
-class ChurchUpdate(BaseModel):
+class GroupUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
 
-class ChurchResponse(BaseModel):
+class GroupResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
     name: str
@@ -34,7 +34,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     name: str
-    church_name: Optional[str] = None
+    group_name: Optional[str] = None
     invite_code: Optional[str] = None
 
 class UserLogin(BaseModel):
@@ -50,8 +50,8 @@ class UserResponse(BaseModel):
     is_approved: bool
     created_at: str
     onboarding_complete: bool = False
-    church_id: Optional[str] = None
-    church_name: Optional[str] = None
+    group_id: Optional[str] = None
+    group_name: Optional[str] = None
 
 
 # ============== COURSE MODELS ==============

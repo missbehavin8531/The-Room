@@ -236,15 +236,15 @@ export const seedAPI = {
     seed: () => api.post('/seed'),
 };
 
-// Churches API
-export const churchesAPI = {
-    getMy: () => api.get('/churches/my'),
-    create: (data) => api.post('/churches', data),
-    update: (churchId, data) => api.put(`/churches/${churchId}`, data),
-    getInviteCode: (churchId) => api.get(`/churches/${churchId}/invite-code`),
-    regenerateCode: (churchId) => api.post(`/churches/${churchId}/regenerate-code`),
-    join: (inviteCode) => api.post(`/churches/join?invite_code=${inviteCode}`),
-    lookup: (inviteCode) => api.get(`/churches/lookup?invite_code=${inviteCode}`),
+// Groups API (multi-tenant)
+export const groupsAPI = {
+    getMy: () => api.get('/groups/my'),
+    create: (data) => api.post('/groups', data),
+    update: (groupId, data) => api.put(`/groups/${groupId}`, data),
+    getInviteCode: (groupId) => api.get(`/groups/${groupId}/invite-code`),
+    regenerateCode: (groupId) => api.post(`/groups/${groupId}/regenerate-code`),
+    join: (inviteCode) => api.post(`/groups/join?invite_code=${inviteCode}`),
+    lookup: (inviteCode) => api.get(`/groups/lookup?invite_code=${inviteCode}`),
     migrate: () => api.post('/admin/migrate-to-multi-tenant'),
 };
 

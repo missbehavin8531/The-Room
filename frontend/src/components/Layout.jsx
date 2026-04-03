@@ -106,8 +106,8 @@ export var Layout = function Layout(props) {
                             <img src="/logo.png" alt="The Room" className="w-10 h-10 rounded-xl" />
                             <div className="flex flex-col">
                                 <span className="font-serif font-bold text-xl leading-tight">The Room</span>
-                                {user && user.church_name && (
-                                    <span className="text-xs text-muted-foreground leading-tight">{user.church_name}</span>
+                                {user && user.group_name && (
+                                    <span className="text-xs text-muted-foreground leading-tight">{user.group_name}</span>
                                 )}
                             </div>
                         </Link>
@@ -179,8 +179,8 @@ export var Layout = function Layout(props) {
                         <img src="/logo.png" alt="The Room" className="w-8 h-8 rounded-lg" />
                         <div className="flex flex-col">
                             <span className="font-serif font-bold text-lg leading-tight">The Room</span>
-                            {user && user.church_name && (
-                                <span className="text-[10px] text-muted-foreground leading-tight">{user.church_name}</span>
+                            {user && user.group_name && (
+                                <span className="text-[10px] text-muted-foreground leading-tight">{user.group_name}</span>
                             )}
                         </div>
                     </Link>

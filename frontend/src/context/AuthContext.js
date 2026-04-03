@@ -46,9 +46,9 @@ export const AuthProvider = ({ children }) => {
         return userData;
     };
 
-    const register = async (name, email, password, churchName, inviteCode) => {
+    const register = async (name, email, password, groupName, inviteCode) => {
         const payload = { name, email, password };
-        if (churchName) payload.church_name = churchName;
+        if (groupName) payload.group_name = groupName;
         if (inviteCode) payload.invite_code = inviteCode;
         const response = await authAPI.register(payload);
         return response.data;

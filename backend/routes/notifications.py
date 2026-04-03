@@ -21,28 +21,28 @@ router = APIRouter(prefix="/api")
 async def search(q: str = Query(..., min_length=1), user: dict = Depends(require_approved)):
     query_regex = {'$regex': q, '$options': 'i'}
     is_teacher = user['role'] in ['teacher', 'admin']
-    church_id = user.get('church_id')
+    group_id = user.get('group_id')
     
     course_query = {'$or': [{'title': query_regex}, {'description': query_regex}]}
     if not is_teacher:
         course_query['is_published'] = True
-    if church_id:
-        course_query['church_id'] = church_id
+    if group_id:
+        course_query['group_id'] = group_id
     courses = await db.courses.find(course_query, {'_id': 0}).limit(10).to_list(10)
     
-    # Get course_ids for this church to scope lessons
-    church_course_ids = [c['id'] for c in courses] if church_id else None
+    # Get course_ids for this group to scope lessons
+    group_course_ids = [c['id'] for c in courses] if group_id else None
     
     lesson_query = {'$or': [{'title': query_regex}, {'description': query_regex}]}
     if not is_teacher:
         lesson_query['is_published'] = True
-    if church_course_ids is not None:
-        all_church_courses = await db.courses.find(
-            {'church_id': church_id} if church_id else {},
+    if group_course_ids is not None:
+        all_group_courses = await db.courses.find(
+            {'group_id': group_id} if group_id else {},
             {'_id': 0, 'id': 1}
         ).to_list(1000)
-        all_church_course_ids = [c['id'] for c in all_church_courses]
-        lesson_query['course_id'] = {'$in': all_church_course_ids}
+        all_group_course_ids = [c['id'] for c in all_group_courses]
+        lesson_query['course_id'] = {'$in': all_group_course_ids}
     lessons = await db.lessons.find(lesson_query, {'_id': 0}).limit(10).to_list(10)
     
     replies = await db.prompt_replies.find(
@@ -76,10 +76,10 @@ async def search(q: str = Query(..., min_length=1), user: dict = Depends(require
 
 @router.get("/analytics", response_model=AnalyticsResponse)
 async def get_analytics(user: dict = Depends(require_admin)):
-    church_id = user.get('church_id')
-    user_query = {'church_id': church_id} if church_id else {}
-    course_query = {'church_id': church_id} if church_id else {}
-    chat_query = {'church_id': church_id} if church_id else {}
+    group_id = user.get('group_id')
+    user_query = {'group_id': group_id} if group_id else {}
+    course_query = {'group_id': group_id} if group_id else {}
+    chat_query = {'group_id': group_id} if group_id else {}
     
     total_users = await db.users.count_documents(user_query)
     approved_users = await db.users.count_documents({**user_query, 'is_approved': True})

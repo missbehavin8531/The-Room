@@ -18,7 +18,7 @@ from routes.video import router as video_router
 from routes.progress import router as progress_router
 from routes.notifications import router as notifications_router
 from routes.seed import router as seed_router
-from routes.churches import router as churches_router
+from routes.groups import router as groups_router
 
 # Create the main app
 app = FastAPI(title="The Room API")
@@ -35,7 +35,7 @@ app.include_router(video_router)
 app.include_router(progress_router)
 app.include_router(notifications_router)
 app.include_router(seed_router)
-app.include_router(churches_router)
+app.include_router(groups_router)
 
 # Static files for uploads
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")

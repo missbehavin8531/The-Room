@@ -6,14 +6,14 @@ import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { usersAPI, analyticsAPI, churchesAPI } from '../lib/api';
+import { usersAPI, analyticsAPI, groupsAPI } from '../lib/api';
 import api from '../lib/api';
 import { formatDate, getInitials, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { 
     Shield, Users, BookOpen, MessageSquare, CheckCircle,
     UserCheck, UserX, Clock, Volume2, VolumeX, Trash2, AlertTriangle,
-    Church, Copy, RefreshCw
+    Copy, RefreshCw
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -43,8 +43,8 @@ export const Admin = () => {
     const [loading, setLoading] = useState(true);
     const [deleteUserId, setDeleteUserId] = useState(null);
     const [showCleanupDialog, setShowCleanupDialog] = useState(false);
-    const [church, setChurch] = useState(null);
-    const [editChurchName, setEditChurchName] = useState('');
+    const [group, setGroup] = useState(null);
+    const [editGroupName, setEditGroupName] = useState('');
 
     useEffect(() => {
         fetchData();
@@ -62,9 +62,9 @@ export const Admin = () => {
             setParticipation(participationRes.data);
             
             try {
-                const churchRes = await churchesAPI.getMy();
-                setChurch(churchRes.data);
-                setEditChurchName(churchRes.data.name);
+                const groupRes = await groupsAPI.getMy();
+                setGroup(groupRes.data);
+                setEditGroupName(groupRes.data.name);
             } catch {}
         } catch (error) {
             console.error('Failed to fetch admin data:', error);
@@ -223,8 +223,8 @@ export const Admin = () => {
                 <Tabs defaultValue="pending" className="space-y-4">
                     <TabsList className="grid w-full grid-cols-4 max-w-lg">
                         <TabsTrigger value="pending" data-testid="pending-tab">Pending ({pendingUsers.length})</TabsTrigger>
-                        <TabsTrigger value="users" data-testid="users-tab">Users</TabsTrigger>
-                        <TabsTrigger value="church" data-testid="church-tab">Church</TabsTrigger>
+                        <TabsTrigger value="users" data-testid="users-tab">Members</TabsTrigger>
+                        <TabsTrigger value="group" data-testid="group-tab">Group</TabsTrigger>
                         <TabsTrigger value="stats" data-testid="stats-tab">Stats</TabsTrigger>
                     </TabsList>
 
@@ -355,38 +355,38 @@ export const Admin = () => {
                         )}
                     </TabsContent>
 
-                    <TabsContent value="church" className="space-y-4">
-                        {church ? (
+                    <TabsContent value="group" className="space-y-4">
+                        {group ? (
                             <div className="space-y-4">
                                 <Card className="card-organic">
-                                    <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Church className="w-5 h-5" /> Church Settings</CardTitle></CardHeader>
+                                    <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Users className="w-5 h-5" /> Group Settings</CardTitle></CardHeader>
                                     <CardContent className="space-y-4">
                                         <div>
-                                            <label className="text-sm font-medium text-muted-foreground">Church Name</label>
+                                            <label className="text-sm font-medium text-muted-foreground">Group Name</label>
                                             <div className="flex gap-2 mt-1">
                                                 <input
                                                     type="text"
-                                                    value={editChurchName}
-                                                    onChange={(e) => setEditChurchName(e.target.value)}
+                                                    value={editGroupName}
+                                                    onChange={(e) => setEditGroupName(e.target.value)}
                                                     className="flex-1 px-3 py-2 border rounded-lg bg-background text-foreground"
-                                                    data-testid="church-name-edit"
+                                                    data-testid="group-name-edit"
                                                 />
                                                 <Button
                                                     size="sm"
                                                     onClick={async () => {
                                                         try {
-                                                            await churchesAPI.update(church.id, { name: editChurchName });
-                                                            setChurch({ ...church, name: editChurchName });
-                                                            toast.success('Church name updated');
+                                                            await groupsAPI.update(group.id, { name: editGroupName });
+                                                            setGroup({ ...group, name: editGroupName });
+                                                            toast.success('Group name updated');
                                                         } catch { toast.error('Failed to update'); }
                                                     }}
-                                                    data-testid="save-church-name-btn"
+                                                    data-testid="save-group-name-btn"
                                                 >Save</Button>
                                             </div>
                                         </div>
                                         <div>
                                             <label className="text-sm font-medium text-muted-foreground">Members</label>
-                                            <p className="text-2xl font-bold mt-1">{church.member_count}</p>
+                                            <p className="text-2xl font-bold mt-1">{group.member_count}</p>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -394,16 +394,16 @@ export const Admin = () => {
                                 <Card className="card-organic">
                                     <CardHeader><CardTitle className="text-lg">Invite Code</CardTitle></CardHeader>
                                     <CardContent className="space-y-3">
-                                        <p className="text-sm text-muted-foreground">Share this code with new members so they can join your church during registration.</p>
+                                        <p className="text-sm text-muted-foreground">Share this code with new members so they can join your group during registration.</p>
                                         <div className="flex items-center gap-3 bg-muted/50 p-4 rounded-xl">
                                             <code className="text-2xl font-mono font-bold tracking-[0.3em] flex-1 text-center" data-testid="invite-code-display">
-                                                {church.invite_code}
+                                                {group.invite_code}
                                             </code>
                                             <Button
                                                 variant="outline"
                                                 size="icon"
                                                 onClick={() => {
-                                                    navigator.clipboard.writeText(church.invite_code);
+                                                    navigator.clipboard.writeText(group.invite_code);
                                                     toast.success('Code copied!');
                                                 }}
                                                 data-testid="copy-invite-code-btn"
@@ -415,8 +415,8 @@ export const Admin = () => {
                                                 size="icon"
                                                 onClick={async () => {
                                                     try {
-                                                        const res = await churchesAPI.regenerateCode(church.id);
-                                                        setChurch({ ...church, invite_code: res.data.invite_code });
+                                                        const res = await groupsAPI.regenerateCode(group.id);
+                                                        setGroup({ ...group, invite_code: res.data.invite_code });
                                                         toast.success('New invite code generated');
                                                     } catch { toast.error('Failed to regenerate code'); }
                                                 }}
@@ -431,13 +431,13 @@ export const Admin = () => {
                         ) : (
                             <Card className="card-organic">
                                 <CardContent className="p-8 text-center">
-                                    <Church className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                                    <h3 className="text-lg font-medium mb-2">No Church Configured</h3>
-                                    <p className="text-muted-foreground text-sm mb-4">Run migration to set up multi-tenant support.</p>
+                                    <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                                    <h3 className="text-lg font-medium mb-2">No Group Configured</h3>
+                                    <p className="text-muted-foreground text-sm mb-4">Run migration to set up multi-group support.</p>
                                     <Button onClick={async () => {
                                         try {
-                                            await churchesAPI.migrate();
-                                            toast.success('Migration complete! Refresh the page.');
+                                            await groupsAPI.migrate();
+                                            toast.success('Migration complete! Refreshing...');
                                             fetchData();
                                         } catch { toast.error('Migration failed'); }
                                     }} data-testid="migrate-btn">
