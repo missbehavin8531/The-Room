@@ -1,5 +1,11 @@
 /* The Room - Small Group Learning Platform Styles */
 
+/* Global mobile safety */
+html, body {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+}
+
 /* Primary button styles */
 .btn-primary {
     @apply bg-primary text-primary-foreground rounded-full px-8 py-3 font-semibold shadow-sm hover:shadow-md transition-all duration-300 active:scale-95;
@@ -15,7 +21,7 @@
 
 /* Card styles */
 .card-organic {
-    @apply bg-white rounded-2xl border border-border shadow-soft hover:shadow-soft-lg transition-all duration-300;
+    @apply bg-white dark:bg-gray-800 rounded-2xl border border-border shadow-soft hover:shadow-soft-lg transition-all duration-300;
 }
 
 /* Input styles */
@@ -26,17 +32,19 @@
 /* Mobile navigation */
 .mobile-nav {
     @apply fixed left-0 right-0 border-t border-border z-50;
-    bottom: 40px; /* Move up to avoid Emergent badge */
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.dark .mobile-nav {
+    background: rgba(17, 24, 39, 0.97);
 }
 
 .mobile-nav-item {
-    @apply flex flex-col items-center justify-center py-2 px-4 text-muted-foreground transition-colors duration-200;
+    @apply flex flex-col items-center justify-center py-1.5 px-2 text-muted-foreground transition-colors duration-200 min-w-0;
 }
 
 .mobile-nav-item.active {
@@ -50,7 +58,7 @@
 /* Page container */
 .page-container {
     @apply container mx-auto px-4 md:px-8;
-    padding-bottom: 140px; /* Extra space for mobile nav + Emergent badge */
+    padding-bottom: 100px; /* Space for mobile bottom nav */
 }
 
 @media (min-width: 768px) {

@@ -9,14 +9,12 @@ import {
     Settings, 
     LogOut,
     User,
-    Menu,
-    X,
+    Search as SearchIcon,
     Shield,
     TrendingUp,
-    Calendar,
-    Search as SearchIcon
+    Calendar
 } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn, getInitials } from '../lib/utils';
 import { Button } from './ui/button';
 import {
     DropdownMenu,
@@ -26,9 +24,18 @@ import {
     DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback } from './ui/avatar';
-import { getInitials } from '../lib/utils';
 
-const navItems = [
+// Bottom nav: max 5 core items
+var bottomNavItems = [
+    { path: '/', icon: Home, label: 'Home' },
+    { path: '/courses', icon: BookOpen, label: 'Courses' },
+    { path: '/search', icon: SearchIcon, label: 'Search' },
+    { path: '/chat', icon: MessageCircle, label: 'Chat' },
+    { path: '/settings', icon: Settings, label: 'Settings' },
+];
+
+// Desktop top nav: all items
+var desktopNavItems = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/courses', icon: BookOpen, label: 'Courses' },
     { path: '/progress', icon: TrendingUp, label: 'Progress' },
@@ -37,23 +44,27 @@ const navItems = [
     { path: '/messages', icon: Mail, label: 'Messages' },
 ];
 
-const adminNavItem = { path: '/admin', icon: Shield, label: 'Admin' };
-const attendanceNavItem = { path: '/attendance', icon: Calendar, label: 'Attendance' };
+var adminNavItem = { path: '/admin', icon: Shield, label: 'Admin' };
+var attendanceNavItem = { path: '/attendance', icon: Calendar, label: 'Attendance' };
 
-export const Layout = ({ children }) => {
-    const { user, logout, isApproved, isAdmin, isTeacherOrAdmin } = useAuth();
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+export var Layout = function Layout(props) {
+    var children = props.children;
+    var auth = useAuth();
+    var user = auth.user;
+    var logout = auth.logout;
+    var isApproved = auth.isApproved;
+    var isTeacherOrAdmin = auth.isTeacherOrAdmin;
+    var location = useLocation();
+    var navigate = useNavigate();
 
-    const handleLogout = () => {
+    function handleLogout() {
         logout();
         navigate('/login');
-    };
+    }
 
-    const allNavItems = isTeacherOrAdmin 
-        ? [...navItems, attendanceNavItem, adminNavItem]
-        : navItems;
+    var allDesktopNav = isTeacherOrAdmin 
+        ? desktopNavItems.concat([attendanceNavItem, adminNavItem])
+        : desktopNavItems;
 
     if (!isApproved) {
         return (
@@ -66,14 +77,14 @@ export const Layout = ({ children }) => {
                     </div>
                     <h1 className="text-2xl font-serif font-bold mb-2">Almost There!</h1>
                     <p className="text-muted-foreground mb-2">
-                        Hi <strong>{user?.name?.split(' ')[0]}</strong>! 👋
+                        Hi <strong>{user && user.name ? user.name.split(' ')[0] : ''}</strong>!
                     </p>
                     <p className="text-muted-foreground mb-6">
                         An admin will approve your account shortly. You'll get full access to lessons, discussions, and more!
                     </p>
                     <div className="p-4 bg-muted/50 rounded-xl mb-6">
                         <p className="text-sm text-muted-foreground">
-                            Signed in as: <strong>{user?.email}</strong>
+                            Signed in as: <strong>{user && user.email}</strong>
                         </p>
                     </div>
                     <Button onClick={handleLogout} variant="outline" className="w-full py-5">
@@ -87,64 +98,68 @@ export const Layout = ({ children }) => {
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Desktop Header */}
+            {/* Desktop Header - hidden on mobile */}
             <header className="hidden md:block sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-b border-border">
                 <div className="container mx-auto px-8">
                     <div className="flex items-center justify-between h-16">
-                        {/* Logo */}
-                        <Link to="/" className="flex items-center gap-3">
+                        <Link to="/" className="flex items-center gap-3 shrink-0">
                             <img src="/logo.png" alt="The Room" className="w-10 h-10 rounded-xl" />
                             <span className="font-serif font-bold text-xl">The Room</span>
                         </Link>
 
-                        {/* Desktop Nav */}
                         <nav className="flex items-center gap-1">
-                            {allNavItems.map((item) => (
-                                <Link
-                                    key={item.path}
-                                    to={item.path}
-                                    className={cn(
-                                        "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors",
-                                        location.pathname === item.path
-                                            ? "bg-primary text-primary-foreground"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                    )}
-                                >
-                                    <item.icon className="w-4 h-4" />
-                                    {item.label}
-                                </Link>
-                            ))}
+                            {allDesktopNav.map(function(item) {
+                                return (
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        className={cn(
+                                            "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors",
+                                            location.pathname === item.path
+                                                ? "bg-primary text-primary-foreground"
+                                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                        )}
+                                    >
+                                        <item.icon className="w-4 h-4" />
+                                        {item.label}
+                                    </Link>
+                                );
+                            })}
                         </nav>
 
-                        {/* User Menu */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="flex items-center gap-2">
                                     <Avatar className="w-8 h-8">
                                         <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                                            {getInitials(user?.name)}
+                                            {getInitials(user && user.name)}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <span className="hidden lg:inline">{user?.name}</span>
+                                    <span className="hidden lg:inline">{user && user.name}</span>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
                                 <div className="px-2 py-1.5">
-                                    <p className="text-sm font-medium">{user?.name}</p>
-                                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                                    <p className="text-sm font-medium">{user && user.name}</p>
+                                    <p className="text-xs text-muted-foreground">{user && user.email}</p>
                                     <span className={cn(
                                         "inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium capitalize",
-                                        user?.role === 'admin' ? 'bg-red-100 text-red-800' :
-                                        user?.role === 'teacher' ? 'bg-blue-100 text-blue-800' :
+                                        user && user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                                        user && user.role === 'teacher' ? 'bg-blue-100 text-blue-800' :
                                         'bg-green-100 text-green-800'
                                     )}>
-                                        {user?.role}
+                                        {user && user.role}
                                     </span>
                                 </div>
                                 <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link to="/settings" className="flex items-center">
+                                        <Settings className="w-4 h-4 mr-2" />Settings
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                                    <LogOut className="w-4 h-4 mr-2" />
-                                    Sign Out
+                                    <LogOut className="w-4 h-4 mr-2" />Sign Out
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -152,40 +167,65 @@ export const Layout = ({ children }) => {
                 </div>
             </header>
 
-            {/* Mobile Header */}
+            {/* Mobile Header - visible only on mobile */}
             <header className="md:hidden sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-b border-border">
                 <div className="flex items-center justify-between px-4 h-14">
                     <Link to="/" className="flex items-center gap-2">
                         <img src="/logo.png" alt="The Room" className="w-8 h-8 rounded-lg" />
-                        <span className="font-serif font-bold">The Room</span>
+                        <span className="font-serif font-bold text-lg">The Room</span>
                     </Link>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="p-2">
+                            <Button variant="ghost" size="sm" className="p-1.5">
                                 <Avatar className="w-8 h-8">
                                     <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                                        {getInitials(user?.name)}
+                                        {getInitials(user && user.name)}
                                     </AvatarFallback>
                                 </Avatar>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <div className="px-2 py-1.5">
-                                <p className="text-sm font-medium">{user?.name}</p>
-                                <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+                        <DropdownMenuContent align="end" className="w-52">
+                            <div className="px-3 py-2">
+                                <p className="text-sm font-medium">{user && user.name}</p>
+                                <p className="text-xs text-muted-foreground">{user && user.email}</p>
+                                <span className={cn(
+                                    "inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium capitalize",
+                                    user && user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                                    user && user.role === 'teacher' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-green-100 text-green-800'
+                                )}>
+                                    {user && user.role}
+                                </span>
                             </div>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem asChild>
-                                <Link to="/settings" className="flex items-center">
-                                    <Settings className="w-4 h-4 mr-2" />
-                                    Settings
+                                <Link to="/progress" className="flex items-center">
+                                    <TrendingUp className="w-4 h-4 mr-2" />Progress
                                 </Link>
                             </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                                <Link to="/messages" className="flex items-center">
+                                    <Mail className="w-4 h-4 mr-2" />Messages
+                                </Link>
+                            </DropdownMenuItem>
+                            {isTeacherOrAdmin && (
+                                <DropdownMenuItem asChild>
+                                    <Link to="/attendance" className="flex items-center">
+                                        <Calendar className="w-4 h-4 mr-2" />Attendance
+                                    </Link>
+                                </DropdownMenuItem>
+                            )}
+                            {isTeacherOrAdmin && (
+                                <DropdownMenuItem asChild>
+                                    <Link to="/admin" className="flex items-center">
+                                        <Shield className="w-4 h-4 mr-2" />Admin Panel
+                                    </Link>
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                                <LogOut className="w-4 h-4 mr-2" />
-                                Sign Out
+                                <LogOut className="w-4 h-4 mr-2" />Sign Out
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -193,27 +233,29 @@ export const Layout = ({ children }) => {
             </header>
 
             {/* Main Content */}
-            <main className="pb-32 md:pb-8">
+            <main className="pb-24 md:pb-8 px-4 md:px-0">
                 {children}
             </main>
 
-            {/* Mobile Bottom Navigation */}
+            {/* Mobile Bottom Navigation - 5 items max */}
             <nav className="md:hidden mobile-nav" data-testid="mobile-nav">
-                <div className="flex items-center justify-around py-2">
-                    {allNavItems.map((item) => (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            data-testid={`nav-${item.label.toLowerCase()}`}
-                            className={cn(
-                                "mobile-nav-item",
-                                location.pathname === item.path && "active"
-                            )}
-                        >
-                            <item.icon className="w-5 h-5" />
-                            <span className="text-xs mt-1">{item.label}</span>
-                        </Link>
-                    ))}
+                <div className="flex items-center justify-around py-1.5 px-1">
+                    {bottomNavItems.map(function(item) {
+                        return (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                data-testid={'nav-' + item.label.toLowerCase()}
+                                className={cn(
+                                    "mobile-nav-item",
+                                    location.pathname === item.path && "active"
+                                )}
+                            >
+                                <item.icon className="w-5 h-5" />
+                                <span className="text-[10px] mt-0.5">{item.label}</span>
+                            </Link>
+                        );
+                    })}
                 </div>
             </nav>
         </div>
