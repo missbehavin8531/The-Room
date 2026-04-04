@@ -8,7 +8,8 @@ import { toast } from 'sonner';
 import Layout from '../components/Layout';
 import {
     Users, BookOpen, UserCheck, UserX, Copy, RefreshCw,
-    CheckCircle, Clock, Loader2, Volume2, VolumeX
+    CheckCircle, Clock, Loader2, Volume2, VolumeX,
+    Share2, Mail, Link as LinkIcon, ClipboardCopy
 } from 'lucide-react';
 
 const getInitials = (name) => name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
@@ -120,24 +121,79 @@ export const TeacherDashboard = () => {
                     </Card>
                 </div>
 
-                {/* Invite Code Card */}
+                {/* Share Invite Section */}
                 {group && (
-                    <Card className="card-organic bg-primary/5">
-                        <CardContent className="p-4 flex items-center gap-4">
-                            <div className="flex-grow">
-                                <p className="text-sm font-medium">Invite Code</p>
-                                <p className="text-xs text-muted-foreground">Share with new members to join your group</p>
+                    <Card className="card-organic border-primary/20" data-testid="share-invite-card">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <Share2 className="w-4 h-4 text-primary" />
+                                Share Invite
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {/* Invite Code Display */}
+                            <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5">
+                                <div className="flex-grow">
+                                    <p className="text-xs text-muted-foreground mb-0.5">Invite Code</p>
+                                    <code className="font-mono font-bold text-lg tracking-widest" data-testid="teacher-group-code">{group.invite_code}</code>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => { navigator.clipboard.writeText(group.invite_code); toast.success('Code copied!'); }}
+                                    data-testid="copy-invite-code"
+                                >
+                                    <Copy className="w-3.5 h-3.5 mr-1.5" /> Code
+                                </Button>
                             </div>
-                            <code className="font-mono font-bold text-lg tracking-widest" data-testid="teacher-group-code">{group.invite_code}</code>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="shrink-0"
-                                onClick={() => { navigator.clipboard.writeText(group.invite_code); toast.success('Copied!'); }}
-                                data-testid="teacher-copy-code"
-                            >
-                                <Copy className="w-4 h-4" />
-                            </Button>
+
+                            {/* Share Actions */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <Button
+                                    variant="outline"
+                                    className="w-full justify-start"
+                                    onClick={() => {
+                                        var link = window.location.origin + '/register?code=' + group.invite_code;
+                                        navigator.clipboard.writeText(link);
+                                        toast.success('Registration link copied!');
+                                    }}
+                                    data-testid="copy-invite-link"
+                                >
+                                    <LinkIcon className="w-4 h-4 mr-2 text-blue-500" /> Copy Link
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="w-full justify-start"
+                                    onClick={() => {
+                                        var link = window.location.origin + '/register?code=' + group.invite_code;
+                                        var subject = encodeURIComponent('Join Our Sunday School Group on The Room');
+                                        var body = encodeURIComponent(
+                                            "Hi there,\n\nYou're invited to join our Sunday school group! We use an app called The Room to share lessons, resources, and stay connected throughout the week.\n\nHere's how to join:\n\n1. Click this link: " + link + "\n2. Enter your name\n3. The invite code " + group.invite_code + " will be pre-filled for you\n4. Create your account with your email and a password\n\nOnce you're in, I'll approve your account and you'll have access to all our lessons, discussions, and resources.\n\nSee you in class!"
+                                        );
+                                        window.open('mailto:?subject=' + subject + '&body=' + body);
+                                    }}
+                                    data-testid="send-invite-email"
+                                >
+                                    <Mail className="w-4 h-4 mr-2 text-green-600" /> Send Email
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="w-full justify-start"
+                                    onClick={() => {
+                                        var link = window.location.origin + '/register?code=' + group.invite_code;
+                                        var template = "Hi there,\n\nYou're invited to join our Sunday school group! We use an app called The Room to share lessons, resources, and stay connected throughout the week.\n\nHere's how to join:\n\n1. Click this link: " + link + "\n2. Enter your name\n3. The invite code " + group.invite_code + " will be pre-filled for you\n4. Create your account with your email and a password\n\nOnce you're in, I'll approve your account and you'll have access to all our lessons, discussions, and resources.\n\nSee you in class!";
+                                        navigator.clipboard.writeText(template);
+                                        toast.success('Email template copied!');
+                                    }}
+                                    data-testid="copy-email-template"
+                                >
+                                    <ClipboardCopy className="w-4 h-4 mr-2 text-purple-500" /> Copy Template
+                                </Button>
+                            </div>
+
+                            <p className="text-xs text-muted-foreground">
+                                New members who register with your code will appear in Pending Approvals above.
+                            </p>
                         </CardContent>
                     </Card>
                 )}

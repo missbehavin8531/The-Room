@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -9,6 +9,7 @@ import { Loader2, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { groupsAPI } from '../lib/api';
 
 export const Register = () => {
+    const [searchParams] = useSearchParams();
     const [step, setStep] = useState(1);
     const [name, setName] = useState('');
     const [inviteCode, setInviteCode] = useState('');
@@ -18,6 +19,11 @@ export const Register = () => {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const { register } = useAuth();
+
+    useEffect(() => {
+        const codeParam = searchParams.get('code');
+        if (codeParam) setInviteCode(codeParam.toUpperCase());
+    }, [searchParams]);
 
     const handleNext = async () => {
         if (step === 1 && !name.trim()) {
