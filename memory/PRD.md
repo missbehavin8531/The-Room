@@ -107,6 +107,7 @@
 - **P1: Offline Mode Caching** — Enhanced service worker with expanded API caching, offline banner, cache versioning (DONE 4/6/2026)
 - **P2: Real-time WebSocket Chat** — WebSocket endpoint at /api/ws/chat with JWT auth, typing indicators, online count, REST fallback polling (DONE 4/6/2026)
 - **Video Recording Upload** — Teachers can upload Zoom/video recordings (MP4/MOV/WebM, up to 125MB) or paste Zoom cloud recording links to lessons. Recordings appear on NEXT (Watch Replay) tab with video player and delete controls. (DONE 4/6/2026)
+- **Automatic Zoom Integration** — OAuth-based Zoom connection for teachers. When a Zoom cloud recording finishes, it auto-imports the MP4 into the teacher's most recent lesson. Includes: connect/disconnect flow, webhook handler (CRC + recording.completed), token refresh, Settings page UI with 3 states (Not Configured / Connect / Connected). Keys to be added by admin. (DONE 4/6/2026)
 
 ---
 
