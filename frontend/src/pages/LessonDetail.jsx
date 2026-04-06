@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { Badge } from '../components/ui/badge';
@@ -19,7 +20,7 @@ import {
     Download, Upload, Send, Trash2, Eye, EyeOff, CheckCircle,
     Loader2, Play, BookOpen, MessageCircle, Clock, ChevronRight,
     Pin, Star, Users, BookMarked, Edit, BarChart3, AlertCircle, GripVertical,
-    ArrowUp, ArrowDown
+    ArrowUp, ArrowDown, Link2, Plus
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -123,7 +124,14 @@ export const LessonDetail = () => {
     
     // Recordings state
     const [recordings, setRecordings] = useState([]);
+    const [uploadedRecordings, setUploadedRecordings] = useState([]);
     const [loadingRecordings, setLoadingRecordings] = useState(false);
+    const [uploadingVideo, setUploadingVideo] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [showLinkForm, setShowLinkForm] = useState(false);
+    const [linkUrl, setLinkUrl] = useState('');
+    const [linkTitle, setLinkTitle] = useState('Zoom Recording');
+    const videoInputRef = useRef(null);
 
     useEffect(() => {
         fetchLessonData();
@@ -155,11 +163,16 @@ export const LessonDetail = () => {
     const fetchRecordings = async () => {
         setLoadingRecordings(true);
         try {
-            const res = await videoRoomAPI.getRecordings(lessonId);
-            setRecordings(res.data.recordings || []);
+            const [dailyRes, uploadedRes] = await Promise.all([
+                videoRoomAPI.getRecordings(lessonId).catch(() => ({ data: { recordings: [] } })),
+                videoRoomAPI.getUploadedRecordings(lessonId).catch(() => ({ data: [] }))
+            ]);
+            setRecordings(dailyRes.data.recordings || []);
+            setUploadedRecordings(uploadedRes.data || []);
         } catch (error) {
             console.error('Failed to fetch recordings:', error);
             setRecordings([]);
+            setUploadedRecordings([]);
         } finally {
             setLoadingRecordings(false);
         }
@@ -243,6 +256,66 @@ export const LessonDetail = () => {
             setCompletedActions(prev => [...new Set([...prev, 'watched_replay'])]);
         } catch (error) {
             console.error('Failed to record attendance:', error);
+        }
+    };
+
+    const handleVideoUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['mp4', 'mov', 'webm', 'avi', 'mkv', 'mpeg', 'mpg'].includes(ext)) {
+            toast.error('Unsupported format. Use MP4, MOV, or WebM.');
+            return;
+        }
+        if (file.size > 125 * 1024 * 1024) {
+            toast.error('File too large. Maximum size is 125MB.');
+            return;
+        }
+
+        setUploadingVideo(true);
+        setUploadProgress(0);
+        try {
+            await videoRoomAPI.uploadRecording(lessonId, file, (progressEvent) => {
+                const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                setUploadProgress(pct);
+            });
+            toast.success('Recording uploaded!');
+            fetchRecordings();
+        } catch (error) {
+            const msg = error.response?.data?.detail || 'Failed to upload recording';
+            toast.error(msg);
+        } finally {
+            setUploadingVideo(false);
+            setUploadProgress(0);
+            if (videoInputRef.current) videoInputRef.current.value = '';
+        }
+    };
+
+    const handleAddRecordingLink = async () => {
+        if (!linkUrl.trim()) {
+            toast.error('Please enter a URL');
+            return;
+        }
+        try {
+            await videoRoomAPI.addRecordingLink(lessonId, linkUrl.trim(), linkTitle.trim() || 'Recording');
+            toast.success('Recording link added!');
+            setLinkUrl('');
+            setLinkTitle('Zoom Recording');
+            setShowLinkForm(false);
+            fetchRecordings();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Failed to add link');
+        }
+    };
+
+    const handleDeleteUploadedRecording = async (recordingId) => {
+        try {
+            await videoRoomAPI.deleteUploadedRecording(recordingId);
+            toast.success('Recording deleted');
+            setUploadedRecordings(prev => prev.filter(r => r.id !== recordingId));
+        } catch (error) {
+            toast.error('Failed to delete recording');
         }
     };
 
@@ -661,6 +734,103 @@ export const LessonDetail = () => {
                 {/* ============ NEXT TAB: Watch Replay + Teacher Notes ============ */}
                 {activeTab === 'next' && (
                     <div className="space-y-4 animate-fade-in">
+                        {/* Teacher Upload Controls */}
+                        {isTeacherOrAdmin && (
+                            <Card className="card-organic border-dashed border-2 border-primary/30">
+                                <CardContent className="p-4 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="font-semibold flex items-center gap-2 text-sm">
+                                            <Upload className="w-4 h-4 text-primary" />
+                                            Add Recording
+                                        </h3>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="file"
+                                                ref={videoInputRef}
+                                                onChange={handleVideoUpload}
+                                                accept=".mp4,.mov,.webm,.avi,.mkv,.mpeg,.mpg"
+                                                className="hidden"
+                                            />
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => videoInputRef.current?.click()}
+                                                disabled={uploadingVideo}
+                                                data-testid="upload-video-btn"
+                                            >
+                                                {uploadingVideo ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                                                ) : (
+                                                    <Upload className="w-4 h-4 mr-1" />
+                                                )}
+                                                Upload Video
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setShowLinkForm(!showLinkForm)}
+                                                data-testid="add-link-btn"
+                                            >
+                                                <Link2 className="w-4 h-4 mr-1" />
+                                                Paste Link
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Upload Progress */}
+                                    {uploadingVideo && (
+                                        <div className="space-y-1" data-testid="upload-progress">
+                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                                <span>Uploading...</span>
+                                                <span>{uploadProgress}%</span>
+                                            </div>
+                                            <div className="w-full bg-muted rounded-full h-2">
+                                                <div
+                                                    className="bg-primary rounded-full h-2 transition-all"
+                                                    style={{ width: `${uploadProgress}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Link Form */}
+                                    {showLinkForm && (
+                                        <div className="space-y-2 p-3 bg-muted/50 rounded-lg animate-fade-in" data-testid="link-form">
+                                            <Input
+                                                placeholder="https://zoom.us/rec/share/..."
+                                                value={linkUrl}
+                                                onChange={(e) => setLinkUrl(e.target.value)}
+                                                data-testid="recording-link-url"
+                                            />
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    placeholder="Title (e.g. Zoom Recording)"
+                                                    value={linkTitle}
+                                                    onChange={(e) => setLinkTitle(e.target.value)}
+                                                    className="flex-grow"
+                                                    data-testid="recording-link-title"
+                                                />
+                                                <Button
+                                                    size="sm"
+                                                    onClick={handleAddRecordingLink}
+                                                    disabled={!linkUrl.trim()}
+                                                    className="btn-primary"
+                                                    data-testid="save-recording-link-btn"
+                                                >
+                                                    <Plus className="w-4 h-4 mr-1" />
+                                                    Add
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <p className="text-xs text-muted-foreground">
+                                        Upload a Zoom recording (MP4, MOV, WebM, up to 125MB) or paste a Zoom cloud sharing link.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         {/* Session Recordings Section */}
                         {loadingRecordings ? (
                             <Card className="card-organic">
@@ -669,12 +839,14 @@ export const LessonDetail = () => {
                                     <span>Loading recordings...</span>
                                 </CardContent>
                             </Card>
-                        ) : recordings.length > 0 ? (
+                        ) : (recordings.length > 0 || uploadedRecordings.length > 0) ? (
                             <div className="space-y-3">
                                 <h3 className="font-semibold flex items-center gap-2">
                                     <Video className="w-5 h-5 text-purple-500" />
                                     Session Recordings
                                 </h3>
+
+                                {/* Daily.co Recordings */}
                                 {recordings.map((recording, idx) => (
                                     <Card key={recording.id} className="card-organic overflow-hidden" data-testid={`recording-${recording.id}`}>
                                         {recording.download_url ? (
@@ -693,7 +865,7 @@ export const LessonDetail = () => {
                                                 <CardContent className="p-3 flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         <Badge variant="secondary">
-                                                            Recording {recordings.length > 1 ? idx + 1 : ''}
+                                                            Live Recording {recordings.length > 1 ? idx + 1 : ''}
                                                         </Badge>
                                                         {recording.duration && (
                                                             <span className="text-sm text-muted-foreground">
@@ -727,6 +899,98 @@ export const LessonDetail = () => {
                                         )}
                                     </Card>
                                 ))}
+
+                                {/* Uploaded / Linked Recordings */}
+                                {uploadedRecordings.map((rec) => (
+                                    <Card key={rec.id} className="card-organic overflow-hidden" data-testid={`uploaded-recording-${rec.id}`}>
+                                        {rec.type === 'upload' ? (
+                                            <>
+                                                <div className="aspect-video bg-black">
+                                                    <video
+                                                        controls
+                                                        className="w-full h-full"
+                                                        src={`${BACKEND_URL}/api/recordings/${rec.id}/stream?token=${localStorage.getItem('token')}`}
+                                                        onPlay={handleWatchReplay}
+                                                        data-testid={`uploaded-video-${rec.id}`}
+                                                    >
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                </div>
+                                                <CardContent className="p-3 flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                                            <Upload className="w-3 h-3 mr-1" /> Uploaded
+                                                        </Badge>
+                                                        <span className="text-sm text-muted-foreground truncate max-w-[200px]">
+                                                            {rec.title || rec.original_filename}
+                                                        </span>
+                                                        {rec.file_size && (
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {formatFileSize(rec.file_size)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-xs text-muted-foreground mr-2">
+                                                            {rec.uploaded_by_name && `by ${rec.uploaded_by_name}`}
+                                                        </span>
+                                                        {isTeacherOrAdmin && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleDeleteUploadedRecording(rec.id)}
+                                                                className="text-destructive p-1 h-auto"
+                                                                data-testid={`delete-recording-${rec.id}`}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </CardContent>
+                                            </>
+                                        ) : (
+                                            <CardContent className="p-4">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                                                            <Link2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-medium">{rec.title || 'Recording Link'}</p>
+                                                            <p className="text-xs text-muted-foreground truncate max-w-[250px]">
+                                                                {rec.url}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <a href={rec.url} target="_blank" rel="noopener noreferrer">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={handleWatchReplay}
+                                                                data-testid={`watch-link-${rec.id}`}
+                                                            >
+                                                                <Play className="w-4 h-4 mr-1" /> Watch
+                                                            </Button>
+                                                        </a>
+                                                        {isTeacherOrAdmin && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleDeleteUploadedRecording(rec.id)}
+                                                                className="text-destructive p-1 h-auto"
+                                                                data-testid={`delete-link-${rec.id}`}
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        )}
+                                    </Card>
+                                ))}
+
                                 {completedActions.includes('watched_replay') && (
                                     <div className="flex items-center justify-center gap-2 text-green-600">
                                         <CheckCircle className="w-5 h-5" />
@@ -739,7 +1003,7 @@ export const LessonDetail = () => {
                         {/* YouTube Video (shown when recording_source is youtube) */}
                         {(lesson.recording_source === 'youtube' || lesson.youtube_url) && (lesson.recording_url || lesson.youtube_url) && (
                             <div className="space-y-3">
-                                {recordings.length > 0 && (
+                                {(recordings.length > 0 || uploadedRecordings.length > 0) && (
                                     <h3 className="font-semibold flex items-center gap-2">
                                         <Play className="w-5 h-5 text-red-500" />
                                         Additional Video Content
@@ -754,7 +1018,7 @@ export const LessonDetail = () => {
                                             allowFullScreen
                                         />
                                     </div>
-                                    {completedActions.includes('watched_replay') && recordings.length === 0 && (
+                                    {completedActions.includes('watched_replay') && recordings.length === 0 && uploadedRecordings.length === 0 && (
                                         <div className="p-3 bg-green-50 dark:bg-green-900/20 flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
                                             <CheckCircle className="w-4 h-4" />
                                             <span className="text-sm font-medium">Watched</span>
@@ -789,18 +1053,23 @@ export const LessonDetail = () => {
                         )}
                         
                         {/* No content available message */}
-                        {!loadingRecordings && recordings.length === 0 && !lesson.youtube_url && !lesson.recording_url && lesson.recording_source !== 'daily' && (
+                        {!loadingRecordings && recordings.length === 0 && uploadedRecordings.length === 0 && !lesson.youtube_url && !lesson.recording_url && lesson.recording_source !== 'daily' && (
                             <Card className="card-organic">
                                 <CardContent className="p-8 text-center">
                                     <Play className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
                                     <h3 className="text-lg font-medium mb-2">No Replay Available</h3>
-                                    <p className="text-muted-foreground">The teacher hasn't added a recording for this lesson yet.</p>
+                                    <p className="text-muted-foreground">
+                                        {isTeacherOrAdmin
+                                            ? 'Upload a recording or paste a link using the controls above.'
+                                            : "The teacher hasn't added a recording for this lesson yet."
+                                        }
+                                    </p>
                                 </CardContent>
                             </Card>
                         )}
                         
                         {/* Daily.co recordings pending message */}
-                        {!loadingRecordings && recordings.length === 0 && lesson.recording_source === 'daily' && (
+                        {!loadingRecordings && recordings.length === 0 && uploadedRecordings.length === 0 && lesson.recording_source === 'daily' && (
                             <Card className="card-organic">
                                 <CardContent className="p-8 text-center">
                                     <Play className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />

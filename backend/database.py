@@ -21,6 +21,7 @@ JWT_EXPIRATION_HOURS = 24
 UPLOAD_DIR = ROOT_DIR / 'uploads'
 UPLOAD_DIR.mkdir(exist_ok=True)
 MAX_UPLOAD_SIZE = 25 * 1024 * 1024  # 25MB
+MAX_VIDEO_UPLOAD_SIZE = 125 * 1024 * 1024  # 125MB
 
 # Daily.co Configuration
 DAILY_API_KEY = os.environ.get('DAILY_API_KEY', '')

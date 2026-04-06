@@ -154,6 +154,19 @@ export const videoRoomAPI = {
     join: (lessonId) => api.post(`/lessons/${lessonId}/video/join`),
     getStatus: (lessonId) => api.get(`/lessons/${lessonId}/video/status`),
     getRecordings: (lessonId) => api.get(`/lessons/${lessonId}/recordings`),
+    getUploadedRecordings: (lessonId) => api.get(`/lessons/${lessonId}/recordings/uploaded`),
+    uploadRecording: (lessonId, file, onProgress) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return api.post(`/lessons/${lessonId}/recordings/upload`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 600000,
+            onUploadProgress: onProgress,
+        });
+    },
+    addRecordingLink: (lessonId, url, title) =>
+        api.post(`/lessons/${lessonId}/recordings/link?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`),
+    deleteUploadedRecording: (recordingId) => api.delete(`/recordings/uploaded/${recordingId}`),
     // Recording controls (teacher/admin only)
     startRecording: (lessonId) => api.post(`/lessons/${lessonId}/recording/start`),
     stopRecording: (lessonId, recordingId) => api.post(`/lessons/${lessonId}/recording/stop?recording_id=${recordingId}`),

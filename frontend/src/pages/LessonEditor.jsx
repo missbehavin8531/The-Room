@@ -387,9 +387,10 @@ export const LessonEditor = () => {
                         <p className="text-sm text-muted-foreground">
                             Where can students watch the replay after the live session?
                         </p>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                             {[
                                 { value: 'daily', label: 'In-App Recording', icon: Video, color: 'purple' },
+                                { value: 'upload', label: 'Upload Video', icon: Play, color: 'green' },
                                 { value: 'youtube', label: 'YouTube', icon: Play, color: 'red' },
                                 { value: 'external', label: 'External URL', icon: ExternalLink, color: 'blue' },
                                 { value: 'none', label: 'None', icon: X, color: 'gray' },
@@ -433,6 +434,12 @@ export const LessonEditor = () => {
                         {lesson.recording_source === 'daily' && (
                             <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-sm text-purple-700 dark:text-purple-300">
                                 Recordings will be saved automatically when you use the in-app video room and click record.
+                            </div>
+                        )}
+
+                        {lesson.recording_source === 'upload' && (
+                            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm text-green-700 dark:text-green-300">
+                                Upload a Zoom or other video recording from the lesson page's "Watch Replay" tab. Supports MP4, MOV, WebM up to 125MB.
                             </div>
                         )}
                     </CardContent>
