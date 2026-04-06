@@ -268,4 +268,11 @@ export const groupsAPI = {
     migrate: () => api.post('/admin/migrate-to-multi-tenant'),
 };
 
+// Zoom Integration API
+export const zoomAPI = {
+    getStatus: () => api.get('/zoom/status'),
+    connect: () => api.get('/zoom/connect'),
+    disconnect: () => api.post('/zoom/disconnect'),
+};
+
 export default api;

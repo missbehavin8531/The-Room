@@ -20,6 +20,7 @@ from routes.notifications import router as notifications_router
 from routes.seed import router as seed_router
 from routes.groups import router as groups_router
 from routes.websocket import router as websocket_router
+from routes.zoom import router as zoom_router
 
 # Create the main app
 app = FastAPI(title="The Room API")
@@ -38,6 +39,7 @@ app.include_router(notifications_router)
 app.include_router(seed_router)
 app.include_router(groups_router)
 app.include_router(websocket_router)
+app.include_router(zoom_router)
 
 # Static files for uploads
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
