@@ -1181,12 +1181,12 @@ export const LessonDetail = () => {
                                                         <Icon className="w-5 h-5" />
                                                     </div>
                                                     <div className="flex-grow min-w-0">
-                                                        <p className="font-medium text-sm truncate flex items-center gap-2">
+                                                        <div className="font-medium text-sm truncate flex items-center gap-2">
                                                             {resource.original_filename}
                                                             {resource.is_primary && (
                                                                 <Badge variant="secondary" className="text-xs">Primary</Badge>
                                                             )}
-                                                        </p>
+                                                        </div>
                                                         <p className="text-xs text-muted-foreground">{formatFileSize(resource.file_size)}</p>
                                                     </div>
                                                     <div className="flex gap-1 flex-shrink-0">

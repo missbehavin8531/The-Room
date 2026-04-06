@@ -49,6 +49,7 @@
 ### Communication
 - Real-time WebSocket chat (scoped per group) with REST fallback
 - Typing indicators and online user count
+| `chat_messages` | id, user_id, user_name, content, is_hidden, group_id, created_at |
 - Direct messages between users
 - Message Teacher feature (available to all approved users)
 - Moderation: hide/delete messages (teacher/admin)
@@ -105,6 +106,7 @@
 - Dark mode, Search, Mobile-first responsive UI
 - **P1: Offline Mode Caching** — Enhanced service worker with expanded API caching, offline banner, cache versioning (DONE 4/6/2026)
 - **P2: Real-time WebSocket Chat** — WebSocket endpoint at /api/ws/chat with JWT auth, typing indicators, online count, REST fallback polling (DONE 4/6/2026)
+- **Video Recording Upload** — Teachers can upload Zoom/video recordings (MP4/MOV/WebM, up to 125MB) or paste Zoom cloud recording links to lessons. Recordings appear on NEXT (Watch Replay) tab with video player and delete controls. (DONE 4/6/2026)
 
 ---
 
