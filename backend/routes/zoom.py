@@ -21,16 +21,23 @@ ZOOM_WEBHOOK_SECRET = os.environ.get("ZOOM_WEBHOOK_SECRET_TOKEN", "")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "")
 
 
-def _redirect_uri():
-    """Build the OAuth redirect URI from the frontend URL."""
+def _redirect_uri(request: Request = None):
+    """Build the OAuth redirect URI dynamically from the request host."""
+    if request:
+        # Use the actual request host for correct domain across environments
+        scheme = request.headers.get("x-forwarded-proto", "https")
+        host = request.headers.get("host", "")
+        if host:
+            return f"{scheme}://{host}/api/zoom/callback"
+    # Fallback to env vars
     base = FRONTEND_URL.rstrip("/") if FRONTEND_URL else ""
     if not base:
         base = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
     return f"{base}/api/zoom/callback"
 
 
-def _zoom_service():
-    return ZoomService(ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, _redirect_uri(), ZOOM_WEBHOOK_SECRET)
+def _zoom_service(request: Request = None):
+    return ZoomService(ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, _redirect_uri(request), ZOOM_WEBHOOK_SECRET)
 
 
 def _zoom_configured():
@@ -57,12 +64,12 @@ async def zoom_status(user: dict = Depends(require_approved)):
 
 # ── Start OAuth ──────────────────────────────────────────────
 @router.get("/connect")
-async def zoom_connect(user: dict = Depends(require_teacher_or_admin)):
+async def zoom_connect(request: Request, user: dict = Depends(require_teacher_or_admin)):
     """Redirect teacher to Zoom OAuth authorization page."""
     if not _zoom_configured():
         raise HTTPException(status_code=503, detail="Zoom integration is not configured yet. Ask the admin to add Zoom credentials.")
 
-    svc = _zoom_service()
+    svc = _zoom_service(request)
     state = secrets.token_urlsafe(32)
 
     await db.zoom_oauth_states.insert_one({
@@ -77,7 +84,7 @@ async def zoom_connect(user: dict = Depends(require_teacher_or_admin)):
 
 # ── OAuth Callback ───────────────────────────────────────────
 @router.get("/callback")
-async def zoom_callback(code: str = Query(...), state: str = Query(...)):
+async def zoom_callback(request: Request, code: str = Query(...), state: str = Query(...)):
     """Handle Zoom OAuth callback — exchange code for tokens."""
     state_doc = await db.zoom_oauth_states.find_one({"state": state})
     if not state_doc:
@@ -86,7 +93,7 @@ async def zoom_callback(code: str = Query(...), state: str = Query(...)):
     user_id = state_doc["user_id"]
     await db.zoom_oauth_states.delete_one({"state": state})
 
-    svc = _zoom_service()
+    svc = _zoom_service(request)
     try:
         token_data = await svc.exchange_code(code)
     except Exception as e:
