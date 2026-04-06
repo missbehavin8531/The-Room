@@ -109,6 +109,7 @@
 - **Video Recording Upload** — Teachers can upload Zoom/video recordings (MP4/MOV/WebM, up to 125MB) or paste Zoom cloud recording links to lessons. Recordings appear on NEXT (Watch Replay) tab with video player and delete controls. (DONE 4/6/2026)
 - **Automatic Zoom Integration** — OAuth-based Zoom connection for teachers. When a Zoom cloud recording finishes, it auto-imports the MP4 into the teacher's most recent lesson. Includes: connect/disconnect flow, webhook handler (CRC + recording.completed), token refresh, Settings page UI with 3 states (Not Configured / Connect / Connected). Keys to be added by admin. (DONE 4/6/2026)
 - **Home Page Overhaul** — Production-quality dashboard with Fraunces/Manrope typography, time-based greeting, green gradient lesson hero card with segmented progress pills, bento stats grid (streak/lessons/enrolled), quick actions, recent chat preview, course progress bars, and completion celebration. Fully mobile-responsive. (DONE 4/6/2026)
+- **Discussion Questions Redesign** — Replaced clunky flat tab UI with accordion-style prompt cards. Each question is a numbered expandable card with inline reply form (circular send button), response count badge, clean reply cards with avatar/name/time, and icon-only moderation controls (status/pin/delete) revealed on hover. (DONE 4/6/2026)
 
 ---
 
