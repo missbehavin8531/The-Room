@@ -594,32 +594,21 @@ export const LessonDetail = () => {
                     <p className="text-muted-foreground text-sm md:text-base">{lesson.description}</p>
                 </div>
 
-                {/* NOW / NEXT / AFTER Tab Navigation */}
-                <div className="flex gap-2 md:gap-3 animate-fade-in" style={{ animationDelay: '0.05s' }}>
+                {/* NOW / NEXT / AFTER Tab Navigation — Underline style */}
+                <div className="flex gap-0 border-b border-border animate-fade-in" style={{ animationDelay: '0.05s' }}>
                     {LESSON_TABS.map((tab) => {
-                        const Icon = tab.icon;
                         const isActive = activeTab === tab.key;
                         return (
                             <button
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
                                 className={cn(
-                                    "flex-1 flex flex-col items-center justify-center py-3 px-2 rounded-xl transition-all duration-200",
-                                    "active:scale-95 focus:outline-none",
-                                    isActive 
-                                        ? "bg-primary text-primary-foreground shadow-lg" 
-                                        : "bg-muted hover:bg-muted/80 text-foreground"
+                                    "lesson-tab flex-1 py-3 text-center",
+                                    isActive ? "lesson-tab-active" : "lesson-tab-inactive"
                                 )}
                                 data-testid={`tab-${tab.key}`}
                             >
-                                <div className={cn(
-                                    "w-10 h-10 rounded-full flex items-center justify-center mb-1",
-                                    isActive ? "bg-white/20" : tab.color
-                                )}>
-                                    <Icon className="w-5 h-5 text-white" />
-                                </div>
-                                <span className="text-xs font-bold">{tab.label}</span>
-                                <span className="text-xs opacity-75 hidden sm:block">{tab.subtitle}</span>
+                                {tab.label}
                             </button>
                         );
                     })}

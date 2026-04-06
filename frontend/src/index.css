@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Nunito:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,74 +6,52 @@
 
 @layer base {
     :root {
-        /* Organic & Earthy (Calming Sage) Theme - Light Mode */
         --background: 40 20% 98%;
         --foreground: 120 10% 18%;
-        
         --card: 0 0% 100%;
         --card-foreground: 120 10% 18%;
-        
         --popover: 0 0% 100%;
         --popover-foreground: 120 10% 18%;
-        
         --primary: 113 24% 33%;
         --primary-foreground: 0 0% 100%;
-        
         --secondary: 40 18% 93%;
         --secondary-foreground: 120 10% 18%;
-        
         --muted: 40 15% 90%;
         --muted-foreground: 120 6% 45%;
-        
         --accent: 18 52% 64%;
         --accent-foreground: 0 0% 100%;
-        
         --destructive: 0 84% 60%;
         --destructive-foreground: 0 0% 98%;
-        
         --border: 40 15% 90%;
         --input: 40 15% 90%;
         --ring: 113 24% 33%;
-        
         --chart-1: 113 24% 33%;
         --chart-2: 18 52% 64%;
         --chart-3: 40 18% 70%;
         --chart-4: 120 10% 50%;
         --chart-5: 40 30% 80%;
-        
         --radius: 0.75rem;
     }
-    
     .dark {
-        /* Dark Mode - Sage Forest Theme */
         --background: 120 10% 10%;
         --foreground: 40 20% 95%;
-        
         --card: 120 10% 14%;
         --card-foreground: 40 20% 95%;
-        
         --popover: 120 10% 14%;
         --popover-foreground: 40 20% 95%;
-        
         --primary: 113 35% 45%;
         --primary-foreground: 0 0% 100%;
-        
         --secondary: 120 10% 18%;
         --secondary-foreground: 40 20% 90%;
-        
         --muted: 120 8% 20%;
         --muted-foreground: 40 10% 60%;
-        
         --accent: 18 52% 55%;
         --accent-foreground: 0 0% 100%;
-        
         --destructive: 0 62% 50%;
         --destructive-foreground: 0 0% 98%;
-        
         --border: 120 8% 22%;
         --input: 120 8% 22%;
         --ring: 113 35% 45%;
-        
         --chart-1: 113 35% 50%;
         --chart-2: 18 52% 60%;
         --chart-3: 40 18% 50%;
@@ -86,84 +64,81 @@
     * {
         @apply border-border;
     }
-    
     html {
         scroll-behavior: smooth;
     }
-    
     body {
         @apply bg-background text-foreground antialiased;
-        font-family: 'Nunito', sans-serif;
+        font-family: 'Manrope', 'Nunito', sans-serif;
     }
-    
     h1, h2, h3, h4, h5, h6 {
-        font-family: 'Merriweather', serif;
+        font-family: 'Fraunces', 'Merriweather', serif;
+    }
+
+    /* Elevated inputs globally */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    textarea {
+        border-radius: 0.75rem !important;
+        border-color: transparent !important;
+        background: hsl(var(--muted) / 0.5) !important;
+        transition: all 0.2s ease !important;
+    }
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+    textarea:focus {
+        border-color: hsl(var(--primary)) !important;
+        background: hsl(var(--card)) !important;
+        box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1) !important;
+    }
+    .dark input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    .dark textarea {
+        background: hsl(var(--muted) / 0.4) !important;
+    }
+    .dark input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+    .dark textarea:focus {
+        background: hsl(var(--card)) !important;
+    }
+
+    /* Focus states */
+    input:focus, textarea:focus, button:focus {
+        outline: none;
+    }
+}
+
+/* Debug wrapper (preserve existing) */
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
     }
 }
 
 /* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: hsl(var(--muted));
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.3);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.5);
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--primary) / 0.15); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.3); }
 
 /* Shimmer animation for skeletons */
 @keyframes shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-    100% {
-        background-position: 200% 0;
-    }
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
 }
-
 .shimmer {
-    background: linear-gradient(
-        90deg,
-        hsl(var(--muted)) 25%,
-        hsl(var(--background)) 50%,
-        hsl(var(--muted)) 75%
-    );
+    background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--background)) 50%, hsl(var(--muted)) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
 }
 
 /* Fade in animation */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
-
 .animate-fade-in {
     animation: fadeIn 0.3s ease-out forwards;
 }
 
 /* Stagger children animations */
-.stagger-children > * {
-    opacity: 0;
-    animation: fadeIn 0.3s ease-out forwards;
-}
-
+.stagger-children > * { opacity: 0; animation: fadeIn 0.3s ease-out forwards; }
 .stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
 .stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
 .stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
@@ -173,9 +148,9 @@
 
 /* Glass morphism */
 .glass {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
 }
 
 /* Mobile bottom nav safe area */
@@ -184,55 +159,23 @@
 }
 
 /* YouTube embed responsive */
-.video-container {
-    position: relative;
-    padding-bottom: 56.25%;
-    height: 0;
-    overflow: hidden;
-}
-
-.video-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 1rem;
-}
+.video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
+.video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 1rem; }
 
 /* Hide scrollbar for chat */
-.hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-
-/* Focus states */
-input:focus, textarea:focus, button:focus {
-    outline: none;
-}
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
 
 /* Card hover effect */
-.card-hover {
-    transition: all 0.3s ease;
-}
-
-.card-hover:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(74, 103, 65, 0.15);
-}
+.card-hover { transition: all 0.3s ease; }
+.card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(74, 103, 65, 0.12); }
 
 /* Button press effect */
-.btn-press:active {
-    transform: scale(0.95);
-}
+.btn-press:active { transform: scale(0.95); }
 
-/* Debug wrapper (preserve existing) */
-@layer base {
-    [data-debug-wrapper="true"] {
-        display: contents !important;
-    }
+/* Slide-in from bottom for bottom nav */
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
+.animate-slide-up { animation: slideUp 0.4s ease-out forwards; }

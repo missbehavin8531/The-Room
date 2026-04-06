@@ -1,199 +1,84 @@
-/* The Room - Small Group Learning Platform Styles */
+/* The Room - Global Component Styles */
 
-/* Hide Emergent badge */
-#emergent-badge { display: none !important; }
-
-
-/* Global mobile safety */
-html, body {
-    overflow-x: hidden;
-    -webkit-text-size-adjust: 100%;
-}
-
-/* Primary button styles */
-.btn-primary {
-    @apply bg-primary text-primary-foreground rounded-full px-8 py-3 font-semibold shadow-sm hover:shadow-md transition-all duration-300 active:scale-95;
-}
-
-.btn-secondary {
-    @apply bg-secondary text-secondary-foreground rounded-full px-8 py-3 font-semibold hover:bg-muted transition-all duration-300 active:scale-95;
-}
-
-.btn-ghost {
-    @apply hover:bg-muted/50 text-primary rounded-full px-6 py-2 transition-all duration-300 active:scale-95;
-}
-
-/* Card styles */
-.card-organic {
-    @apply bg-white dark:bg-gray-800 rounded-2xl border border-border shadow-soft hover:shadow-soft-lg transition-all duration-300;
-}
-
-/* Input styles */
-.input-clean {
-    @apply rounded-xl border-border bg-background focus:ring-primary focus:border-primary h-12 px-4;
-}
-
-/* Mobile navigation */
-.mobile-nav {
-    @apply fixed left-0 right-0 border-t border-border z-50;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.97);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-.dark .mobile-nav {
-    background: rgba(17, 24, 39, 0.97);
-}
-
-.mobile-nav-item {
-    @apply flex flex-col items-center justify-center py-1.5 px-2 text-muted-foreground transition-colors duration-200 min-w-0;
-}
-
-.mobile-nav-item.active {
-    @apply text-primary;
-}
-
-.mobile-nav-item:hover {
-    @apply text-primary/80;
-}
-
-/* Page container */
+/* ── Page container ─────────────────────── */
 .page-container {
-    @apply container mx-auto px-4 md:px-8;
-    padding-bottom: 100px; /* Space for mobile bottom nav */
+    @apply px-5 sm:px-6 max-w-2xl mx-auto;
 }
 
-@media (min-width: 768px) {
-    .page-container {
-        padding-bottom: 2rem;
-    }
+/* ── Card Organic ─────────────────────── */
+.card-organic {
+    @apply rounded-2xl border border-black/[0.04] dark:border-white/[0.06];
+    box-shadow: 0 4px 24px rgb(0 0 0 / 0.04);
 }
 
-/* Section spacing */
-.section-gap {
-    @apply space-y-8 md:space-y-12;
+/* ── Primary Button ─────────────────── */
+.btn-primary {
+    @apply bg-primary text-primary-foreground rounded-xl px-6 font-semibold transition-all duration-200 active:scale-[0.96];
+    box-shadow: 0 4px 14px 0 rgba(74,93,58,0.25);
+}
+.btn-primary:hover {
+    box-shadow: 0 6px 20px 0 rgba(74,93,58,0.35);
 }
 
-/* Avatar */
-.avatar-circle {
-    @apply w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold;
-}
-
-/* Badge */
-.badge-role {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-}
-
-.badge-admin {
-    @apply bg-red-100 text-red-800;
-}
-
-.badge-teacher {
-    @apply bg-blue-100 text-blue-800;
-}
-
-.badge-member {
-    @apply bg-green-100 text-green-800;
-}
-
-/* Empty state */
-.empty-state {
-    @apply flex flex-col items-center justify-center py-12 text-center;
-}
-
-.empty-state-icon {
-    @apply w-16 h-16 text-muted-foreground/50 mb-4;
-}
-
-.empty-state-text {
-    @apply text-muted-foreground;
-}
-
-/* Loading skeleton */
-.skeleton {
-    @apply bg-muted rounded animate-pulse;
-}
-
-/* Chat bubble */
+/* ── Chat Bubbles ───────────────────── */
 .chat-bubble {
-    @apply max-w-[80%] rounded-2xl px-4 py-2;
+    @apply px-4 py-2.5 max-w-[85%] text-sm leading-relaxed;
 }
-
 .chat-bubble-own {
-    @apply bg-primary text-primary-foreground ml-auto rounded-br-sm;
+    @apply bg-[#4a5d3a] text-white rounded-2xl rounded-br-md;
 }
-
 .chat-bubble-other {
-    @apply bg-muted text-foreground mr-auto rounded-bl-sm;
+    @apply bg-[#e8ebe6] text-[#2A3324] rounded-2xl rounded-bl-md;
+}
+.dark .chat-bubble-other {
+    @apply bg-[#2a3528] text-[#EAECE8];
 }
 
-/* Resource card */
-.resource-card {
-    @apply flex items-center gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors cursor-pointer;
-}
-
-/* Zoom button */
-.zoom-button {
-    @apply inline-flex items-center gap-2 bg-blue-500 text-white rounded-full px-6 py-3 font-semibold hover:bg-blue-600 transition-all duration-300 active:scale-95;
-}
-
-/* YouTube video wrapper */
+/* ── YouTube Wrapper ────────────────── */
 .youtube-wrapper {
-    @apply relative w-full rounded-xl overflow-hidden;
-    padding-bottom: 56.25%;
+    @apply relative w-full pb-[56.25%] overflow-hidden rounded-t-2xl;
 }
-
 .youtube-wrapper iframe {
     @apply absolute inset-0 w-full h-full;
 }
 
-/* Discussion comment */
-.comment-card {
-    @apply p-4 rounded-xl bg-muted/30 border border-border/50;
+/* ── Nav Links ──────────────────────── */
+.nav-link {
+    @apply text-muted-foreground transition-colors duration-200;
+}
+.nav-link:hover {
+    @apply text-foreground;
+}
+.nav-link-active {
+    @apply text-primary font-semibold;
 }
 
-/* Form group */
-.form-group {
-    @apply space-y-2;
+/* ── Mobile Floating Bottom Nav ─────── */
+.bottom-nav-float {
+    @apply fixed bottom-4 left-4 right-4 z-50 rounded-full px-2 py-2 flex items-center justify-around;
+    background: hsl(var(--background) / 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid hsl(var(--border) / 0.5);
+    box-shadow: 0 8px 32px rgb(0 0 0 / 0.08), 0 1px 3px rgb(0 0 0 / 0.04);
+}
+.dark .bottom-nav-float {
+    background: hsl(var(--background) / 0.9);
+    box-shadow: 0 8px 32px rgb(0 0 0 / 0.3);
 }
 
-.form-label {
-    @apply text-sm font-medium text-foreground;
+/* ── Lesson Tabs (Underline style) ──── */
+.lesson-tab {
+    @apply relative pb-2 px-4 text-sm font-semibold tracking-wide transition-colors duration-200 cursor-pointer;
+    font-family: 'Manrope', sans-serif;
 }
-
-/* Status indicators */
-.status-dot {
-    @apply w-2 h-2 rounded-full;
+.lesson-tab-inactive {
+    @apply text-muted-foreground;
 }
-
-.status-online {
-    @apply bg-green-500;
+.lesson-tab-active {
+    @apply text-primary;
 }
-
-.status-offline {
-    @apply bg-gray-400;
-}
-
-/* Notification badge */
-.notification-badge {
-    @apply absolute -top-1 -right-1 w-5 h-5 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center font-bold;
-}
-
-/* Tabs */
-.tab-list {
-    @apply flex gap-1 p-1 bg-muted rounded-xl;
-}
-
-.tab-trigger {
-    @apply flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors;
-}
-
-.tab-trigger[data-state="active"] {
-    @apply bg-white text-primary shadow-sm;
-}
-
-.tab-trigger[data-state="inactive"] {
-    @apply text-muted-foreground hover:text-foreground;
+.lesson-tab-active::after {
+    content: '';
+    @apply absolute bottom-0 left-1/2 -translate-x-1/2 h-[2.5px] w-8 bg-primary rounded-full;
 }

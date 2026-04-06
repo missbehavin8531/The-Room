@@ -3,9 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Card, CardContent } from '../components/ui/card';
 import { toast } from 'sonner';
-import { BookOpen, Loader2, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowRight } from 'lucide-react';
+
+const LOGIN_BG = "https://images.unsplash.com/photo-1761342352872-d50e9b69ebf2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MjJ8MHwxfHNlYXJjaHwxfHxjYWxtJTIwbmF0dXJlJTIwZm9yZXN0JTIwbW9ybmluZyUyMGxpZ2h0fGVufDB8fHx8MTc3NTUxMjY4OXww&ixlib=rb-4.1.0&q=85&w=1200";
 
 export const Login = () => {
     const [email, setEmail] = useState('');
@@ -20,7 +21,6 @@ export const Login = () => {
             toast.error('Please fill in all fields');
             return;
         }
-
         setLoading(true);
         try {
             const user = await login(email, password);
@@ -39,47 +39,61 @@ export const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-                {/* Logo */}
-                <div className="text-center mb-8 animate-fade-in">
-                    <img 
-                        src="/logo.png" 
-                        alt="The Room" 
-                        className="w-32 h-32 mx-auto mb-4 rounded-2xl"
-                    />
-                    <h1 className="font-serif text-3xl font-bold">The Room</h1>
-                    <p className="text-muted-foreground mt-2 text-sm max-w-xs mx-auto">
-                        A weekly discipleship hub: meet live, share resources, discuss, and follow up.
-                    </p>
-                </div>
+        <div className="min-h-screen relative flex items-end sm:items-center justify-center overflow-hidden">
+            {/* Background Image */}
+            <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${LOGIN_BG})` }}
+            />
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
-                <Card className="card-organic animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                    <CardContent className="p-6">
+            {/* Card */}
+            <div className="relative z-10 w-full max-w-md p-5 pb-10 sm:pb-5 animate-fade-in">
+                <div className="rounded-3xl border border-white/20 overflow-hidden"
+                    style={{
+                        background: 'rgba(255,255,255,0.82)',
+                        backdropFilter: 'blur(24px)',
+                        WebkitBackdropFilter: 'blur(24px)',
+                        boxShadow: '0 20px 60px rgb(0 0 0 / 0.2)',
+                    }}
+                >
+                    <div className="p-8 sm:p-10">
+                        {/* Logo & Title */}
+                        <div className="text-center mb-8">
+                            <img
+                                src="/logo.png"
+                                alt="The Room"
+                                className="w-20 h-20 mx-auto mb-4 rounded-2xl shadow-lg"
+                            />
+                            <h1 className="text-3xl font-medium tracking-tight text-[#2A3324]" style={{ fontFamily: "'Fraunces', serif" }}>
+                                The Room
+                            </h1>
+                            <p className="text-[#5a6b52] text-sm mt-1.5" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                                Meet live, share resources, discuss, and follow up.
+                            </p>
+                        </div>
+
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                                <Input
-                                    type="email"
-                                    placeholder="Email address"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="input-clean py-6 text-base"
-                                    data-testid="login-email-input"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Input
-                                    type="password"
-                                    placeholder="Password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="input-clean py-6 text-base"
-                                    data-testid="login-password-input"
-                                />
-                            </div>
+                            <Input
+                                type="email"
+                                placeholder="Email address"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="py-6 text-base !bg-white/50 !border-transparent focus:!bg-white focus:!border-[#4a5d3a] rounded-xl"
+                                data-testid="login-email-input"
+                            />
+                            <Input
+                                type="password"
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="py-6 text-base !bg-white/50 !border-transparent focus:!bg-white focus:!border-[#4a5d3a] rounded-xl"
+                                data-testid="login-password-input"
+                            />
                             <Button
                                 type="submit"
-                                className="w-full btn-primary py-6 text-lg"
+                                className="w-full btn-primary py-6 text-lg rounded-xl"
                                 disabled={loading}
                                 data-testid="login-submit-btn"
                             >
@@ -94,30 +108,27 @@ export const Login = () => {
                             </Button>
                         </form>
 
-                        <div className="mt-4 text-center">
-                            <Link 
-                                to="/forgot-password" 
-                                className="text-sm text-muted-foreground hover:text-primary hover:underline"
+                        <div className="mt-5 text-center space-y-2">
+                            <Link
+                                to="/forgot-password"
+                                className="text-sm text-[#5a6b52] hover:text-[#4a5d3a] hover:underline"
                                 data-testid="forgot-password-link"
                             >
                                 Forgot your password?
                             </Link>
-                        </div>
-
-                        <div className="mt-4 text-center">
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-[#5a6b52]">
                                 New here?{' '}
-                                <Link 
-                                    to="/register" 
-                                    className="text-primary hover:underline font-medium"
+                                <Link
+                                    to="/register"
+                                    className="text-[#4a5d3a] hover:underline font-semibold"
                                     data-testid="register-link"
                                 >
                                     Create account
                                 </Link>
                             </p>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
         </div>
     );

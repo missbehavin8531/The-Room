@@ -211,17 +211,13 @@ export const Chat = () => {
 
     return (
         <Layout>
-            <div className="page-container py-6 h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] flex flex-col">
+            <div className="page-container py-6 h-[calc(100vh-10rem)] md:h-[calc(100vh-6rem)] flex flex-col">
                 {/* Header */}
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-3 flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-serif font-bold flex items-center gap-2">
-                            <MessageCircle className="w-6 h-6 text-primary" />
-                            Community Chat
+                        <h1 className="text-xl font-bold" style={{ fontFamily: "'Fraunces', serif" }}>
+                            Community
                         </h1>
-                        <p className="text-muted-foreground text-sm">
-                            Connect with fellow members
-                        </p>
                     </div>
                     <div className="flex items-center gap-2" data-testid="chat-status">
                         {onlineCount > 0 && (
@@ -257,77 +253,62 @@ export const Chat = () => {
                                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
                             </div>
                         ) : messages.length > 0 ? (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 {messages.map((message) => {
                                     const isOwn = message.user_id === user?.id;
                                     return (
                                         <div
                                             key={message.id}
                                             className={cn(
-                                                "flex gap-3",
+                                                "group/msg flex gap-2.5",
                                                 isOwn && "flex-row-reverse",
-                                                message.is_hidden && "opacity-50"
+                                                message.is_hidden && "opacity-40"
                                             )}
                                             data-testid={`chat-message-${message.id}`}
                                         >
-                                            <Avatar className="w-8 h-8 flex-shrink-0">
-                                                <AvatarFallback className={cn(
-                                                    "text-xs",
-                                                    isOwn ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
-                                                )}>
-                                                    {getInitials(message.user_name)}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div className={cn(
-                                                "max-w-[75%]",
-                                                isOwn && "text-right"
-                                            )}>
-                                                <div className="flex items-center gap-2 mb-1">
+                                            {!isOwn && (
+                                                <Avatar className="w-7 h-7 flex-shrink-0 mt-5">
+                                                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                                                        {getInitials(message.user_name)}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                            )}
+                                            <div className={cn("max-w-[78%]", isOwn && "text-right")}>
+                                                <div className={cn("flex items-center gap-2 mb-0.5", isOwn && "justify-end")}>
                                                     {!isOwn && (
-                                                        <span className="text-sm font-medium">{message.user_name}</span>
+                                                        <span className="text-xs font-semibold">{message.user_name}</span>
                                                     )}
-                                                    <span className="text-xs text-muted-foreground">
+                                                    <span className="text-[11px] text-muted-foreground">
                                                         {formatRelativeTime(message.created_at)}
                                                     </span>
-                                                    {message.is_hidden && (
-                                                        <span className="text-xs bg-muted px-1.5 py-0.5 rounded">Hidden</span>
-                                                    )}
                                                 </div>
                                                 <div className={cn(
                                                     "chat-bubble inline-block text-left",
                                                     isOwn ? "chat-bubble-own" : "chat-bubble-other"
                                                 )}>
-                                                    <p className="text-sm">{message.content}</p>
+                                                    <p className="text-sm leading-relaxed">{message.content}</p>
                                                 </div>
 
-                                                {/* Moderation actions */}
+                                                {/* Moderation — hidden until hover */}
                                                 {isTeacherOrAdmin && (
                                                     <div className={cn(
-                                                        "flex gap-1 mt-1",
+                                                        "flex gap-0.5 mt-0.5 opacity-0 group-hover/msg:opacity-100 transition-opacity",
                                                         isOwn ? "justify-end" : "justify-start"
                                                     )}>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
+                                                        <button
                                                             onClick={() => handleHideMessage(message.id, !message.is_hidden)}
-                                                            className="p-1 h-auto"
+                                                            className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
                                                             data-testid={`hide-msg-${message.id}`}
                                                         >
-                                                            {message.is_hidden ? (
-                                                                <Eye className="w-3 h-3" />
-                                                            ) : (
-                                                                <EyeOff className="w-3 h-3" />
-                                                            )}
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
+                                                            {message.is_hidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                                                        </button>
+                                                        <button
                                                             onClick={() => handleDeleteMessage(message.id)}
-                                                            className="p-1 h-auto text-destructive"
+                                                            className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                                                             data-testid={`delete-msg-${message.id}`}
                                                         >
                                                             <Trash2 className="w-3 h-3" />
-                                                        </Button>
+                                                        </button>
                                                     </div>
                                                 )}
                                             </div>
@@ -356,29 +337,31 @@ export const Chat = () => {
                     )}
 
                     {/* Message Input */}
-                    <div className="p-4 border-t border-border">
-                        <form onSubmit={handleSendMessage} className="flex gap-3">
-                            <Input
-                                ref={inputRef}
-                                placeholder="Type a message..."
-                                value={newMessage}
-                                onChange={handleInputChange}
-                                className="flex-grow"
-                                disabled={sending}
-                                data-testid="chat-input"
-                            />
-                            <Button
-                                type="submit"
-                                disabled={sending || !newMessage.trim()}
-                                className="btn-primary"
-                                data-testid="chat-send-btn"
-                            >
-                                {sending ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                    <Send className="w-4 h-4" />
-                                )}
-                            </Button>
+                    <div className="p-3 border-t border-border">
+                        <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+                            <div className="flex-grow relative">
+                                <Input
+                                    ref={inputRef}
+                                    placeholder="Message..."
+                                    value={newMessage}
+                                    onChange={handleInputChange}
+                                    className="!rounded-full !pr-10 !py-5 text-sm"
+                                    disabled={sending}
+                                    data-testid="chat-input"
+                                />
+                                <Button
+                                    type="submit"
+                                    disabled={sending || !newMessage.trim()}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 w-8 p-0 rounded-full btn-primary"
+                                    data-testid="chat-send-btn"
+                                >
+                                    {sending ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Send className="w-4 h-4" />
+                                    )}
+                                </Button>
+                            </div>
                         </form>
                     </div>
                 </Card>
