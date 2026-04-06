@@ -43,10 +43,12 @@ async def get_courses(user: dict = Depends(require_approved)):
     match_stage = {}
     if not is_teacher:
         match_stage['is_published'] = True
-    if group_ids:
-        match_stage['group_id'] = {'$in': group_ids}
-    elif group_id:
-        match_stage['group_id'] = group_id
+    # Admin sees ALL courses globally; teachers/members see only their group's
+    if user['role'] != 'admin':
+        if group_ids:
+            match_stage['group_id'] = {'$in': group_ids}
+        elif group_id:
+            match_stage['group_id'] = group_id
     
     pipeline = [
         {'$match': match_stage},
