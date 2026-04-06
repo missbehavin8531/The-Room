@@ -1,126 +1,104 @@
 {
-  "theme": "light",
-  "archetype": "Organic & Earthy",
-  "design_philosophy": "Create a warm, grounding, and emotionally resonant dashboard. Emphasize soft edges, generous breathing room (negative space), and clear typography. Avoid the generic 'SaaS dashboard' aesthetic. The design should feel tactile, like a quiet, intentional space for growth.",
+  "project_name": "The Room",
+  "domain": "Church Discipleship Platform",
+  "theme": "Light Mode Primary (Dark Mode Supported)",
+  "archetype": "1 (Organic & Earthy)",
+  "core_philosophy": "Warmth, Trust, Calm, and Community. The UI should feel like a premium, tactile journal or a peaceful retreat. Avoid clinical 'SaaS' defaults. Use generous spacing, soft shadows, and deep earthy colors.",
   "colors": {
-    "light": {
-      "background": "#F2EFE9",
-      "surface": "#FFFFFF",
-      "surface_alt": "#EBE8DE",
-      "primary": "#4A5D3A",
-      "primary_hover": "#3D4D30",
-      "primary_light": "#E5EBE0",
-      "text_main": "#1C2316",
-      "text_muted": "#5C6B50",
-      "border": "#E2DFD3",
-      "accent_warm": "#C47C56"
+    "primary": "#4a5d3a",
+    "primary_foreground": "#ffffff",
+    "background_light": "#F9F8F6",
+    "background_dark": "#1A1F18",
+    "card_light": "#FFFFFF",
+    "card_dark": "#232A21",
+    "text_light": "#2A3324",
+    "text_dark": "#EAECE8",
+    "sage_palette": {
+      "50": "#f6f7f5",
+      "100": "#e8ebe6",
+      "200": "#d4dbd0",
+      "300": "#b5c1ad",
+      "400": "#8fa383",
+      "500": "#4A6741",
+      "600": "#3d5536",
+      "900": "#232e21"
     },
-    "dark": {
-      "background": "#12160F",
-      "surface": "#1C2217",
-      "surface_alt": "#252B1E",
-      "primary": "#8AA673",
-      "primary_hover": "#9CBA84",
-      "primary_light": "#2D3823",
-      "text_main": "#F5F3EB",
-      "text_muted": "#A3B396",
-      "border": "#2E3626",
-      "accent_warm": "#D99371"
-    }
+    "bone": "#F2F0E9"
   },
   "typography": {
-    "font_imports": [
-      "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
-    ],
-    "headings": {
-      "family": "'Fraunces', serif",
-      "weights": ["300", "500", "600"],
-      "h1": "text-4xl sm:text-5xl tracking-tight leading-none",
-      "h2": "text-2xl sm:text-3xl tracking-tight",
-      "h3": "text-xl sm:text-2xl",
-      "h4": "text-lg sm:text-xl font-medium"
+    "fonts": {
+      "heading": "Fraunces, serif",
+      "body": "Manrope, sans-serif"
     },
-    "body": {
-      "family": "'Manrope', sans-serif",
-      "weights": ["400", "500", "600"],
-      "base": "text-base leading-relaxed tracking-wide",
-      "small": "text-sm leading-normal",
-      "label": "text-xs uppercase tracking-[0.2em] font-bold"
+    "rules": {
+      "h1": "text-4xl sm:text-5xl tracking-tight leading-none font-medium",
+      "h2": "text-2xl sm:text-3xl tracking-tight leading-tight font-medium",
+      "h3": "text-xl sm:text-2xl tracking-tight",
+      "body": "text-base leading-relaxed",
+      "meta": "text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground"
     }
   },
   "spacing_and_layout": {
-    "container": "w-full max-w-md mx-auto px-6",
-    "bottom_padding": "pb-[100px]",
-    "section_gap": "gap-10",
-    "item_gap": "gap-4",
-    "radius": {
-      "card": "rounded-[2rem]",
-      "button": "rounded-full",
-      "image": "rounded-2xl",
-      "pill": "rounded-full"
-    },
-    "bento_grid": "grid grid-cols-2 gap-4",
-    "surface_styles": {
-      "card_organic": "bg-white dark:bg-[#1C2217] shadow-[0_8px_30px_rgba(74,93,58,0.06)] dark:shadow-none border border-[#1C2316]/5 dark:border-white/5",
-      "card_flat": "bg-[#EBE8DE] dark:bg-[#252B1E] border-none",
-      "glass": "bg-white/70 dark:bg-[#12160F]/60 backdrop-blur-xl backdrop-saturate-150 border border-white/40 dark:border-white/10 shadow-sm"
-    }
+    "padding": "Generous spacing. Use p-6 to p-8 inside cards.",
+    "border_radius": "Rounded-2xl for main cards, rounded-full for buttons and pills.",
+    "shadows": "Tactile Neumorphism. Use soft, wide ambient shadows with a 1px inner border for definition (e.g., shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/5)."
   },
   "components": {
-    "welcome_section": {
-      "layout": "Flex column, generous top padding (pt-12). Left-aligned.",
-      "text": "Greeting label in text_muted, Name in Fraunces H1. Adds emotional intimacy immediately."
+    "login_page": {
+      "background": "Use a full-bleed warm background image with a subtle dark gradient overlay at the bottom.",
+      "card": "Crystal Glassmorphism. backdrop-blur-2xl, bg-white/70 (light) or bg-black/60 (dark). 1px border-white/40.",
+      "inputs": "Soft, pill-shaped inputs. bg-white/50 border-transparent focus:border-primary focus:bg-white transition-all.",
+      "spacing": "Remove dead whitespace above the logo. Center the card vertically with visual weight adjustment."
     },
-    "lesson_card": {
-      "style": "card_organic relative overflow-hidden rounded-[2.5rem] p-8",
-      "background": "Use the primary color bg-[#4A5D3A]. Text inside must be pure white (#FFFFFF) for contrast.",
-      "image_overlay": "Apply abstract nature image with mix-blend-overlay and 20% opacity. Never use a heavy black blanket.",
-      "progress_bar": "Custom segmented tracker. 5 rounded pills side-by-side. Active=bg-white, inactive=bg-white/20.",
-      "content": "Title in Fraunces H2, Date in small label, Description in body text."
+    "bottom_navigation": {
+      "layout": "Floating pill design instead of full-width bottom bar. bottom-4, rounded-full mx-4 px-6.",
+      "surface": "backdrop-blur-2xl bg-background/90 border border-border/50 shadow-lg.",
+      "icons": "Switch to @phosphor-icons/react. Use 'Regular' weight for inactive, 'Fill' weight for active states. Scale up icon size slightly.",
+      "active_state": "Replace subtle tint with a distinct indicator (e.g., a dot underneath or primary colored fill icon + bold text)."
     },
-    "quick_actions": {
-      "layout": "Asymmetrical row or scattered bento items rather than a boring equal grid.",
-      "buttons": "Circular or Squircle shape, prominent icons. Duotone icons inside rounded-full containers with 'card_flat' surface style."
+    "chat_page": {
+      "bubbles": {
+        "own": "Solid Primary (bg-[#4a5d3a]) with white text. rounded-2xl rounded-br-sm.",
+        "others": "Soft Sage (bg-sage-100 dark:bg-sage-900/50) with dark text. rounded-2xl rounded-bl-sm."
+      },
+      "moderation_icons": "Hide by default. Wrap message in a 'group' and use 'opacity-0 group-hover:opacity-100 transition-opacity' for hide/delete icons to reduce visual noise.",
+      "input_area": "Attach smoothly to the bottom. Use a cohesive pill-shaped input field with an integrated send button (circular icon button)."
     },
-    "stats_bento": {
-      "layout": "grid-cols-2 gap-4",
-      "items": [
-        "Streak: col-span-1 row-span-2 (Tall card, large number in Fraunces H1)",
-        "Completed Lessons: col-span-1 row-span-1 (Square card)",
-        "Enrolled: col-span-1 row-span-1 (Square card)"
-      ]
+    "lesson_tabs": {
+      "style": "Elegant sliding tabs. Avoid chunky pills.",
+      "implementation": "Use Framer Motion 'layoutId' for a subtle background highlight behind active text, OR use a clean 2px sliding underline. Text should be font-medium, not button-like."
     },
-    "recent_chat": {
-      "style": "glass card, floating over the background, previewing 1-2 messages. Avatar + Manrope body."
+    "course_cards": {
+      "image": "Add a gradient overlay at the bottom of the image (bg-gradient-to-t from-black/60 to-transparent) to ensure smooth transition to text.",
+      "meta_text": "Apply typography.rules.meta (uppercase, wide tracking, small size) for enrolled counts and lessons.",
+      "enroll_button": "Do not stretch full width. Use a fitted 'rounded-full px-6' button or a circular floating action button (FAB) with an ArrowRight icon overlaid on the bottom right of the image."
     },
-    "schedule": {
-      "layout": "Vertical list with timeline-style connector. Uses generous gap-6 spacing."
+    "settings_page": {
+      "layout": "iOS-style grouped lists. Group related settings into a single 'card-organic' container with internal rows separated by 'border-b last:border-0'.",
+      "icons": "Wrap setting icons in soft, colorful, rounded-lg backgrounds (e.g., bg-primary/10 text-primary) to create visual hierarchy."
+    },
+    "global_inputs_and_buttons": {
+      "inputs": "Remove harsh borders on default state. Use a soft fill (bg-muted/50), rounding (rounded-xl), and only show primary border/ring on focus.",
+      "buttons": "Must include 'active:scale-95 transition-all duration-200'. Primary buttons should have a subtle colored shadow (shadow-[0_4px_14px_0_rgba(74,93,58,0.39)])."
     }
   },
-  "motion": {
-    "page_load": "Staggered fade-up (y: 20, opacity: 0) on containers.",
-    "hover": "Subtle scale (scale-95 on press), hover:-translate-y-1 for cards.",
-    "celebration": "When 5 steps done, trigger an organic, warm sunburst or floating leaves animation rather than generic confetti."
-  },
   "media": {
-    "image_urls": [
-      {
-        "url": "https://images.unsplash.com/photo-1744457167322-1e193924a1fe?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA4Mzl8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMG5hdHVyZSUyMGJhY2tncm91bmQlMjBvbGl2ZSUyMGdyZWVuJTIwd2FybXxlbnwwfHx8fDE3NzU1MTA0OTN8MA&ixlib=rb-4.1.0&q=85",
-        "category": "lesson_card_background",
-        "description": "Abstract olive green flowing shapes for the hero 'This Week's Lesson' card. Mix blend to act as texture."
-      },
-      {
-        "url": "https://images.unsplash.com/photo-1591539052428-984a8f2006c6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjd8MHwxfHNlYXJjaHwyfHxwZW9wbGUlMjBzbWFsbCUyMGdyb3VwJTIwY29udmVyc2F0aW9uJTIwd2FybXxlbnwwfHx8fDE3NzU1MTA0ODh8MA&ixlib=rb-4.1.0&q=85",
-        "category": "community_thumbnail",
-        "description": "Small group of people talking, for the chat or courses section."
-      }
-    ]
+    "login_background": {
+      "url": "https://images.unsplash.com/photo-1761342352872-d50e9b69ebf2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MjJ8MHwxfHNlYXJjaHwxfHxjYWxtJTIwbmF0dXJlJTIwZm9yZXN0JTIwbW9ybmluZyUyMGxpZ2h0fGVufDB8fHx8MTc3NTUxMjY4OXww&ixlib=rb-4.1.0&q=85",
+      "description": "Warm morning sunlight streaming through forest trees, conveying peace and spiritual awakening. Use as full-bleed background."
+    },
+    "course_placeholder": {
+      "url": "https://images.unsplash.com/photo-1679560051901-90499016475a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MjJ8MHwxfHNlYXJjaHwzfHxjYWxtJTIwbmF0dXJlJTIwZm9yZXN0JTIwbW9ybmluZyUyMGxpZ2h0fGVufDB8fHx8MTc3NTUxMjY4OXww&ixlib=rb-4.1.0&q=85",
+      "description": "Calm nature scene for course card placeholders."
+    }
   },
-  "technical_instructions": {
-    "dependencies": "Install @phosphor-icons/react and framer-motion.",
-    "icons": "Use Phosphor Icons (Duotone weight) for all UI icons to match the warm organic feel.",
-    "testing": "Ensure all interactive elements have data-testid attributes (e.g., data-testid='lesson-card-start').",
-    "mobile_first": "Design specifically for mobile. Desktop should show this in a centered max-w-md view or scaled up gracefully. Keep the bottom nav padding pb-[100px].",
-    "typography_setup": "Add Fraunces and Manrope imports to index.css and define them in tailwind.config.js."
-  }
+  "dependencies_to_add": [
+    "framer-motion",
+    "@phosphor-icons/react"
+  ],
+  "accessibility_and_testing": {
+    "focus_states": "Ensure all interactive elements have focus-visible ring.",
+    "testing": "All interactive elements MUST include data-testid attribute (e.g., data-testid='login-submit-button')."
+  },
+  "instructions_to_main_agent": "Implement these changes across the React components. Start by updating index.css and App.css with the new color and spacing variables. Then, refactor the bottom nav to use Phosphor icons and a floating pill layout. Update the Chat page to differentiate message bubbles and hide moderation tools behind hover/group states. Fix the Course Cards by adjusting the button and meta typography. Finally, refactor the Settings page into grouped lists."
 }
