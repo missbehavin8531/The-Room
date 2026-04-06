@@ -118,6 +118,8 @@
   - Chat: iMessage-like asymmetric bubbles (dark olive own, light sage others), pill input with circular send, moderation hidden until hover
   - CSS Architecture: Full rewrite of index.css and App.css for consistency
   - Courses Page: Wider image aspect (2.4:1), frosted-glass meta chips on image, compact inline Enroll pill, single-column stacked layout, stagger-in animations
+  - CourseDetail Page: Hero banner with gradient overlay + meta badges, compact admin icon row, numbered lesson circles, stagger animations (DONE 4/6/2026)
+  - Progress Page: Bento stat grid (streak/lessons/courses), SVG ring overall progress, card-based course progress with progress bars, card-based student list with avatars, underline tabs (DONE 4/6/2026)
 
 ---
 
