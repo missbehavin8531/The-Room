@@ -6,7 +6,6 @@ import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
-import { Progress } from '../components/ui/progress';
 import { coursesAPI, lessonsAPI } from '../lib/api';
 import { toast } from 'sonner';
 import { EmptyState } from '../components/EmptyState';
@@ -14,9 +13,9 @@ import { CoursesSkeleton } from '../components/LoadingSkeleton';
 import { LessonCalendar } from '../components/LessonCalendar';
 import { CourseWizard } from '../components/CourseWizard';
 import { LessonWizard } from '../components/LessonWizard';
-import { 
-    BookOpen, Plus, Search, Users, Video, 
-    UserPlus, UserMinus, Calendar, Grid3X3, Eye, EyeOff
+import {
+    BookOpen, Plus, Search, Users,
+    UserPlus, UserMinus, Calendar, Grid3X3, EyeOff, ChevronRight, Loader2
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -29,15 +28,13 @@ export const Courses = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState('grid');
     const [enrolling, setEnrolling] = useState(null);
-    
+
     // Wizard states
     const [showCourseWizard, setShowCourseWizard] = useState(false);
     const [showLessonWizard, setShowLessonWizard] = useState(false);
     const [newCourseForLesson, setNewCourseForLesson] = useState(null);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    useEffect(() => { fetchData(); }, []);
 
     const fetchData = async () => {
         try {
@@ -57,34 +54,32 @@ export const Courses = () => {
     const handleCourseCreated = (course, shouldStartLessonWizard = false) => {
         setCourses([course, ...courses]);
         setShowCourseWizard(false);
-        
         if (shouldStartLessonWizard) {
-            // Immediately start the lesson wizard for the new course
             setNewCourseForLesson(course);
             setShowLessonWizard(true);
         }
     };
-    
+
     const handleLessonCreated = (lesson) => {
         setAllLessons([...allLessons, lesson]);
         setShowLessonWizard(false);
-        setNewCourseForLesson(null);
-        // Navigate to the course detail page
-        if (newCourseForLesson) {
-            navigate(`/courses/${newCourseForLesson.id}`);
-        }
-    };
-    
-    const handleLessonWizardClose = () => {
-        setShowLessonWizard(false);
-        // Still navigate to the course if wizard was closed without creating a lesson
         if (newCourseForLesson) {
             navigate(`/courses/${newCourseForLesson.id}`);
             setNewCourseForLesson(null);
         }
     };
 
-    const handleEnroll = async (courseId, isEnrolled) => {
+    const handleLessonWizardClose = () => {
+        setShowLessonWizard(false);
+        if (newCourseForLesson) {
+            navigate(`/courses/${newCourseForLesson.id}`);
+            setNewCourseForLesson(null);
+        }
+    };
+
+    const handleEnroll = async (e, courseId, isEnrolled) => {
+        e.preventDefault();
+        e.stopPropagation();
         setEnrolling(courseId);
         try {
             if (isEnrolled) {
@@ -94,13 +89,13 @@ export const Courses = () => {
                 await coursesAPI.enroll(courseId);
                 toast.success('Enrolled in course!');
             }
-            setCourses(courses.map(c => 
-                c.id === courseId 
-                    ? { 
-                        ...c, 
+            setCourses(courses.map(c =>
+                c.id === courseId
+                    ? {
+                        ...c,
                         is_enrolled: !isEnrolled,
                         enrollment_count: isEnrolled ? c.enrollment_count - 1 : c.enrollment_count + 1
-                    } 
+                    }
                     : c
             ));
         } catch (error) {
@@ -110,9 +105,7 @@ export const Courses = () => {
         }
     };
 
-    const handleLessonClick = (lesson) => {
-        navigate(`/lessons/${lesson.id}`);
-    };
+    const handleLessonClick = (lesson) => { navigate(`/lessons/${lesson.id}`); };
 
     const filteredCourses = courses.filter(course =>
         course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -132,58 +125,61 @@ export const Courses = () => {
 
     return (
         <Layout>
-            <div className="page-container py-6 space-y-6">
+            <div className="page-container py-6 space-y-5 max-w-2xl mx-auto">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-serif font-bold">Courses</h1>
-                        <p className="text-muted-foreground">Explore and learn from our courses</p>
-                    </div>
-                    
-                    <div className="flex gap-2">
+                <div className="flex items-center justify-between animate-fade-in">
+                    <h1 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Fraunces', serif" }}>
+                        Courses
+                    </h1>
+                    <div className="flex items-center gap-2">
                         {/* View Toggle */}
-                        <div className="flex gap-1 p-1 bg-muted rounded-lg">
-                            <Button
-                                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                                size="sm"
+                        <div className="flex p-0.5 bg-muted rounded-xl">
+                            <button
                                 onClick={() => setViewMode('grid')}
-                                className="rounded-md"
+                                className={cn(
+                                    "p-2 rounded-lg transition-all",
+                                    viewMode === 'grid'
+                                        ? "bg-background shadow-sm text-foreground"
+                                        : "text-muted-foreground"
+                                )}
                                 data-testid="view-grid-btn"
                             >
                                 <Grid3X3 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                                variant={viewMode === 'calendar' ? 'default' : 'ghost'}
-                                size="sm"
+                            </button>
+                            <button
                                 onClick={() => setViewMode('calendar')}
-                                className="rounded-md"
+                                className={cn(
+                                    "p-2 rounded-lg transition-all",
+                                    viewMode === 'calendar'
+                                        ? "bg-background shadow-sm text-foreground"
+                                        : "text-muted-foreground"
+                                )}
                                 data-testid="view-calendar-btn"
                             >
                                 <Calendar className="w-4 h-4" />
-                            </Button>
+                            </button>
                         </div>
-
                         {isTeacherOrAdmin && (
-                            <Button 
-                                className="btn-primary" 
+                            <Button
+                                className="btn-primary h-9 rounded-xl text-sm"
                                 onClick={() => setShowCourseWizard(true)}
                                 data-testid="create-course-btn"
                             >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Create Course
+                                <Plus className="w-4 h-4 mr-1" />
+                                New
                             </Button>
                         )}
                     </div>
                 </div>
 
                 {/* Search */}
-                <div className="relative max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <div className="relative animate-fade-in" style={{ animationDelay: '0.05s' }}>
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         placeholder="Search courses..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 input-clean"
+                        className="pl-10 !rounded-xl"
                         data-testid="search-courses-input"
                     />
                 </div>
@@ -194,109 +190,115 @@ export const Courses = () => {
                 ) : (
                     <>
                         {filteredCourses.length > 0 ? (
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredCourses.map((course, index) => {
-                                    const progress = course.total_lessons > 0 
-                                        ? (course.completed_lessons / course.total_lessons) * 100 
+                            <div className="space-y-4 stagger-children">
+                                {filteredCourses.map((course) => {
+                                    const progress = course.total_lessons > 0
+                                        ? Math.round((course.completed_lessons / course.total_lessons) * 100)
                                         : 0;
-                                    
+                                    const lessonCount = course.lesson_count || course.total_lessons || 0;
+
                                     return (
-                                        <Card 
-                                            key={course.id} 
-                                            className="card-organic card-hover h-full overflow-hidden animate-fade-in"
-                                            style={{ animationDelay: `${index * 0.05}s` }}
-                                            data-testid={`course-card-${course.id}`}
+                                        <Link
+                                            to={`/courses/${course.id}`}
+                                            key={course.id}
+                                            className="block group"
                                         >
-                                            {/* Thumbnail */}
-                                            <Link to={`/courses/${course.id}`}>
-                                                <div className="aspect-video bg-muted relative overflow-hidden">
+                                            <Card
+                                                className="card-organic overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+                                                data-testid={`course-card-${course.id}`}
+                                            >
+                                                {/* Image */}
+                                                <div className="relative aspect-[2.4/1] bg-muted overflow-hidden">
                                                     {course.thumbnail_url ? (
                                                         <img
                                                             src={course.thumbnail_url}
                                                             alt={course.title}
-                                                            className="w-full h-full object-cover transition-transform hover:scale-105"
+                                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                         />
                                                     ) : (
                                                         <div className="absolute inset-0 flex items-center justify-center bg-primary/5">
-                                                            <BookOpen className="w-12 h-12 text-primary/30" />
+                                                            <BookOpen className="w-10 h-10 text-primary/20" />
                                                         </div>
                                                     )}
-                                                    {/* Draft badge for teachers */}
-                                                    {isTeacherOrAdmin && !course.is_published && (
-                                                        <Badge variant="secondary" className="absolute top-3 left-3">
-                                                            <EyeOff className="w-3 h-3 mr-1" />
-                                                            Draft
-                                                        </Badge>
-                                                    )}
-                                                    {course.is_enrolled && (
-                                                        <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs">
-                                                            Enrolled
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </Link>
-                                            
-                                            <CardContent className="p-4">
-                                                <Link to={`/courses/${course.id}`}>
-                                                    <h3 className="font-serif font-bold text-lg mb-2 line-clamp-2 hover:text-primary transition-colors">
-                                                        {course.title}
-                                                    </h3>
-                                                </Link>
-                                                <p className="text-muted-foreground text-sm line-clamp-2 mb-3">
-                                                    {course.description}
-                                                </p>
-                                                
-                                                {/* Progress bar for enrolled users */}
-                                                {course.is_enrolled && course.total_lessons > 0 && (
-                                                    <div className="mb-3">
-                                                        <div className="flex items-center justify-between text-xs mb-1">
-                                                            <span className="text-muted-foreground">Progress</span>
-                                                            <span className="font-medium">{course.completed_lessons}/{course.total_lessons}</span>
-                                                        </div>
-                                                        <Progress value={progress} className="h-1.5" />
+                                                    {/* Gradient scrim on image */}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                                                    {/* Badges */}
+                                                    <div className="absolute top-3 left-3 flex gap-2">
+                                                        {isTeacherOrAdmin && !course.is_published && (
+                                                            <Badge variant="secondary" className="bg-black/40 text-white border-0 backdrop-blur-sm text-[11px]">
+                                                                <EyeOff className="w-3 h-3 mr-1" />Draft
+                                                            </Badge>
+                                                        )}
                                                     </div>
-                                                )}
-                                                
-                                                <div className="flex items-center justify-between text-sm mb-3">
-                                                    <span className="text-muted-foreground flex items-center gap-1">
-                                                        <Users className="w-4 h-4" />
-                                                        {course.enrollment_count} enrolled
-                                                    </span>
-                                                    <span className="text-primary font-medium">
-                                                        {course.lesson_count || course.total_lessons} lessons
-                                                    </span>
+                                                    {/* Bottom-left meta chips on image */}
+                                                    <div className="absolute bottom-3 left-3 flex gap-2">
+                                                        <span className="flex items-center gap-1 bg-black/40 backdrop-blur-sm text-white text-[11px] font-medium px-2.5 py-1 rounded-full">
+                                                            <BookOpen className="w-3 h-3" />
+                                                            {lessonCount} {lessonCount === 1 ? 'lesson' : 'lessons'}
+                                                        </span>
+                                                        <span className="flex items-center gap-1 bg-black/40 backdrop-blur-sm text-white text-[11px] font-medium px-2.5 py-1 rounded-full">
+                                                            <Users className="w-3 h-3" />
+                                                            {course.enrollment_count}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                
-                                                {/* Enroll Button */}
-                                                <Button
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        handleEnroll(course.id, course.is_enrolled);
-                                                    }}
-                                                    variant={course.is_enrolled ? "outline" : "default"}
-                                                    className={cn(
-                                                        "w-full",
-                                                        course.is_enrolled ? "" : "btn-primary"
+
+                                                {/* Body */}
+                                                <CardContent className="p-4">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="flex-grow min-w-0">
+                                                            <h3 className="font-semibold text-base leading-snug mb-1 group-hover:text-primary transition-colors line-clamp-1" style={{ fontFamily: "'Fraunces', serif" }}>
+                                                                {course.title}
+                                                            </h3>
+                                                            <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                                                                {course.description}
+                                                            </p>
+                                                        </div>
+
+                                                        {/* Enroll CTA — small pill */}
+                                                        {course.is_enrolled ? (
+                                                            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                                                <Badge className="bg-primary/10 text-primary border-0 text-[11px] font-semibold px-2.5">
+                                                                    Enrolled
+                                                                </Badge>
+                                                                {progress > 0 && (
+                                                                    <span className="text-[11px] text-muted-foreground">{progress}%</span>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <Button
+                                                                size="sm"
+                                                                className="btn-primary h-8 rounded-xl text-xs flex-shrink-0"
+                                                                onClick={(e) => handleEnroll(e, course.id, false)}
+                                                                disabled={enrolling === course.id}
+                                                                data-testid={`enroll-${course.id}`}
+                                                            >
+                                                                {enrolling === course.id ? (
+                                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                                ) : (
+                                                                    <>
+                                                                        <UserPlus className="w-3.5 h-3.5 mr-1" />
+                                                                        Enroll
+                                                                    </>
+                                                                )}
+                                                            </Button>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Progress bar for enrolled */}
+                                                    {course.is_enrolled && course.total_lessons > 0 && (
+                                                        <div className="mt-3">
+                                                            <div className="h-1 bg-muted rounded-full overflow-hidden">
+                                                                <div
+                                                                    className="h-full bg-primary rounded-full transition-all duration-700"
+                                                                    style={{ width: `${progress}%` }}
+                                                                />
+                                                            </div>
+                                                        </div>
                                                     )}
-                                                    disabled={enrolling === course.id}
-                                                    data-testid={`enroll-${course.id}`}
-                                                >
-                                                    {enrolling === course.id ? (
-                                                        'Loading...'
-                                                    ) : course.is_enrolled ? (
-                                                        <>
-                                                            <UserMinus className="w-4 h-4 mr-2" />
-                                                            Unenroll
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <UserPlus className="w-4 h-4 mr-2" />
-                                                            Enroll Now
-                                                        </>
-                                                    )}
-                                                </Button>
-                                            </CardContent>
-                                        </Card>
+                                                </CardContent>
+                                            </Card>
+                                        </Link>
                                     );
                                 })}
                             </div>
@@ -306,9 +308,9 @@ export const Courses = () => {
                                     icon="courses"
                                     title={searchQuery ? 'No courses found' : 'No courses yet'}
                                     description={
-                                        searchQuery 
+                                        searchQuery
                                             ? 'Try adjusting your search terms'
-                                            : isTeacherOrAdmin 
+                                            : isTeacherOrAdmin
                                                 ? 'Create your first course to get started'
                                                 : 'Check back soon for new courses'
                                     }
@@ -324,16 +326,10 @@ export const Courses = () => {
                     </>
                 )}
             </div>
-            
-            {/* Course Creation Wizard */}
+
             {showCourseWizard && (
-                <CourseWizard
-                    onClose={() => setShowCourseWizard(false)}
-                    onSuccess={handleCourseCreated}
-                />
+                <CourseWizard onClose={() => setShowCourseWizard(false)} onSuccess={handleCourseCreated} />
             )}
-            
-            {/* Lesson Creation Wizard (triggered after course creation) */}
             {showLessonWizard && newCourseForLesson && (
                 <LessonWizard
                     courseId={newCourseForLesson.id}
