@@ -229,7 +229,7 @@ export const LessonDetail = () => {
 
     const handlePromptChange = async (promptId) => {
         setActivePromptId(promptId);
-        if (!promptReplies[promptId]) {
+        if (promptId && !promptReplies[promptId]) {
             await fetchPromptReplies(promptId);
         }
     };
@@ -550,15 +550,7 @@ export const LessonDetail = () => {
     const zoomLink = lesson.zoom_link || course?.zoom_link;
     const resources = lesson.resources || [];
     const primaryResource = resources.find(r => r.is_primary) || resources[0];
-    const activeReplies = promptReplies[activePromptId] || [];
     const activePrompt = prompts.find(p => p.id === activePromptId);
-
-    // Sort replies: pinned first
-    const sortedReplies = [...activeReplies].sort((a, b) => {
-        if (a.is_pinned && !b.is_pinned) return -1;
-        if (!a.is_pinned && b.is_pinned) return 1;
-        return new Date(a.created_at) - new Date(b.created_at);
-    });
 
     return (
         <Layout>
@@ -1243,160 +1235,179 @@ export const LessonDetail = () => {
                         </div>
 
                         {/* Discussion Prompts */}
-                        <div className="space-y-3">
-                            <h3 className="font-semibold flex items-center gap-2">
-                                <MessageCircle className="w-5 h-5" />
-                                Discussion
+                        <div className="space-y-4" data-testid="discussion-section">
+                            <h3 className="text-xs tracking-widest uppercase font-semibold text-muted-foreground" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                                Discussion Questions
                             </h3>
                             
                             {prompts.length > 0 ? (
-                                <>
-                                    {/* Prompt Tabs */}
-                                    {prompts.length > 1 && (
-                                        <div className="flex gap-2 overflow-x-auto pb-2">
-                                            {prompts.map((prompt, idx) => (
-                                                <Button
-                                                    key={prompt.id}
-                                                    variant={activePromptId === prompt.id ? "default" : "outline"}
-                                                    size="sm"
-                                                    onClick={() => handlePromptChange(prompt.id)}
-                                                    className="flex-shrink-0"
+                                <div className="space-y-4">
+                                    {prompts.map((prompt, idx) => {
+                                        const isActive = activePromptId === prompt.id;
+                                        const replies = promptReplies[prompt.id] || [];
+                                        const pinnedReplies = replies.filter(r => r.is_pinned);
+                                        const otherReplies = replies.filter(r => !r.is_pinned).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                                        const allReplies = [...pinnedReplies, ...otherReplies];
+
+                                        return (
+                                            <Card
+                                                key={prompt.id}
+                                                className={cn(
+                                                    "card-organic overflow-hidden transition-all duration-300",
+                                                    isActive && "ring-1 ring-primary/30"
+                                                )}
+                                                data-testid={`prompt-card-${idx}`}
+                                            >
+                                                {/* Prompt Header — clickable to expand/collapse */}
+                                                <button
+                                                    className="w-full text-left p-5 flex items-start gap-4 group"
+                                                    onClick={() => handlePromptChange(isActive ? null : prompt.id)}
                                                     data-testid={`prompt-tab-${idx}`}
                                                 >
-                                                    Prompt {idx + 1}
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    )}
-                                    
-                                    {/* Active Prompt Question */}
-                                    {activePrompt && (
-                                        <Card className="card-organic bg-primary/5 border-primary/20">
-                                            <CardContent className="p-4">
-                                                <p className="font-medium text-primary" data-testid="active-prompt-question">
-                                                    {activePrompt.question}
-                                                </p>
-                                            </CardContent>
-                                        </Card>
-                                    )}
-                                    
-                                    {/* Reply Form */}
-                                    <Card className="card-organic">
-                                        <CardContent className="p-4">
-                                            <form onSubmit={handleSubmitReply} className="space-y-3">
-                                                <Textarea
-                                                    placeholder="Share your thoughts on this prompt..."
-                                                    value={newReply}
-                                                    onChange={(e) => setNewReply(e.target.value)}
-                                                    rows={3}
-                                                    data-testid="reply-input"
-                                                />
-                                                <Button 
-                                                    type="submit" 
-                                                    disabled={submittingReply || !newReply.trim()} 
-                                                    className="btn-primary"
-                                                    data-testid="submit-reply-btn"
-                                                >
-                                                    {submittingReply ? (
-                                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                                    ) : (
-                                                        <Send className="w-4 h-4 mr-2" />
-                                                    )}
-                                                    Submit Response
-                                                </Button>
-                                            </form>
-                                        </CardContent>
-                                    </Card>
-                                    
-                                    {/* Replies */}
-                                    <div className="space-y-2">
-                                        {sortedReplies.length > 0 ? sortedReplies.map((reply) => (
-                                            <Card 
-                                                key={reply.id} 
-                                                className={cn(
-                                                    "card-organic",
-                                                    reply.is_pinned && "ring-2 ring-amber-400 bg-amber-50/50 dark:bg-amber-900/10"
-                                                )}
-                                                data-testid={`reply-${reply.id}`}
-                                            >
-                                                <CardContent className="p-3">
-                                                    <div className="flex items-start gap-3">
-                                                        <Avatar className="w-8 h-8">
-                                                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                                                {getInitials(reply.user_name)}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <div className="flex-grow min-w-0">
-                                                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                                <span className="font-semibold text-sm">{reply.user_name}</span>
-                                                                <span className="text-xs text-muted-foreground">{formatRelativeTime(reply.created_at)}</span>
-                                                                {reply.is_pinned && (
-                                                                    <Badge variant="outline" className="text-xs text-amber-600 border-amber-400">
-                                                                        <Pin className="w-3 h-3 mr-1" /> Pinned
-                                                                    </Badge>
-                                                                )}
-                                                            </div>
-                                                            <p className="text-sm mb-2">{reply.content}</p>
-                                                            
-                                                            {/* Teacher Actions Row */}
-                                                            {isTeacherOrAdmin && (
-                                                                <div className="flex items-center gap-2 flex-wrap">
-                                                                    {/* Status Dropdown */}
-                                                                    <DropdownMenu>
-                                                                        <DropdownMenuTrigger asChild>
-                                                                            <Button 
-                                                                                variant="outline" 
-                                                                                size="sm"
-                                                                                className={cn(
-                                                                                    "text-xs h-7",
-                                                                                    getStatusStyle(reply.status)
-                                                                                )}
-                                                                                data-testid={`status-btn-${reply.id}`}
-                                                                            >
-                                                                                {reply.status === 'answered' ? <CheckCircle className="w-3 h-3 mr-1" /> : 
-                                                                                 reply.status === 'needs_followup' ? <AlertCircle className="w-3 h-3 mr-1" /> : 
-                                                                                 <Clock className="w-3 h-3 mr-1" />}
-                                                                                {getStatusLabel(reply.status)}
-                                                                            </Button>
-                                                                        </DropdownMenuTrigger>
-                                                                        <DropdownMenuContent align="start">
-                                                                            <StatusDropdownItems onSelect={(key) => handleStatusChange(reply.id, key)} />
-                                                                        </DropdownMenuContent>
-                                                                    </DropdownMenu>
-                                                                    
-                                                                    <Button 
-                                                                        variant="ghost" 
-                                                                        size="sm" 
-                                                                        className={cn("h-7 text-xs", reply.is_pinned && "text-amber-600")}
-                                                                        onClick={() => handlePinReply(reply.id, !reply.is_pinned)}
-                                                                    >
-                                                                        <Pin className="w-3 h-3 mr-1" />
-                                                                        {reply.is_pinned ? 'Unpin' : 'Pin'}
-                                                                    </Button>
-                                                                    <Button 
-                                                                        variant="ghost" 
-                                                                        size="sm" 
-                                                                        className="h-7 text-xs text-destructive"
-                                                                        onClick={() => setDeleteItem(reply)}
-                                                                    >
-                                                                        <Trash2 className="w-3 h-3 mr-1" />
-                                                                        Delete
-                                                                    </Button>
-                                                                </div>
-                                                            )}
-                                                        </div>
+                                                    <div className={cn(
+                                                        "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold transition-colors",
+                                                        isActive
+                                                            ? "bg-primary text-primary-foreground"
+                                                            : "bg-muted text-muted-foreground"
+                                                    )}>
+                                                        {idx + 1}
                                                     </div>
-                                                </CardContent>
+                                                    <div className="flex-grow min-w-0">
+                                                        <p className={cn(
+                                                            "font-medium leading-snug transition-colors",
+                                                            isActive ? "text-foreground" : "text-foreground/80"
+                                                        )} style={{ fontFamily: "'Manrope', sans-serif" }} data-testid="active-prompt-question">
+                                                            {prompt.question}
+                                                        </p>
+                                                        {!isActive && replies.length > 0 && (
+                                                            <p className="text-xs text-muted-foreground mt-1">
+                                                                {replies.length} {replies.length === 1 ? 'response' : 'responses'}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <ChevronRight className={cn(
+                                                        "w-5 h-5 text-muted-foreground flex-shrink-0 transition-transform duration-200 mt-1",
+                                                        isActive && "rotate-90"
+                                                    )} />
+                                                </button>
+
+                                                {/* Expanded Content */}
+                                                {isActive && (
+                                                    <div className="px-5 pb-5 space-y-4 animate-fade-in">
+                                                        {/* Reply Form */}
+                                                        <form onSubmit={handleSubmitReply} className="space-y-3">
+                                                            <div className="relative">
+                                                                <Textarea
+                                                                    placeholder="Share your thoughts..."
+                                                                    value={newReply}
+                                                                    onChange={(e) => setNewReply(e.target.value)}
+                                                                    rows={2}
+                                                                    className="resize-none pr-12 text-sm"
+                                                                    data-testid="reply-input"
+                                                                />
+                                                                <Button
+                                                                    type="submit"
+                                                                    size="sm"
+                                                                    disabled={submittingReply || !newReply.trim()}
+                                                                    className="absolute bottom-2 right-2 h-8 w-8 p-0 rounded-full"
+                                                                    data-testid="submit-reply-btn"
+                                                                >
+                                                                    {submittingReply ? (
+                                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                                    ) : (
+                                                                        <Send className="w-4 h-4" />
+                                                                    )}
+                                                                </Button>
+                                                            </div>
+                                                        </form>
+
+                                                        {/* Replies */}
+                                                        {allReplies.length > 0 ? (
+                                                            <div className="space-y-3">
+                                                                <p className="text-xs text-muted-foreground font-medium">
+                                                                    {allReplies.length} {allReplies.length === 1 ? 'Response' : 'Responses'}
+                                                                </p>
+                                                                {allReplies.map((reply) => (
+                                                                    <div
+                                                                        key={reply.id}
+                                                                        className={cn(
+                                                                            "group/reply relative p-3 rounded-xl transition-colors",
+                                                                            reply.is_pinned
+                                                                                ? "bg-amber-50/80 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-700/30"
+                                                                                : "bg-muted/40 hover:bg-muted/60"
+                                                                        )}
+                                                                        data-testid={`reply-${reply.id}`}
+                                                                    >
+                                                                        <div className="flex items-start gap-3">
+                                                                            <Avatar className="w-7 h-7 flex-shrink-0">
+                                                                                <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+                                                                                    {getInitials(reply.user_name)}
+                                                                                </AvatarFallback>
+                                                                            </Avatar>
+                                                                            <div className="flex-grow min-w-0">
+                                                                                <div className="flex items-center gap-2 mb-0.5">
+                                                                                    <span className="font-semibold text-sm">{reply.user_name}</span>
+                                                                                    <span className="text-[11px] text-muted-foreground">{formatRelativeTime(reply.created_at)}</span>
+                                                                                    {reply.is_pinned && (
+                                                                                        <Pin className="w-3 h-3 text-amber-500" />
+                                                                                    )}
+                                                                                </div>
+                                                                                <p className="text-sm leading-relaxed">{reply.content}</p>
+                                                                            </div>
+
+                                                                            {/* Moderation — icon-only, revealed on hover */}
+                                                                            {isTeacherOrAdmin && (
+                                                                                <div className="flex items-center gap-0.5 opacity-0 group-hover/reply:opacity-100 transition-opacity flex-shrink-0">
+                                                                                    <DropdownMenu>
+                                                                                        <DropdownMenuTrigger asChild>
+                                                                                            <button
+                                                                                                className={cn(
+                                                                                                    "w-6 h-6 rounded-md flex items-center justify-center text-xs",
+                                                                                                    getStatusStyle(reply.status)
+                                                                                                )}
+                                                                                                data-testid={`status-btn-${reply.id}`}
+                                                                                            >
+                                                                                                {reply.status === 'answered' ? <CheckCircle className="w-3 h-3" /> :
+                                                                                                 reply.status === 'needs_followup' ? <AlertCircle className="w-3 h-3" /> :
+                                                                                                 <Clock className="w-3 h-3" />}
+                                                                                            </button>
+                                                                                        </DropdownMenuTrigger>
+                                                                                        <DropdownMenuContent align="end" className="min-w-[120px]">
+                                                                                            <StatusDropdownItems onSelect={(key) => handleStatusChange(reply.id, key)} />
+                                                                                        </DropdownMenuContent>
+                                                                                    </DropdownMenu>
+                                                                                    <button
+                                                                                        className={cn(
+                                                                                            "w-6 h-6 rounded-md flex items-center justify-center transition-colors",
+                                                                                            reply.is_pinned ? "text-amber-500 bg-amber-100 dark:bg-amber-900/30" : "text-muted-foreground hover:bg-muted"
+                                                                                        )}
+                                                                                        onClick={() => handlePinReply(reply.id, !reply.is_pinned)}
+                                                                                    >
+                                                                                        <Pin className="w-3 h-3" />
+                                                                                    </button>
+                                                                                    <button
+                                                                                        className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                                                                        onClick={() => setDeleteItem(reply)}
+                                                                                    >
+                                                                                        <Trash2 className="w-3 h-3" />
+                                                                                    </button>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <p className="text-sm text-muted-foreground text-center py-2">
+                                                                Be the first to share your thoughts.
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </Card>
-                                        )) : (
-                                            <Card className="card-organic">
-                                                <CardContent className="p-4 text-center text-muted-foreground">
-                                                    <p>Be the first to respond to this prompt!</p>
-                                                </CardContent>
-                                            </Card>
-                                        )}
-                                    </div>
-                                </>
+                                        );
+                                    })}
+                                </div>
                             ) : (
                                 <Card className="card-organic">
                                     <EmptyState
