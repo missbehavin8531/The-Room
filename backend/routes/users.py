@@ -7,6 +7,7 @@ from database import db
 from models import UserResponse
 from auth import require_admin, require_teacher_or_admin, require_approved
 from services.email_service import email_service
+from services.security_logger import log_security_event
 
 router = APIRouter(prefix="/api")
 
@@ -93,6 +94,8 @@ async def approve_user(user_id: str, background_tasks: BackgroundTasks, user: di
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="User not found or already approved")
     
+    await log_security_event('user_approved', f'{user_to_approve["email"]} approved by {user["email"]}', email=user_to_approve['email'], user_id=user_id)
+    
     if user_to_approve.get('email'):
         background_tasks.add_task(
             email_service.send_welcome_email,
@@ -149,6 +152,7 @@ async def delete_user(user_id: str, user: dict = Depends(require_teacher_or_admi
     # Prevent deleting admin accounts
     if target.get('role') == 'admin':
         raise HTTPException(status_code=403, detail="Cannot delete admin accounts")
+    await log_security_event('user_deleted', f'{target["email"]} deleted by {user["email"]}', email=target['email'], user_id=user_id)
     result = await db.users.delete_one({'id': user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="User not found")

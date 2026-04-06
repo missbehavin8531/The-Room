@@ -124,10 +124,34 @@ class DailyService:
                 )
                 if response.status_code in [200, 201]:
                     return response.json()
-                else:
-                    error_msg = response.text
-                    logging.error(f"Failed to start recording: {error_msg}")
-                    return {"error": error_msg, "status_code": response.status_code}
+                
+                error_msg = response.text
+                # If room has an active stream/recording, stop it and retry
+                if "active stream" in error_msg.lower() or "already" in error_msg.lower():
+                    logging.warning(f"Active stream detected on {room_name}, stopping and retrying...")
+                    try:
+                        await client.post(
+                            f"{self.BASE_URL}/rooms/{room_name}/recordings/stop",
+                            headers=self.headers,
+                            timeout=10.0
+                        )
+                    except Exception:
+                        pass
+                    # Brief pause then retry
+                    import asyncio
+                    await asyncio.sleep(1)
+                    retry = await client.post(
+                        f"{self.BASE_URL}/rooms/{room_name}/recordings/start",
+                        json={"type": "cloud"},
+                        headers=self.headers,
+                        timeout=15.0
+                    )
+                    if retry.status_code in [200, 201]:
+                        return retry.json()
+                    error_msg = retry.text
+
+                logging.error(f"Failed to start recording: {error_msg}")
+                return {"error": error_msg, "status_code": response.status_code}
             except Exception as e:
                 logging.error(f"Failed to start recording: {e}")
                 return {"error": str(e)}

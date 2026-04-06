@@ -274,4 +274,10 @@ export const zoomAPI = {
     disconnect: () => api.post('/zoom/disconnect'),
 };
 
+// Security Log API
+export const securityLogAPI = {
+    getLogs: (params) => api.get('/security-logs', { params }),
+    getSummary: () => api.get('/security-logs/summary'),
+};
+
 export default api;

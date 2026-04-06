@@ -11,6 +11,7 @@ from database import db, JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRATION_HOURS
 from models import UserCreate, UserLogin, UserResponse
 from pydantic import BaseModel
 from services.email_service import email_service
+from services.security_logger import log_security_event
 
 router = APIRouter(prefix="/api")
 security = HTTPBearer()
@@ -105,6 +106,8 @@ async def register(data: UserCreate):
     }
     await db.users.insert_one(user)
 
+    await log_security_event('user_registered', f'New user registered: {data.email} (group: {group_name})', email=data.email, user_id=user_id)
+
     return {
         'message': f"Welcome! You've joined {group_name}. Your group leader will approve your account shortly.",
         'user_id': user_id,
@@ -116,6 +119,7 @@ async def register(data: UserCreate):
 async def login(data: UserLogin):
     user = await db.users.find_one({'email': data.email}, {'_id': 0})
     if not user or not verify_password(data.password, user['password']):
+        await log_security_event('login_failed', f'Failed login attempt for {data.email}', email=data.email)
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     onboarding = await db.user_onboarding.find_one({'user_id': user['id']})
@@ -133,6 +137,7 @@ async def login(data: UserLogin):
     needs_group_setup = (user['role'] == 'teacher' and len(group_ids) == 0 and not group_id)
     
     token = create_token(user['id'], user['email'], user['role'])
+    await log_security_event('login_success', f'{user["email"]} logged in', email=user['email'], user_id=user['id'])
     return {
         'token': token,
         'user': {
@@ -310,6 +315,7 @@ async def forgot_password(data: ForgotPasswordRequest, background_tasks: Backgro
 
 @router.post("/auth/reset-password")
 async def reset_password(data: ResetPasswordRequest):
+    await log_security_event('password_reset_request', f'Password reset requested for {data.token[:20]}...')
     # Validate the token
     try:
         payload = jwt.decode(data.token, JWT_SECRET, algorithms=[JWT_ALGORITHM])

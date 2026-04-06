@@ -13,7 +13,8 @@ import {
     Search as SearchIcon,
     Shield,
     TrendingUp,
-    Calendar
+    Calendar,
+    FileWarning
 } from 'lucide-react';
 import { cn, getInitials } from '../lib/utils';
 import { Button } from './ui/button';
@@ -239,6 +240,13 @@ export var Layout = function Layout(props) {
                                     </Link>
                                 </DropdownMenuItem>
                             )}
+                            {isAdmin && (
+                                <DropdownMenuItem asChild>
+                                    <Link to="/security-log" className="flex items-center">
+                                        <FileWarning className="w-4 h-4 mr-2" />Security Log
+                                    </Link>
+                                </DropdownMenuItem>
+                            )}
                             {isTeacher && !isAdmin && (
                                 <DropdownMenuItem asChild>
                                     <Link to="/teacher-dashboard" className="flex items-center">
@@ -256,7 +264,7 @@ export var Layout = function Layout(props) {
             </header>
 
             {/* Main Content */}
-            <main className="pb-28 md:pb-8 px-4 md:px-0">
+            <main className="pb-36 md:pb-8 px-4 md:px-0">
                 {children}
             </main>
 

@@ -23,6 +23,7 @@ import Search from './pages/Search';
 import ForgotPassword from './pages/ForgotPassword';
 import TeacherSetup from './pages/TeacherSetup';
 import TeacherDashboard from './pages/TeacherDashboard';
+import SecurityLog from './pages/SecurityLog';
 
 // Components
 import { Onboarding } from './components/Onboarding';
@@ -267,6 +268,14 @@ function AppRoutes() {
                     </ProtectedRoute>
                 }
             />
+            <Route
+                path="/security-log"
+                element={
+                    <ProtectedRoute requireAdmin>
+                        <SecurityLog />
+                    </ProtectedRoute>
+                }
+            />
 
             {/* Catch all - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -281,7 +290,7 @@ function App() {
             <AuthProvider>
                 <OfflineBanner />
                 <AppRoutes />
-                <Toaster position="top-center" richColors />
+                <Toaster position="top-center" richColors duration={3000} />
             </AuthProvider>
         </BrowserRouter>
     );
