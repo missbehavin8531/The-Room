@@ -21,6 +21,7 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - Attendance reporting
 - Teacher dashboard with "Share Invite" widget
 - Dark mode toggle, mobile-first responsiveness
+- **Security Log** for admins — tracks login success/failure, registrations, approvals, deletions, password resets
 
 ## UI/UX Design System
 - **Typography**: Fraunces (headings), Manrope (body)
@@ -29,12 +30,13 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - **Colors**: Earthy tones (sage, amber, olive), primary accent
 - **Animations**: `animate-fade-in`, `stagger-children`, entrance reveals
 - **Navigation**: Floating glassmorphic bottom pill with active dot indicator
+- **Toasts**: Auto-dismiss after 3 seconds
 - **Design reference**: `/app/design_guidelines.json`
 
 ## Architecture
 - **Backend**: FastAPI, MongoDB (motor), WebSockets, JWT auth
 - **Frontend**: React, Tailwind CSS, Shadcn UI, Service Workers
-- **DB**: MongoDB with collections: users, groups, courses, lessons, resources, enrollments, chat_messages, attendance
+- **DB**: MongoDB with collections: users, groups, courses, lessons, resources, enrollments, chat_messages, attendance, security_logs
 
 ## Security Hardening (Completed 4/6/2026)
 - Password reset token no longer leaked in API response
@@ -48,6 +50,11 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - Private messages accept admin as recipient
 - Name length capped at 100 characters
 
+## Bug Fixes (4/6/2026)
+- Daily.co recording "active stream" error: auto-stops existing stream and retries
+- Toast notifications: set to auto-dismiss after 3 seconds (was lingering indefinitely)
+- Mobile scroll: increased bottom padding (pb-36) so content is not hidden behind floating nav
+
 ## Completed Work Timeline
 - Role Restructure (Admin/Teacher/Member) - DONE
 - Multi-group architecture migration - DONE
@@ -60,6 +67,8 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - Full UI/UX design overhaul (all pages) - DONE
 - CourseDetail + Progress page refinement - DONE (4/6/2026)
 - Security/QA hardening (13 fixes) - DONE (4/6/2026)
+- Security Log feature for admins - DONE (4/6/2026)
+- Bug fixes (recording, toasts, scroll) - DONE (4/6/2026)
 
 ## Upcoming Tasks
 - P2: Background sync for Offline Mode (Service Worker)
