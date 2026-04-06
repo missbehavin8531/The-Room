@@ -117,6 +117,7 @@
   - Lesson Tabs: Replaced chunky colored pill buttons with clean underline tabs (NOW/NEXT/AFTER)
   - Chat: iMessage-like asymmetric bubbles (dark olive own, light sage others), pill input with circular send, moderation hidden until hover
   - CSS Architecture: Full rewrite of index.css and App.css for consistency
+  - Courses Page: Wider image aspect (2.4:1), frosted-glass meta chips on image, compact inline Enroll pill, single-column stacked layout, stagger-in animations
 
 ---
 
