@@ -1,138 +1,126 @@
 {
-  "identity": {
-    "persona": "E1",
-    "role": "Creative Designer",
-    "principles": [
-      "Fusion over Imitation: Mix organic textures with clean tech utility.",
-      "Emotion First: Every screen must feel 'safe' and 'welcoming'.",
-      "Content is King: The lesson content (video/text) is the hero.",
-      "Zoom In: Use close-ups of people/hands to create intimacy.",
-      "Negative Space: Generous breathing room to prevent cognitive overload."
-    ]
+  "theme": "light",
+  "archetype": "Organic & Earthy",
+  "design_philosophy": "Create a warm, grounding, and emotionally resonant dashboard. Emphasize soft edges, generous breathing room (negative space), and clear typography. Avoid the generic 'SaaS dashboard' aesthetic. The design should feel tactile, like a quiet, intentional space for growth.",
+  "colors": {
+    "light": {
+      "background": "#F2EFE9",
+      "surface": "#FFFFFF",
+      "surface_alt": "#EBE8DE",
+      "primary": "#4A5D3A",
+      "primary_hover": "#3D4D30",
+      "primary_light": "#E5EBE0",
+      "text_main": "#1C2316",
+      "text_muted": "#5C6B50",
+      "border": "#E2DFD3",
+      "accent_warm": "#C47C56"
+    },
+    "dark": {
+      "background": "#12160F",
+      "surface": "#1C2217",
+      "surface_alt": "#252B1E",
+      "primary": "#8AA673",
+      "primary_hover": "#9CBA84",
+      "primary_light": "#2D3823",
+      "text_main": "#F5F3EB",
+      "text_muted": "#A3B396",
+      "border": "#2E3626",
+      "accent_warm": "#D99371"
+    }
   },
-  "design_system": {
-    "theme": "light",
-    "typography": {
-      "font_family": {
-        "headings": "Merriweather, serif",
-        "body": "Nunito, sans-serif"
-      },
-      "scale": {
-        "h1": "text-4xl md:text-5xl font-bold tracking-tight",
-        "h2": "text-3xl md:text-4xl font-semibold",
-        "h3": "text-2xl font-medium",
-        "body": "text-base md:text-lg leading-relaxed",
-        "caption": "text-sm text-muted-foreground"
-      },
-      "instructions": "Import 'Merriweather' (400, 700, 900) and 'Nunito' (400, 600, 700) from Google Fonts. Apply 'font-serif' to all Headings and 'font-sans' to body text."
+  "typography": {
+    "font_imports": [
+      "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+    ],
+    "headings": {
+      "family": "'Fraunces', serif",
+      "weights": ["300", "500", "600"],
+      "h1": "text-4xl sm:text-5xl tracking-tight leading-none",
+      "h2": "text-2xl sm:text-3xl tracking-tight",
+      "h3": "text-xl sm:text-2xl",
+      "h4": "text-lg sm:text-xl font-medium"
     },
-    "colors": {
-      "palette_name": "Organic & Earthy (Calming Sage)",
-      "primary": {
-        "hex": "#4A6741",
-        "name": "Deep Sage",
-        "usage": "Primary buttons, active states, key icons"
-      },
-      "secondary": {
-        "hex": "#F2F0E9",
-        "name": "Warm Bone",
-        "usage": "Page backgrounds, secondary containers"
-      },
-      "accent": {
-        "hex": "#D48C70",
-        "name": "Terracotta",
-        "usage": "Call to actions (secondary), highlights, notifications"
-      },
-      "neutral": {
-        "hex": "#2C332B",
-        "name": "Forest Charcoal",
-        "usage": "Main text"
-      },
-      "muted": {
-        "hex": "#E8E4D9",
-        "name": "Soft Beige",
-        "usage": "Card backgrounds, inputs"
-      },
-      "background": "#F9F8F6",
-      "foreground": "#2C332B"
-    },
-    "spacing": {
-      "base_unit": "4px",
-      "container_padding": "p-6 md:p-12",
-      "section_gap": "gap-8 md:gap-16",
-      "card_padding": "p-6"
-    },
+    "body": {
+      "family": "'Manrope', sans-serif",
+      "weights": ["400", "500", "600"],
+      "base": "text-base leading-relaxed tracking-wide",
+      "small": "text-sm leading-normal",
+      "label": "text-xs uppercase tracking-[0.2em] font-bold"
+    }
+  },
+  "spacing_and_layout": {
+    "container": "w-full max-w-md mx-auto px-6",
+    "bottom_padding": "pb-[100px]",
+    "section_gap": "gap-10",
+    "item_gap": "gap-4",
     "radius": {
-      "default": "0.75rem",
-      "button": "9999px",
-      "card": "1rem"
+      "card": "rounded-[2rem]",
+      "button": "rounded-full",
+      "image": "rounded-2xl",
+      "pill": "rounded-full"
     },
-    "shadows": {
-      "card": "0 4px 20px -2px rgba(74, 103, 65, 0.08)",
-      "hover": "0 10px 25px -5px rgba(74, 103, 65, 0.15)"
+    "bento_grid": "grid grid-cols-2 gap-4",
+    "surface_styles": {
+      "card_organic": "bg-white dark:bg-[#1C2217] shadow-[0_8px_30px_rgba(74,93,58,0.06)] dark:shadow-none border border-[#1C2316]/5 dark:border-white/5",
+      "card_flat": "bg-[#EBE8DE] dark:bg-[#252B1E] border-none",
+      "glass": "bg-white/70 dark:bg-[#12160F]/60 backdrop-blur-xl backdrop-saturate-150 border border-white/40 dark:border-white/10 shadow-sm"
     }
   },
   "components": {
-    "buttons": {
-      "style": "pill-shaped",
-      "classes": "rounded-full px-8 py-6 font-semibold shadow-sm hover:shadow-md transition-all duration-300",
-      "variants": {
-        "primary": "bg-[#4A6741] text-white hover:bg-[#3A5233]",
-        "secondary": "bg-[#E8E4D9] text-[#2C332B] hover:bg-[#Dcd8cd]",
-        "ghost": "hover:bg-[#E8E4D9]/50 text-[#4A6741]"
-      }
+    "welcome_section": {
+      "layout": "Flex column, generous top padding (pt-12). Left-aligned.",
+      "text": "Greeting label in text_muted, Name in Fraunces H1. Adds emotional intimacy immediately."
     },
-    "cards": {
-      "style": "soft-organic",
-      "classes": "bg-white rounded-2xl border border-[#E8E4D9] shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300"
+    "lesson_card": {
+      "style": "card_organic relative overflow-hidden rounded-[2.5rem] p-8",
+      "background": "Use the primary color bg-[#4A5D3A]. Text inside must be pure white (#FFFFFF) for contrast.",
+      "image_overlay": "Apply abstract nature image with mix-blend-overlay and 20% opacity. Never use a heavy black blanket.",
+      "progress_bar": "Custom segmented tracker. 5 rounded pills side-by-side. Active=bg-white, inactive=bg-white/20.",
+      "content": "Title in Fraunces H2, Date in small label, Description in body text."
     },
-    "inputs": {
-      "style": "clean-soft",
-      "classes": "rounded-xl border-[#E8E4D9] bg-[#F9F8F6] focus:ring-[#4A6741] focus:border-[#4A6741] h-12"
+    "quick_actions": {
+      "layout": "Asymmetrical row or scattered bento items rather than a boring equal grid.",
+      "buttons": "Circular or Squircle shape, prominent icons. Duotone icons inside rounded-full containers with 'card_flat' surface style."
     },
-    "navigation": {
-      "mobile": "Bottom tab bar with soft blur backdrop-blur-lg bg-white/90 border-t border-[#E8E4D9]",
-      "desktop": "Clean top bar with generous spacing"
+    "stats_bento": {
+      "layout": "grid-cols-2 gap-4",
+      "items": [
+        "Streak: col-span-1 row-span-2 (Tall card, large number in Fraunces H1)",
+        "Completed Lessons: col-span-1 row-span-1 (Square card)",
+        "Enrolled: col-span-1 row-span-1 (Square card)"
+      ]
+    },
+    "recent_chat": {
+      "style": "glass card, floating over the background, previewing 1-2 messages. Avatar + Manrope body."
+    },
+    "schedule": {
+      "layout": "Vertical list with timeline-style connector. Uses generous gap-6 spacing."
     }
   },
-  "assets": {
-    "images": [
+  "motion": {
+    "page_load": "Staggered fade-up (y: 20, opacity: 0) on containers.",
+    "hover": "Subtle scale (scale-95 on press), hover:-translate-y-1 for cards.",
+    "celebration": "When 5 steps done, trigger an organic, warm sunburst or floating leaves animation rather than generic confetti."
+  },
+  "media": {
+    "image_urls": [
       {
-        "category": "hero_community",
-        "url": "https://images.unsplash.com/photo-1610070835951-156b6921281d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwxfHxkaXZlcnNlJTIwZ3JvdXAlMjBzdHVkeWluZyUyMGJpYmxlJTIwZGlzY3Vzc2lvbnxlbnwwfHx8fDE3Njk5NjU0MjR8MA&ixlib=rb-4.1.0&q=85",
-        "description": "Diverse group sitting on grass, used for Landing Page Hero or Community section."
+        "url": "https://images.unsplash.com/photo-1744457167322-1e193924a1fe?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA4Mzl8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMG5hdHVyZSUyMGJhY2tncm91bmQlMjBvbGl2ZSUyMGdyZWVuJTIwd2FybXxlbnwwfHx8fDE3NzU1MTA0OTN8MA&ixlib=rb-4.1.0&q=85",
+        "category": "lesson_card_background",
+        "description": "Abstract olive green flowing shapes for the hero 'This Week's Lesson' card. Mix blend to act as texture."
       },
       {
-        "category": "teaching_class",
-        "url": "https://images.unsplash.com/photo-1574130303188-31a915382726?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwzfHxzdW5kYXklMjBzY2hvb2wlMjB0ZWFjaGVyJTIwd2l0aCUyMGNoaWxkcmVuJTIwY2xhc3Nyb29tfGVufDB8fHx8MTc2OTk2NTQyOXww&ixlib=rb-4.1.0&q=85",
-        "description": "Indoor classroom setting, used for Courses List or Teacher Dashboard."
-      },
-      {
-        "category": "quiet_study",
-        "url": "https://images.unsplash.com/photo-1766364984475-53b7cf4d33fe?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjd8MHwxfHNlYXJjaHwxfHxvcGVuJTIwYmlibGUlMjBvbiUyMHdvb2RlbiUyMHRhYmxlJTIwY29mZmVlfGVufDB8fHx8MTc2OTk2NTQzM3ww&ixlib=rb-4.1.0&q=85",
-        "description": "Bible and coffee on table, used for Lesson Detail or Resources section."
-      },
-      {
-        "category": "large_gathering",
-        "url": "https://images.unsplash.com/photo-1765947382559-93260e5d6c89?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDB8MHwxfHNlYXJjaHwxfHxjaHVyY2glMjBjb21tdW5pdHklMjBnYXRoZXJpbmclMjBoYXBweXxlbnwwfHx8fDE3Njk5NjU0MzR8MA&ixlib=rb-4.1.0&q=85",
-        "description": "Large congregation, used for Events or About page."
+        "url": "https://images.unsplash.com/photo-1591539052428-984a8f2006c6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjd8MHwxfHNlYXJjaHwyfHxwZW9wbGUlMjBzbWFsbCUyMGdyb3VwJTIwY29udmVyc2F0aW9uJTIwd2FybXxlbnwwfHx8fDE3NzU1MTA0ODh8MA&ixlib=rb-4.1.0&q=85",
+        "category": "community_thumbnail",
+        "description": "Small group of people talking, for the chat or courses section."
       }
-    ],
-    "icons": "Use 'lucide-react' with soft stroke width (1.5px or 2px). Avoid sharp edges."
+    ]
   },
-  "layout_strategies": {
-    "mobile_first": true,
-    "grid_system": "Simple 1-col mobile, 3-col desktop. Use 'max-w-md mx-auto' for mobile-centric flows like Auth.",
-    "containers": "Use 'container mx-auto px-4 md:px-8' for main content wrappers."
-  },
-  "universal_guidelines": [
-    "Avoid 'AI Slop': Do not use generic gradients or default Shadcn styles without customization.",
-    "Micro-interactions: Add 'active:scale-95' to all buttons for tactile feel.",
-    "Accessibility: Ensure text contrast is high (Forest Charcoal on Warm Bone).",
-    "Data-TestID: All interactive elements MUST have 'data-testid' attributes.",
-    "Toasts: Use 'sonner' for notifications.",
-    "Empty States: Never leave a list empty. Use a friendly illustration or icon with encouraging text.",
-    "Loading States: Use skeletons with a 'shimmer' effect, not just spinners."
-  ],
-  "instructions_to_main_agent": "1. Install 'Merriweather' and 'Nunito' fonts immediately. 2. Update 'tailwind.config.js' with the 'Organic & Earthy' color palette. 3. Customize Shadcn components (Button, Card, Input) to match the 'pill-shaped' and 'soft-organic' styles defined above. 4. Build the Mobile Navigation Bar first as it is the core of the mobile-first experience."
+  "technical_instructions": {
+    "dependencies": "Install @phosphor-icons/react and framer-motion.",
+    "icons": "Use Phosphor Icons (Duotone weight) for all UI icons to match the warm organic feel.",
+    "testing": "Ensure all interactive elements have data-testid attributes (e.g., data-testid='lesson-card-start').",
+    "mobile_first": "Design specifically for mobile. Desktop should show this in a centered max-w-md view or scaled up gracefully. Keep the bottom nav padding pb-[100px].",
+    "typography_setup": "Add Fraunces and Manrope imports to index.css and define them in tailwind.config.js."
+  }
 }
