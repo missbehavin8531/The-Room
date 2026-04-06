@@ -99,17 +99,29 @@ async def delete_group(group_id: str, user: dict = Depends(require_admin)):
     if user.get('group_id') == group_id:
         raise HTTPException(status_code=400, detail="You cannot delete your own group")
 
-    # Unassign all members
-    result = await db.users.update_many(
+    # Unassign all members from both group_id and group_ids
+    await db.users.update_many(
         {'group_id': group_id},
         {'$set': {'group_id': None}}
     )
+    await db.users.update_many(
+        {'group_ids': group_id},
+        {'$pull': {'group_ids': group_id}}
+    )
+
+    # Also clean up users whose group_id was this group - set to first remaining group_id
+    orphaned = await db.users.find(
+        {'group_id': None, 'group_ids': {'$exists': True, '$not': {'$size': 0}}},
+        {'_id': 0, 'id': 1, 'group_ids': 1}
+    ).to_list(1000)
+    for u in orphaned:
+        if u['group_ids']:
+            await db.users.update_one({'id': u['id']}, {'$set': {'group_id': u['group_ids'][0]}})
 
     await db.groups.delete_one({'id': group_id})
 
     return {
-        'message': f"Group '{group['name']}' deleted. {result.modified_count} members unassigned.",
-        'members_unassigned': result.modified_count
+        'message': f"Group '{group['name']}' deleted. Members unassigned.",
     }
 
 

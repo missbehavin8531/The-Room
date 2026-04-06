@@ -137,6 +137,18 @@ async def mute_user(user_id: str, muted: bool = Query(...), user: dict = Depends
 
 @router.delete("/users/{user_id}")
 async def delete_user(user_id: str, user: dict = Depends(require_teacher_or_admin)):
+    target = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    # Teachers can only delete members in their own group(s)
+    if user['role'] == 'teacher':
+        teacher_groups = set(user.get('group_ids', []))
+        target_groups = set(target.get('group_ids', []))
+        if not teacher_groups.intersection(target_groups):
+            raise HTTPException(status_code=403, detail="You can only delete members in your group")
+    # Prevent deleting admin accounts
+    if target.get('role') == 'admin':
+        raise HTTPException(status_code=403, detail="Cannot delete admin accounts")
     result = await db.users.delete_one({'id': user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="User not found")

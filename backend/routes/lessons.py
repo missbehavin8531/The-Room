@@ -368,9 +368,10 @@ async def upload_resource(
 async def download_resource(resource_id: str, token: str = Query(None)):
     # Allow auth via query param (for <a href> links) or header
     if token:
-        from jose import jwt
+        from database import JWT_SECRET, JWT_ALGORITHM
+        import jwt as pyjwt
         try:
-            jwt.decode(token, os.environ.get('JWT_SECRET', ''), algorithms=['HS256'])
+            pyjwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         except Exception:
             raise HTTPException(status_code=403, detail="Invalid token")
     else:

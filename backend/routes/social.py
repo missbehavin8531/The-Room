@@ -20,6 +20,8 @@ router = APIRouter(prefix="/api")
 async def create_comment(lesson_id: str, data: CommentCreate, user: dict = Depends(require_approved)):
     if user.get('is_muted'):
         raise HTTPException(status_code=403, detail="You are muted and cannot post")
+    if not data.content or not data.content.strip():
+        raise HTTPException(status_code=400, detail="Comment cannot be empty")
     
     lesson = await db.lessons.find_one({'id': lesson_id})
     if not lesson:
@@ -67,6 +69,8 @@ async def delete_comment(comment_id: str, user: dict = Depends(require_teacher_o
 async def send_chat_message(data: ChatMessageCreate, user: dict = Depends(require_approved)):
     if user.get('is_muted'):
         raise HTTPException(status_code=403, detail="You are muted and cannot chat")
+    if not data.content or not data.content.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
     
     message_id = str(uuid.uuid4())
     message = {
@@ -111,7 +115,9 @@ async def delete_chat_message(message_id: str, user: dict = Depends(require_teac
 
 @router.post("/messages", response_model=PrivateMessageResponse)
 async def send_private_message(data: PrivateMessageCreate, user: dict = Depends(require_approved)):
-    teacher = await db.users.find_one({'id': data.teacher_id, 'role': 'teacher'}, {'_id': 0})
+    if not data.content or not data.content.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    teacher = await db.users.find_one({'id': data.teacher_id, 'role': {'$in': ['teacher', 'admin']}}, {'_id': 0})
     if not teacher:
         raise HTTPException(status_code=404, detail="Teacher not found")
     

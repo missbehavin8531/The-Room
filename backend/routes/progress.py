@@ -105,9 +105,12 @@ async def get_my_progress(user: dict = Depends(require_approved)):
 @router.get("/teacher/student-progress")
 async def get_student_progress(user: dict = Depends(require_teacher_or_admin)):
     query = {'role': 'member', 'is_approved': True}
+    group_ids = user.get('group_ids', [])
     group_id = user.get('group_id')
-    if group_id:
-        query['group_id'] = group_id
+    if group_ids:
+        query['group_ids'] = {'$in': group_ids}
+    elif group_id:
+        query['$or'] = [{'group_id': group_id}, {'group_ids': group_id}]
     
     members = await db.users.find(
         query,

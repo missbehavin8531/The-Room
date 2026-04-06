@@ -45,10 +45,13 @@ app.include_router(zoom_router)
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 # CORS
+frontend_url = os.environ.get('FRONTEND_URL', '')
+cors_origins = os.environ.get('CORS_ORIGINS', frontend_url).split(',')
+cors_origins = [o.strip() for o in cors_origins if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=cors_origins if cors_origins else ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

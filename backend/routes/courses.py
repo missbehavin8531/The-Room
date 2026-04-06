@@ -188,12 +188,16 @@ async def get_course(course_id: str, user: dict = Depends(require_approved)):
 
 @router.put("/courses/{course_id}")
 async def update_course(course_id: str, data: CourseUpdate, user: dict = Depends(require_teacher_or_admin)):
+    course = await db.courses.find_one({'id': course_id}, {'_id': 0})
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    # Teachers can only edit their own courses
+    if user['role'] == 'teacher' and course.get('teacher_id') != user['id']:
+        raise HTTPException(status_code=403, detail="You can only edit your own courses")
     update_data = data.model_dump(exclude_unset=True, exclude_none=True)
     if not update_data:
         return {'message': 'No changes to update'}
-    result = await db.courses.update_one({'id': course_id}, {'$set': update_data})
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Course not found")
+    await db.courses.update_one({'id': course_id}, {'$set': update_data})
     return {'message': 'Course updated'}
 
 @router.post("/courses/{course_id}/publish")
@@ -201,6 +205,8 @@ async def publish_course(course_id: str, user: dict = Depends(require_teacher_or
     course = await db.courses.find_one({'id': course_id})
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
+    if user['role'] == 'teacher' and course.get('teacher_id') != user['id']:
+        raise HTTPException(status_code=403, detail="You can only publish your own courses")
     await db.courses.update_one({'id': course_id}, {'$set': {'is_published': True}})
     await db.lessons.update_many({'course_id': course_id}, {'$set': {'is_published': True}})
     return {'message': 'Course and lessons published'}
@@ -260,14 +266,23 @@ async def get_course_cover(course_id: str):
 
 @router.post("/courses/{course_id}/unpublish")
 async def unpublish_course(course_id: str, user: dict = Depends(require_teacher_or_admin)):
+    course = await db.courses.find_one({'id': course_id})
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    if user['role'] == 'teacher' and course.get('teacher_id') != user['id']:
+        raise HTTPException(status_code=403, detail="You can only unpublish your own courses")
     await db.courses.update_one({'id': course_id}, {'$set': {'is_published': False}})
     return {'message': 'Course unpublished'}
 
 @router.delete("/courses/{course_id}")
 async def delete_course(course_id: str, user: dict = Depends(require_teacher_or_admin)):
-    result = await db.courses.delete_one({'id': course_id})
-    if result.deleted_count == 0:
+    course = await db.courses.find_one({'id': course_id}, {'_id': 0})
+    if not course:
         raise HTTPException(status_code=404, detail="Course not found")
+    # Teachers can only delete their own courses
+    if user['role'] == 'teacher' and course.get('teacher_id') != user['id']:
+        raise HTTPException(status_code=403, detail="You can only delete your own courses")
+    await db.courses.delete_one({'id': course_id})
     await db.lessons.delete_many({'course_id': course_id})
     await db.enrollments.delete_many({'course_id': course_id})
     return {'message': 'Course and associated lessons deleted'}

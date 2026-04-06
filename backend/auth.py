@@ -77,6 +77,16 @@ async def register(data: UserCreate):
     if not group:
         raise HTTPException(status_code=400, detail="Invalid invite code. Ask your group leader for the correct code.")
     
+    # Validate name
+    if not data.name or not data.name.strip():
+        raise HTTPException(status_code=400, detail="Name is required")
+    if len(data.name.strip()) > 100:
+        raise HTTPException(status_code=400, detail="Name is too long (max 100 characters)")
+    
+    # Validate password length
+    if len(data.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
     group_id = group['id']
     group_name = group['name']
 
@@ -207,10 +217,13 @@ class ChangePasswordRequest(BaseModel):
 
 @router.put("/auth/update-name")
 async def update_name(data: UpdateNameRequest, user: dict = Depends(get_current_user)):
-    if not data.name.strip():
+    name = data.name.strip()
+    if not name:
         raise HTTPException(status_code=400, detail="Name cannot be empty")
-    await db.users.update_one({'id': user['id']}, {'$set': {'name': data.name.strip()}})
-    return {'message': 'Name updated successfully', 'name': data.name.strip()}
+    if len(name) > 100:
+        raise HTTPException(status_code=400, detail="Name is too long (max 100 characters)")
+    await db.users.update_one({'id': user['id']}, {'$set': {'name': name}})
+    return {'message': 'Name updated successfully', 'name': name}
 
 @router.put("/auth/change-password")
 async def change_password(data: ChangePasswordRequest, user: dict = Depends(get_current_user)):
@@ -293,8 +306,7 @@ async def forgot_password(data: ForgotPasswordRequest, background_tasks: Backgro
         email_service.get_base_template(reset_content)
     )
     
-    # Return token directly for the app's reset flow
-    return {'message': 'If an account with that email exists, a reset link has been sent.', 'reset_token': reset_token}
+    return {'message': 'If an account with that email exists, a reset link has been sent.'}
 
 @router.post("/auth/reset-password")
 async def reset_password(data: ResetPasswordRequest):
