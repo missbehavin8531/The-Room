@@ -1,11 +1,8 @@
-# Test Credentials - The Room
+# Test Credentials
 
-## Platform Admin
-- Email: kirah092804@gmail.com
-- Password: sZ3Og1s$f&ki
-
-## Test Admin
-- Email: s.hicks@theironvision.com
+## Admin Accounts
+- Platform Admin: kirah092804@gmail.com / sZ3Og1s$f&ki
+- Test Admin: s.hicks@theironvision.com / (check DB - password was set during earlier sessions)
 
 ## Demo Group
 - Name: The Room Demo Group
