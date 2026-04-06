@@ -26,6 +26,7 @@ import TeacherDashboard from './pages/TeacherDashboard';
 
 // Components
 import { Onboarding } from './components/Onboarding';
+import { OfflineBanner } from './components/OfflineBanner';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requireAdmin = false, requireTeacher = false }) => {
@@ -278,6 +279,7 @@ function App() {
     return (
         <BrowserRouter>
             <AuthProvider>
+                <OfflineBanner />
                 <AppRoutes />
                 <Toaster position="top-center" richColors />
             </AuthProvider>

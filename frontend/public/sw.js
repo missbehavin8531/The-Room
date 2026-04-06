@@ -1,6 +1,6 @@
 // Service Worker for Push Notifications + Offline Mode - The Room App
 
-var CACHE_NAME = 'the-room-v1';
+var CACHE_NAME = 'the-room-v2';
 var OFFLINE_URLS = [
     '/',
     '/index.html',
@@ -9,7 +9,7 @@ var OFFLINE_URLS = [
 
 // Install: Pre-cache shell
 self.addEventListener('install', function(event) {
-    console.log('Service Worker installing.');
+    console.log('Service Worker v2 installing.');
     event.waitUntil(
         caches.open(CACHE_NAME).then(function(cache) {
             console.log('Caching app shell');
@@ -21,7 +21,7 @@ self.addEventListener('install', function(event) {
 
 // Activate: Clean old caches
 self.addEventListener('activate', function(event) {
-    console.log('Service Worker activated.');
+    console.log('Service Worker v2 activated.');
     event.waitUntil(
         caches.keys().then(function(cacheNames) {
             var deletePromises = [];
@@ -44,14 +44,17 @@ self.addEventListener('fetch', function(event) {
     // Skip non-GET requests
     if (event.request.method !== 'GET') return;
 
-    // Skip chrome-extension and other non-http(s)
+    // Skip chrome-extension, ws, and other non-http(s)
     if (!url.protocol.startsWith('http')) return;
+
+    // Skip WebSocket upgrade requests
+    if (event.request.headers.get('Upgrade') === 'websocket') return;
 
     // API requests: network-first with cache fallback
     if (url.pathname.startsWith('/api/')) {
         event.respondWith(
             fetch(event.request).then(function(response) {
-                // Only cache successful API responses for read endpoints
+                // Cache successful API responses for read endpoints
                 if (response.ok && isReadEndpoint(url.pathname)) {
                     var responseClone = response.clone();
                     caches.open(CACHE_NAME).then(function(cache) {
@@ -62,7 +65,7 @@ self.addEventListener('fetch', function(event) {
             }).catch(function() {
                 return caches.match(event.request).then(function(cached) {
                     if (cached) return cached;
-                    return new Response(JSON.stringify({ error: 'You are offline' }), {
+                    return new Response(JSON.stringify({ error: 'You are offline', offline: true }), {
                         status: 503,
                         headers: { 'Content-Type': 'application/json' }
                     });
@@ -155,13 +158,47 @@ self.addEventListener('notificationclick', function(event) {
     );
 });
 
+// Message handler — receives commands from main thread
+self.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+    if (event.data && event.data.type === 'CACHE_API') {
+        // Pre-cache specific API responses on demand
+        var urls = event.data.urls || [];
+        event.waitUntil(
+            caches.open(CACHE_NAME).then(function(cache) {
+                var promises = urls.map(function(url) {
+                    return fetch(url, { headers: event.data.headers || {} })
+                        .then(function(response) {
+                            if (response.ok) {
+                                return cache.put(url, response);
+                            }
+                        })
+                        .catch(function() {});
+                });
+                return Promise.all(promises);
+            })
+        );
+    }
+});
+
 // Helper: Check if API endpoint should be cached for offline
 function isReadEndpoint(pathname) {
     var cacheablePatterns = [
         '/api/courses',
         '/api/lessons/',
         '/api/auth/me',
-        '/api/my-progress'
+        '/api/my-progress',
+        '/api/groups/my',
+        '/api/groups/all',
+        '/api/chat',
+        '/api/messages/inbox',
+        '/api/search',
+        '/api/enrollments/my',
+        '/api/analytics',
+        '/api/teachers',
+        '/api/users'
     ];
     for (var i = 0; i < cacheablePatterns.length; i++) {
         if (pathname.indexOf(cacheablePatterns[i]) !== -1) {
@@ -174,7 +211,7 @@ function isReadEndpoint(pathname) {
 // Helper: Check if static asset should be cached
 function shouldCacheStatic(url) {
     var ext = url.pathname.split('.').pop();
-    var cacheableExtensions = ['js', 'css', 'png', 'jpg', 'jpeg', 'svg', 'woff', 'woff2', 'ico'];
+    var cacheableExtensions = ['js', 'css', 'png', 'jpg', 'jpeg', 'svg', 'woff', 'woff2', 'ico', 'webp', 'gif'];
     for (var i = 0; i < cacheableExtensions.length; i++) {
         if (ext === cacheableExtensions[i]) {
             return true;

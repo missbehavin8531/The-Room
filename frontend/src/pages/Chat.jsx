@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
-import { Card, CardContent } from '../components/ui/card';
+import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { ScrollArea } from '../components/ui/scroll-area';
@@ -9,7 +9,17 @@ import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { chatAPI } from '../lib/api';
 import { formatRelativeTime, getInitials, cn } from '../lib/utils';
 import { toast } from 'sonner';
-import { Send, Loader2, Trash2, Eye, EyeOff, MessageCircle } from 'lucide-react';
+import { Send, Loader2, Trash2, Eye, EyeOff, MessageCircle, Wifi, WifiOff, Users } from 'lucide-react';
+import { useWebSocket } from '../hooks/useWebSocket';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+function getWsUrl() {
+    const token = localStorage.getItem('token');
+    if (!token || !BACKEND_URL) return null;
+    const wsBase = BACKEND_URL.replace(/^http/, 'ws');
+    return `${wsBase}/api/ws/chat?token=${token}`;
+}
 
 export const Chat = () => {
     const { user, isTeacherOrAdmin } = useAuth();
@@ -17,22 +27,98 @@ export const Chat = () => {
     const [loading, setLoading] = useState(true);
     const [newMessage, setNewMessage] = useState('');
     const [sending, setSending] = useState(false);
+    const [typingUsers, setTypingUsers] = useState([]);
     const scrollRef = useRef(null);
     const inputRef = useRef(null);
+    const typingTimeout = useRef(null);
+    const messagesRef = useRef(messages);
 
+    // Keep messagesRef in sync
     useEffect(() => {
-        fetchMessages();
-        // Poll for new messages every 5 seconds
-        const interval = setInterval(fetchMessages, 5000);
-        return () => clearInterval(interval);
+        messagesRef.current = messages;
+    }, [messages]);
+
+    const scrollToBottom = useCallback(() => {
+        if (scrollRef.current) {
+            const el = scrollRef.current;
+            // ScrollArea wraps content in a viewport div
+            const viewport = el.querySelector('[data-radix-scroll-area-viewport]') || el;
+            viewport.scrollTop = viewport.scrollHeight;
+        }
     }, []);
 
-    useEffect(() => {
-        // Scroll to bottom when messages change
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    // WebSocket message handler
+    const handleWsMessage = useCallback((data) => {
+        switch (data.type) {
+            case 'new_message':
+                setMessages(prev => {
+                    // Deduplicate by id
+                    if (prev.some(m => m.id === data.message.id)) return prev;
+                    return [...prev, data.message];
+                });
+                setTimeout(scrollToBottom, 50);
+                break;
+
+            case 'message_deleted':
+                setMessages(prev => prev.filter(m => m.id !== data.message_id));
+                break;
+
+            case 'message_hidden':
+                setMessages(prev =>
+                    prev.map(m =>
+                        m.id === data.message_id ? { ...m, is_hidden: data.hidden } : m
+                    )
+                );
+                break;
+
+            case 'typing': {
+                const name = data.user_name;
+                setTypingUsers(prev => {
+                    if (prev.includes(name)) return prev;
+                    return [...prev, name];
+                });
+                // Clear typing indicator after 3s
+                setTimeout(() => {
+                    setTypingUsers(prev => prev.filter(n => n !== name));
+                }, 3000);
+                break;
+            }
+
+            case 'error':
+                toast.error(data.message);
+                break;
+
+            default:
+                break;
         }
-    }, [messages]);
+    }, [scrollToBottom]);
+
+    const wsUrl = getWsUrl();
+    const { status: wsStatus, onlineCount, send: wsSend } = useWebSocket(wsUrl, {
+        onMessage: handleWsMessage,
+        enabled: !!wsUrl,
+    });
+
+    const isConnected = wsStatus === 'connected';
+
+    // Fetch initial messages via REST
+    useEffect(() => {
+        fetchMessages();
+    }, []);
+
+    // Fallback polling only when WS is disconnected
+    useEffect(() => {
+        if (isConnected) return;
+        const interval = setInterval(fetchMessages, 6000);
+        return () => clearInterval(interval);
+    }, [isConnected]);
+
+    // Scroll to bottom on initial load
+    useEffect(() => {
+        if (!loading) {
+            setTimeout(scrollToBottom, 100);
+        }
+    }, [loading, scrollToBottom]);
 
     const fetchMessages = async () => {
         try {
@@ -49,12 +135,29 @@ export const Chat = () => {
         e.preventDefault();
         if (!newMessage.trim()) return;
 
+        const content = newMessage.trim();
+
+        // Try WebSocket first
+        if (isConnected) {
+            const sent = wsSend({ type: 'message', content });
+            if (sent) {
+                setNewMessage('');
+                inputRef.current?.focus();
+                return;
+            }
+        }
+
+        // Fallback to REST
         setSending(true);
         try {
-            const response = await chatAPI.send(newMessage.trim());
-            setMessages([...messages, response.data]);
+            const response = await chatAPI.send(content);
+            setMessages(prev => {
+                if (prev.some(m => m.id === response.data.id)) return prev;
+                return [...prev, response.data];
+            });
             setNewMessage('');
             inputRef.current?.focus();
+            setTimeout(scrollToBottom, 50);
         } catch (error) {
             const message = error.response?.data?.detail || 'Failed to send message';
             toast.error(message);
@@ -64,6 +167,10 @@ export const Chat = () => {
     };
 
     const handleDeleteMessage = async (messageId) => {
+        if (isConnected) {
+            wsSend({ type: 'delete', message_id: messageId });
+            return;
+        }
         try {
             await chatAPI.delete(messageId);
             setMessages(messages.filter(m => m.id !== messageId));
@@ -74,9 +181,13 @@ export const Chat = () => {
     };
 
     const handleHideMessage = async (messageId, hidden) => {
+        if (isConnected) {
+            wsSend({ type: 'hide', message_id: messageId, hidden });
+            return;
+        }
         try {
             await chatAPI.hide(messageId, hidden);
-            setMessages(messages.map(m => 
+            setMessages(messages.map(m =>
                 m.id === messageId ? { ...m, is_hidden: hidden } : m
             ));
             toast.success(hidden ? 'Message hidden' : 'Message visible');
@@ -85,18 +196,56 @@ export const Chat = () => {
         }
     };
 
+    // Send typing indicator
+    const handleInputChange = (e) => {
+        setNewMessage(e.target.value);
+        if (isConnected && e.target.value.trim()) {
+            if (!typingTimeout.current) {
+                wsSend({ type: 'typing' });
+                typingTimeout.current = setTimeout(() => {
+                    typingTimeout.current = null;
+                }, 2000);
+            }
+        }
+    };
+
     return (
         <Layout>
             <div className="page-container py-6 h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] flex flex-col">
                 {/* Header */}
-                <div className="mb-4">
-                    <h1 className="text-2xl font-serif font-bold flex items-center gap-2">
-                        <MessageCircle className="w-6 h-6 text-primary" />
-                        Community Chat
-                    </h1>
-                    <p className="text-muted-foreground text-sm">
-                        Connect with fellow members
-                    </p>
+                <div className="mb-4 flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-serif font-bold flex items-center gap-2">
+                            <MessageCircle className="w-6 h-6 text-primary" />
+                            Community Chat
+                        </h1>
+                        <p className="text-muted-foreground text-sm">
+                            Connect with fellow members
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2" data-testid="chat-status">
+                        {onlineCount > 0 && (
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="online-count">
+                                <Users className="w-3 h-3" />
+                                {onlineCount}
+                            </span>
+                        )}
+                        <span
+                            className={cn(
+                                "flex items-center gap-1 text-xs px-2 py-1 rounded-full",
+                                isConnected
+                                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                    : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                            )}
+                            data-testid="ws-status"
+                        >
+                            {isConnected ? (
+                                <><Wifi className="w-3 h-3" /> Live</>
+                            ) : (
+                                <><WifiOff className="w-3 h-3" /> Polling</>
+                            )}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Chat Container */}
@@ -150,7 +299,7 @@ export const Chat = () => {
                                                 )}>
                                                     <p className="text-sm">{message.content}</p>
                                                 </div>
-                                                
+
                                                 {/* Moderation actions */}
                                                 {isTeacherOrAdmin && (
                                                     <div className={cn(
@@ -162,6 +311,7 @@ export const Chat = () => {
                                                             size="sm"
                                                             onClick={() => handleHideMessage(message.id, !message.is_hidden)}
                                                             className="p-1 h-auto"
+                                                            data-testid={`hide-msg-${message.id}`}
                                                         >
                                                             {message.is_hidden ? (
                                                                 <Eye className="w-3 h-3" />
@@ -174,6 +324,7 @@ export const Chat = () => {
                                                             size="sm"
                                                             onClick={() => handleDeleteMessage(message.id)}
                                                             className="p-1 h-auto text-destructive"
+                                                            data-testid={`delete-msg-${message.id}`}
                                                         >
                                                             <Trash2 className="w-3 h-3" />
                                                         </Button>
@@ -194,6 +345,16 @@ export const Chat = () => {
                         )}
                     </ScrollArea>
 
+                    {/* Typing Indicator */}
+                    {typingUsers.length > 0 && (
+                        <div className="px-4 py-1 text-xs text-muted-foreground italic" data-testid="typing-indicator">
+                            {typingUsers.length === 1
+                                ? `${typingUsers[0]} is typing...`
+                                : `${typingUsers.join(', ')} are typing...`
+                            }
+                        </div>
+                    )}
+
                     {/* Message Input */}
                     <div className="p-4 border-t border-border">
                         <form onSubmit={handleSendMessage} className="flex gap-3">
@@ -201,7 +362,7 @@ export const Chat = () => {
                                 ref={inputRef}
                                 placeholder="Type a message..."
                                 value={newMessage}
-                                onChange={(e) => setNewMessage(e.target.value)}
+                                onChange={handleInputChange}
                                 className="flex-grow"
                                 disabled={sending}
                                 data-testid="chat-input"
