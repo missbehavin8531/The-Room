@@ -47,9 +47,18 @@
 - Attendance reporting for teachers/admins
 
 ### Communication
-- Global chat (scoped per group)
+- Real-time WebSocket chat (scoped per group) with REST fallback
+- Typing indicators and online user count
 - Direct messages between users
 - Message Teacher feature (available to all approved users)
+- Moderation: hide/delete messages (teacher/admin)
+
+### Offline Mode (PWA)
+- Service Worker caches API responses for offline viewing
+- Network-first strategy for API, cache-first for static assets
+- Expanded cacheable endpoints (courses, lessons, chat, groups, etc.)
+- Offline banner indicator when device is offline
+- App shell pre-caching for instant load
 
 ### UI/UX
 - Dark mode toggle (Tailwind class-based)
@@ -68,6 +77,7 @@
 | `courses` | id, title, group_id, teacher_id, unlock_type |
 | `lessons` | id, course_id, title, hosting_method |
 | `resources` | id, lesson_id, original_filename, file_type, order |
+| `chat_messages` | id, user_id, user_name, content, is_hidden, group_id, created_at |
 
 ---
 
@@ -93,22 +103,19 @@
 - Email/Push notifications
 - Progress tracking, Attendance reporting, PDF certificates
 - Dark mode, Search, Mobile-first responsive UI
+- **P1: Offline Mode Caching** — Enhanced service worker with expanded API caching, offline banner, cache versioning (DONE 4/6/2026)
+- **P2: Real-time WebSocket Chat** — WebSocket endpoint at /api/ws/chat with JWT auth, typing indicators, online count, REST fallback polling (DONE 4/6/2026)
 
 ---
 
 ## Credentials
 - **Platform Admin:** kirah092804@gmail.com / sZ3Og1s$f&ki
 - **Invite Code (The Room):** VJ3QHHL8
+- **Demo Group Code:** DEMO2026
 
 ---
 
 ## Backlog / Future Tasks
-
-### P1
-- Offline mode caching in Service Worker
-
-### P2
-- Real-time WebSocket for chat
 
 ### P3
 - QR code for invite sharing
