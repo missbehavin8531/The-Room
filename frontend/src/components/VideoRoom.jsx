@@ -20,7 +20,8 @@ const VideoTile = ({ sessionId, isLocal, userName }) => {
     const daily = useDaily();
 
     useEffect(() => {
-        if (!daily || !videoRef.current || !sessionId) return;
+        if (!daily || !videoRef.current) return;
+        if (!isLocal && !sessionId) return;
 
         const updateVideo = () => {
             const participant = daily.participants()[isLocal ? 'local' : sessionId];

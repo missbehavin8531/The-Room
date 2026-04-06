@@ -37,12 +37,15 @@ async def create_course(data: CourseCreate, user: dict = Depends(require_teacher
 async def get_courses(user: dict = Depends(require_approved)):
     user_id = user['id']
     is_teacher = user['role'] in ['teacher', 'admin']
+    group_ids = user.get('group_ids', [])
     group_id = user.get('group_id')
     
     match_stage = {}
     if not is_teacher:
         match_stage['is_published'] = True
-    if group_id:
+    if group_ids:
+        match_stage['group_id'] = {'$in': group_ids}
+    elif group_id:
         match_stage['group_id'] = group_id
     
     pipeline = [

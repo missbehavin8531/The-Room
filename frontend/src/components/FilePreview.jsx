@@ -6,13 +6,18 @@ import { formatFileSize } from '../lib/utils';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
+function getAuthUrl(resourceId) {
+    var token = localStorage.getItem('token');
+    return BACKEND_URL + '/api/resources/' + resourceId + '/download?token=' + token;
+}
+
 export const FilePreview = ({ resource, open, onClose }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
     if (!resource) return null;
 
-    const downloadUrl = `${BACKEND_URL}/api/resources/${resource.id}/download`;
+    const downloadUrl = getAuthUrl(resource.id);
     
     const getIcon = () => {
         switch (resource.file_type) {

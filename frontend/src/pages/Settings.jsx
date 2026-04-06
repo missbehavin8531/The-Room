@@ -6,13 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { useAuth } from '../context/AuthContext';
-import { profileAPI } from '../lib/api';
+import { profileAPI, groupsAPI } from '../lib/api';
 import { toast } from 'sonner';
-import { Settings as SettingsIcon, User, KeyRound, Loader2 } from 'lucide-react';
+import { Settings as SettingsIcon, User, KeyRound, Loader2, Users } from 'lucide-react';
 
 function Settings() {
     var auth = useAuth();
     var currentUser = auth.user;
+    var refreshUser = auth.refreshUser;
 
     var nameState = useState(currentUser ? currentUser.name : '');
     var name = nameState[0];
@@ -33,6 +34,13 @@ function Settings() {
     var pwLoading = useState(false);
     var savingPw = pwLoading[0];
     var setSavingPw = pwLoading[1];
+
+    var joinCodeState = useState('');
+    var joinCode = joinCodeState[0];
+    var setJoinCode = joinCodeState[1];
+    var joinLoading = useState(false);
+    var joiningGroup = joinLoading[0];
+    var setJoiningGroup = joinLoading[1];
 
     function handleNameSave(e) {
         e.preventDefault();
@@ -80,6 +88,27 @@ function Settings() {
                 var msg = err.response && err.response.data && err.response.data.detail;
                 toast.error(msg || 'Failed to change password');
                 setSavingPw(false);
+            });
+    }
+
+    function handleJoinGroup(e) {
+        e.preventDefault();
+        if (!joinCode.trim()) {
+            toast.error('Please enter an invite code');
+            return;
+        }
+        setJoiningGroup(true);
+        groupsAPI.join(joinCode.trim().toUpperCase())
+            .then(function(res) {
+                toast.success(res.data.message || 'Joined group!');
+                setJoinCode('');
+                setJoiningGroup(false);
+                if (refreshUser) refreshUser();
+            })
+            .catch(function(err) {
+                var msg = err.response && err.response.data && err.response.data.detail;
+                toast.error(msg || 'Failed to join group');
+                setJoiningGroup(false);
             });
     }
 
@@ -146,6 +175,32 @@ function Settings() {
                             />
                             <Button type="submit" disabled={savingPw} data-testid="settings-change-pw-btn">
                                 {savingPw ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Change Password'}
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <Users className="w-5 h-5" />
+                            Join Another Group
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground mb-3">
+                            Have an invite code? Enter it below to join another group.
+                        </p>
+                        <form onSubmit={handleJoinGroup} className="flex gap-2">
+                            <Input
+                                value={joinCode}
+                                onChange={function(e) { setJoinCode(e.target.value.toUpperCase()); }}
+                                placeholder="Enter invite code"
+                                className="flex-1 font-mono tracking-widest uppercase"
+                                data-testid="settings-join-code-input"
+                            />
+                            <Button type="submit" disabled={joiningGroup} data-testid="settings-join-group-btn">
+                                {joiningGroup ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Join'}
                             </Button>
                         </form>
                     </CardContent>

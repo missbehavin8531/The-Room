@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from database import db
 from models import UserResponse
-from auth import require_admin, require_teacher_or_admin
+from auth import require_admin, require_teacher_or_admin, require_approved
 from services.email_service import email_service
 
 router = APIRouter(prefix="/api")
@@ -15,9 +15,12 @@ router = APIRouter(prefix="/api")
 async def get_users(skip: int = Query(0, ge=0), limit: int = Query(200, ge=1, le=500), user: dict = Depends(require_teacher_or_admin)):
     query = {}
     if user['role'] == 'teacher':
+        group_ids = user.get('group_ids', [])
         group_id = user.get('group_id')
-        if group_id:
-            query['group_id'] = group_id
+        if group_ids:
+            query['group_ids'] = {'$in': group_ids}
+        elif group_id:
+            query['group_ids'] = group_id
         else:
             return []
     users = await db.users.find(query, {'_id': 0, 'password': 0}).skip(skip).limit(limit).to_list(limit)
@@ -27,9 +30,12 @@ async def get_users(skip: int = Query(0, ge=0), limit: int = Query(200, ge=1, le
 async def get_pending_users(skip: int = Query(0, ge=0), limit: int = Query(200, ge=1, le=500), user: dict = Depends(require_teacher_or_admin)):
     query = {'is_approved': False}
     if user['role'] == 'teacher':
+        group_ids = user.get('group_ids', [])
         group_id = user.get('group_id')
-        if group_id:
-            query['group_id'] = group_id
+        if group_ids:
+            query['group_ids'] = {'$in': group_ids}
+        elif group_id:
+            query['group_ids'] = group_id
         else:
             return []
     users = await db.users.find(query, {'_id': 0, 'password': 0}).skip(skip).limit(limit).to_list(limit)
@@ -41,7 +47,7 @@ async def get_unassigned_users(skip: int = Query(0, ge=0), limit: int = Query(20
     """Get non-admin users that are not assigned to any group."""
     users = await db.users.find(
         {'$and': [
-            {'$or': [{'group_id': None}, {'group_id': {'$exists': False}}]},
+            {'$or': [{'group_ids': {'$size': 0}}, {'group_ids': {'$exists': False}}]},
             {'role': {'$ne': 'admin'}}
         ]},
         {'_id': 0, 'password': 0}
@@ -51,7 +57,7 @@ async def get_unassigned_users(skip: int = Query(0, ge=0), limit: int = Query(20
 
 @router.put("/users/{user_id}/assign-group")
 async def assign_user_to_group(user_id: str, group_id: str = Query(...), user: dict = Depends(require_admin)):
-    """Assign a user to any group."""
+    """Assign a user to a group (adds to their group_ids array)."""
     target_group = await db.groups.find_one({'id': group_id}, {'_id': 0})
     if not target_group:
         raise HTTPException(status_code=404, detail="Group not found")
@@ -62,7 +68,7 @@ async def assign_user_to_group(user_id: str, group_id: str = Query(...), user: d
 
     await db.users.update_one(
         {'id': user_id},
-        {'$set': {'group_id': group_id}}
+        {'$addToSet': {'group_ids': group_id}, '$set': {'group_id': group_id}}
     )
 
     return {
@@ -137,8 +143,8 @@ async def delete_user(user_id: str, user: dict = Depends(require_teacher_or_admi
     return {'message': 'User deleted'}
 
 @router.get("/teachers", response_model=List[UserResponse])
-async def get_teachers(user: dict = Depends(require_admin)):
-    query = {'role': 'teacher', 'is_approved': True}
+async def get_teachers(user: dict = Depends(require_approved)):
+    query = {'role': {'$in': ['teacher', 'admin']}, 'is_approved': True}
     group_id = user.get('group_id')
     if group_id:
         query['group_id'] = group_id

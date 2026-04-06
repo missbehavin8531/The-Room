@@ -51,7 +51,7 @@ async def create_group(data: GroupCreate, user: dict = Depends(require_teacher_o
     if user['role'] == 'teacher' and not user.get('group_id'):
         await db.users.update_one(
             {'id': user['id']},
-            {'$set': {'group_id': group_id}}
+            {'$set': {'group_id': group_id}, '$addToSet': {'group_ids': group_id}}
         )
 
     return GroupResponse(**group, member_count=1 if user['role'] == 'teacher' else 0)
@@ -59,7 +59,8 @@ async def create_group(data: GroupCreate, user: dict = Depends(require_teacher_o
 
 @router.get("/groups/my", response_model=GroupResponse)
 async def get_my_group(user: dict = Depends(require_approved)):
-    group_id = user.get('group_id')
+    group_ids = user.get('group_ids', [])
+    group_id = group_ids[0] if group_ids else user.get('group_id')
     if not group_id:
         raise HTTPException(status_code=404, detail="You are not part of any group")
 
@@ -67,7 +68,7 @@ async def get_my_group(user: dict = Depends(require_approved)):
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
 
-    member_count = await db.users.count_documents({'group_id': group_id})
+    member_count = await db.users.count_documents({'group_ids': group_id})
     return GroupResponse(**group, member_count=member_count)
 
 
@@ -147,16 +148,17 @@ async def regenerate_invite_code(group_id: str, user: dict = Depends(require_adm
 
 @router.post("/groups/join")
 async def join_group_by_code(invite_code: str, user: dict = Depends(require_approved)):
-    if user.get('group_id'):
-        raise HTTPException(status_code=400, detail="You are already part of a group")
-
     group = await db.groups.find_one({'invite_code': invite_code}, {'_id': 0})
     if not group:
         raise HTTPException(status_code=404, detail="Invalid invite code")
 
+    user_group_ids = user.get('group_ids', [])
+    if group['id'] in user_group_ids:
+        raise HTTPException(status_code=400, detail="You are already a member of this group")
+
     await db.users.update_one(
         {'id': user['id']},
-        {'$set': {'group_id': group['id']}}
+        {'$addToSet': {'group_ids': group['id']}, '$set': {'group_id': group['id']}}
     )
 
     return {'message': f"Joined {group['name']} successfully", 'group_id': group['id'], 'group_name': group['name']}

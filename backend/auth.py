@@ -90,6 +90,7 @@ async def register(data: UserCreate):
         'is_approved': False,
         'is_muted': False,
         'group_id': group_id,
+        'group_ids': [group_id],
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user)
@@ -111,14 +112,15 @@ async def login(data: UserLogin):
     onboarding_complete = onboarding.get('completed', False) if onboarding else False
     
     group_name = None
-    group_id = user.get('group_id')
+    group_ids = user.get('group_ids', [])
+    group_id = group_ids[0] if group_ids else user.get('group_id')
     if group_id:
         group = await db.groups.find_one({'id': group_id}, {'_id': 0, 'name': 1})
         if group:
             group_name = group['name']
     
     # Check if teacher needs group setup
-    needs_group_setup = (user['role'] == 'teacher' and not group_id)
+    needs_group_setup = (user['role'] == 'teacher' and len(group_ids) == 0 and not group_id)
     
     token = create_token(user['id'], user['email'], user['role'])
     return {
@@ -131,6 +133,7 @@ async def login(data: UserLogin):
             'is_approved': user['is_approved'],
             'onboarding_complete': onboarding_complete,
             'group_id': group_id,
+            'group_ids': group_ids,
             'group_name': group_name,
             'needs_group_setup': needs_group_setup
         }
@@ -142,13 +145,14 @@ async def get_me(user: dict = Depends(get_current_user)):
     onboarding_complete = onboarding.get('completed', False) if onboarding else False
     
     group_name = None
-    group_id = user.get('group_id')
+    group_ids = user.get('group_ids', [])
+    group_id = group_ids[0] if group_ids else user.get('group_id')
     if group_id:
         group = await db.groups.find_one({'id': group_id}, {'_id': 0, 'name': 1})
         if group:
             group_name = group['name']
     
-    needs_group_setup = (user['role'] == 'teacher' and not group_id)
+    needs_group_setup = (user['role'] == 'teacher' and len(group_ids) == 0 and not group_id)
     
     return UserResponse(
         id=user['id'],
@@ -159,6 +163,7 @@ async def get_me(user: dict = Depends(get_current_user)):
         created_at=user['created_at'],
         onboarding_complete=onboarding_complete,
         group_id=group_id,
+        group_ids=group_ids,
         group_name=group_name,
         needs_group_setup=needs_group_setup
     )

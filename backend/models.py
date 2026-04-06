@@ -50,6 +50,7 @@ class UserResponse(BaseModel):
     created_at: str
     onboarding_complete: bool = False
     group_id: Optional[str] = None
+    group_ids: List[str] = []
     group_name: Optional[str] = None
     needs_group_setup: bool = False
 

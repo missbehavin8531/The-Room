@@ -929,7 +929,7 @@ export const LessonDetail = () => {
                                                         >
                                                             <Eye className="w-4 h-4" />
                                                         </Button>
-                                                        <a href={`${BACKEND_URL}/api/resources/${resource.id}/download`} download>
+                                                        <a href={`${BACKEND_URL}/api/resources/${resource.id}/download?token=${localStorage.getItem('token')}`} download>
                                                             <Button variant="ghost" size="sm" onClick={handleViewSlides}>
                                                                 <Download className="w-4 h-4" />
                                                             </Button>
