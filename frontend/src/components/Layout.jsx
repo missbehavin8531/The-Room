@@ -14,7 +14,7 @@ import {
     Shield,
     TrendingUp,
     Calendar,
-    FileWarning
+    ShieldAlert,
 } from 'lucide-react';
 import { cn, getInitials } from '../lib/utils';
 import { Button } from './ui/button';
@@ -243,7 +243,7 @@ export var Layout = function Layout(props) {
                             {isAdmin && (
                                 <DropdownMenuItem asChild>
                                     <Link to="/security-log" className="flex items-center">
-                                        <FileWarning className="w-4 h-4 mr-2" />Security Log
+                                        <ShieldAlert className="w-4 h-4 mr-2" />Security Log
                                     </Link>
                                 </DropdownMenuItem>
                             )}
