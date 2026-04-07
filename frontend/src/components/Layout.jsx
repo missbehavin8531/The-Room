@@ -2,7 +2,6 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
-    Home, 
     BookOpen, 
     MessageCircle, 
     Mail, 
@@ -29,7 +28,6 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 
 // Desktop top nav: all items
 var desktopNavItems = [
-    { path: '/dashboard', key: 'home', icon: Home, label: 'Home' },
     { path: '/dashboard', key: 'courses', icon: BookOpen, label: 'Courses' },
     { path: '/progress', key: 'progress', icon: TrendingUp, label: 'Progress' },
     { path: '/search', key: 'search', icon: SearchIcon, label: 'Search' },
@@ -64,9 +62,9 @@ export var Layout = function Layout(props) {
     if (isAdmin) extraNav.push(adminNavItem);
     if (isTeacher && !isAdmin) extraNav.push(teacherNavItem);
 
-    // Guests: only Home/Courses, Chat (read-only), Settings
+    // Guests: only Courses, Chat (read-only)
     var filteredDesktop = isGuest
-        ? desktopNavItems.filter(function(i) { return i.key === 'home' || i.key === 'courses' || i.key === 'chat'; })
+        ? desktopNavItems.filter(function(i) { return i.key === 'courses' || i.key === 'chat'; })
         : desktopNavItems;
     var allDesktopNav = filteredDesktop.concat(extraNav);
 
