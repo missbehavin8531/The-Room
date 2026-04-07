@@ -1,104 +1,106 @@
 {
-  "project_name": "The Room",
-  "domain": "Church Discipleship Platform",
-  "theme": "Light Mode Primary (Dark Mode Supported)",
-  "archetype": "1 (Organic & Earthy)",
-  "core_philosophy": "Warmth, Trust, Calm, and Community. The UI should feel like a premium, tactile journal or a peaceful retreat. Avoid clinical 'SaaS' defaults. Use generous spacing, soft shadows, and deep earthy colors.",
-  "colors": {
-    "primary": "#4a5d3a",
-    "primary_foreground": "#ffffff",
-    "background_light": "#F9F8F6",
-    "background_dark": "#1A1F18",
-    "card_light": "#FFFFFF",
-    "card_dark": "#232A21",
-    "text_light": "#2A3324",
-    "text_dark": "#EAECE8",
-    "sage_palette": {
-      "50": "#f6f7f5",
-      "100": "#e8ebe6",
-      "200": "#d4dbd0",
-      "300": "#b5c1ad",
-      "400": "#8fa383",
-      "500": "#4A6741",
-      "600": "#3d5536",
-      "900": "#232e21"
-    },
-    "bone": "#F2F0E9"
-  },
+  "theme": "light",
+  "archetype": "Organic & Earthy",
   "typography": {
     "fonts": {
-      "heading": "Fraunces, serif",
+      "headings": "Fraunces, serif",
       "body": "Manrope, sans-serif"
     },
-    "rules": {
-      "h1": "text-4xl sm:text-5xl tracking-tight leading-none font-medium",
-      "h2": "text-2xl sm:text-3xl tracking-tight leading-tight font-medium",
-      "h3": "text-xl sm:text-2xl tracking-tight",
-      "body": "text-base leading-relaxed",
-      "meta": "text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground"
+    "scales": {
+      "h1": "text-5xl sm:text-6xl lg:text-7xl font-serif tracking-tighter leading-tight text-foreground",
+      "h2": "text-3xl sm:text-4xl lg:text-5xl font-serif tracking-tight leading-snug text-foreground",
+      "h3": "text-2xl sm:text-3xl font-serif tracking-tight text-foreground",
+      "body_large": "text-lg sm:text-xl font-sans leading-relaxed text-muted-foreground",
+      "body": "text-base font-sans leading-relaxed text-muted-foreground",
+      "overline": "text-xs font-sans uppercase tracking-[0.2em] font-bold text-primary"
     }
+  },
+  "colors": {
+    "background": "hsl(var(--background))",
+    "foreground": "hsl(var(--foreground))",
+    "primary": "hsl(var(--primary))",
+    "primary_foreground": "hsl(var(--primary-foreground))",
+    "secondary": "hsl(var(--secondary))",
+    "secondary_foreground": "hsl(var(--secondary-foreground))",
+    "accent": "hsl(var(--accent))",
+    "accent_foreground": "hsl(var(--accent-foreground))",
+    "card": "hsl(var(--card))",
+    "border": "hsl(var(--border))"
   },
   "spacing_and_layout": {
-    "padding": "Generous spacing. Use p-6 to p-8 inside cards.",
-    "border_radius": "Rounded-2xl for main cards, rounded-full for buttons and pills.",
-    "shadows": "Tactile Neumorphism. Use soft, wide ambient shadows with a 1px inner border for definition (e.g., shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/5)."
+    "section_padding": "py-24 md:py-32 lg:py-40",
+    "container": "max-w-7xl mx-auto px-6 md:px-8",
+    "hero_layout": "grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center min-h-[90vh] pt-32 pb-20",
+    "bento_grid": "grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8",
+    "bento_spans": {
+      "wide": "col-span-1 md:col-span-8",
+      "square": "col-span-1 md:col-span-4",
+      "tall": "col-span-1 md:col-span-4 md:row-span-2"
+    }
+  },
+  "surface_strategies": {
+    "header": "backdrop-blur-xl bg-background/80 border-b border-border/50 sticky top-0 z-50",
+    "cards": "bg-card border border-border/50 rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 overflow-hidden relative",
+    "glass_panel": "bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl shadow-soft",
+    "input": "bg-muted/50 border-transparent rounded-xl focus:bg-card focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+  },
+  "motion_and_interactions": {
+    "scroll_reveal": "framer-motion viewport={{ once: true, margin: '-100px' }} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: 'easeOut' }}",
+    "stagger_children": "transition={{ staggerChildren: 0.1 }}",
+    "hover_lift": "hover:-translate-y-1 hover:shadow-soft-lg transition-transform duration-300 ease-out"
   },
   "components": {
-    "login_page": {
-      "background": "Use a full-bleed warm background image with a subtle dark gradient overlay at the bottom.",
-      "card": "Crystal Glassmorphism. backdrop-blur-2xl, bg-white/70 (light) or bg-black/60 (dark). 1px border-white/40.",
-      "inputs": "Soft, pill-shaped inputs. bg-white/50 border-transparent focus:border-primary focus:bg-white transition-all.",
-      "spacing": "Remove dead whitespace above the logo. Center the card vertically with visual weight adjustment."
+    "buttons": {
+      "primary": "inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground h-12 px-8 py-3 text-base font-semibold shadow-sm hover:bg-primary/90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:-translate-y-0.5",
+      "secondary": "inline-flex items-center justify-center rounded-full bg-transparent text-foreground h-12 px-8 py-3 text-base font-medium border border-border hover:bg-muted/50 transition-all hover:-translate-y-0.5",
+      "accent": "inline-flex items-center justify-center rounded-full bg-accent text-accent-foreground h-12 px-8 py-3 text-base font-semibold shadow-sm hover:bg-accent/90 transition-all hover:-translate-y-0.5"
     },
-    "bottom_navigation": {
-      "layout": "Floating pill design instead of full-width bottom bar. bottom-4, rounded-full mx-4 px-6.",
-      "surface": "backdrop-blur-2xl bg-background/90 border border-border/50 shadow-lg.",
-      "icons": "Switch to @phosphor-icons/react. Use 'Regular' weight for inactive, 'Fill' weight for active states. Scale up icon size slightly.",
-      "active_state": "Replace subtle tint with a distinct indicator (e.g., a dot underneath or primary colored fill icon + bold text)."
-    },
-    "chat_page": {
-      "bubbles": {
-        "own": "Solid Primary (bg-[#4a5d3a]) with white text. rounded-2xl rounded-br-sm.",
-        "others": "Soft Sage (bg-sage-100 dark:bg-sage-900/50) with dark text. rounded-2xl rounded-bl-sm."
-      },
-      "moderation_icons": "Hide by default. Wrap message in a 'group' and use 'opacity-0 group-hover:opacity-100 transition-opacity' for hide/delete icons to reduce visual noise.",
-      "input_area": "Attach smoothly to the bottom. Use a cohesive pill-shaped input field with an integrated send button (circular icon button)."
-    },
-    "lesson_tabs": {
-      "style": "Elegant sliding tabs. Avoid chunky pills.",
-      "implementation": "Use Framer Motion 'layoutId' for a subtle background highlight behind active text, OR use a clean 2px sliding underline. Text should be font-medium, not button-like."
-    },
-    "course_cards": {
-      "image": "Add a gradient overlay at the bottom of the image (bg-gradient-to-t from-black/60 to-transparent) to ensure smooth transition to text.",
-      "meta_text": "Apply typography.rules.meta (uppercase, wide tracking, small size) for enrolled counts and lessons.",
-      "enroll_button": "Do not stretch full width. Use a fitted 'rounded-full px-6' button or a circular floating action button (FAB) with an ArrowRight icon overlaid on the bottom right of the image."
-    },
-    "settings_page": {
-      "layout": "iOS-style grouped lists. Group related settings into a single 'card-organic' container with internal rows separated by 'border-b last:border-0'.",
-      "icons": "Wrap setting icons in soft, colorful, rounded-lg backgrounds (e.g., bg-primary/10 text-primary) to create visual hierarchy."
-    },
-    "global_inputs_and_buttons": {
-      "inputs": "Remove harsh borders on default state. Use a soft fill (bg-muted/50), rounding (rounded-xl), and only show primary border/ring on focus.",
-      "buttons": "Must include 'active:scale-95 transition-all duration-200'. Primary buttons should have a subtle colored shadow (shadow-[0_4px_14px_0_rgba(74,93,58,0.39)])."
-    }
+    "auth_integration": "Unified Auth Modal via Shadcn Dialog. No separate login page. Present a seamless tabbed or sliding interface for Login / Sign Up, styled premium. Include an explicit 'Try Demo (Guest Mode)' option in the auth flow.",
+    "icons": "lucide-react"
   },
   "media": {
-    "login_background": {
-      "url": "https://images.unsplash.com/photo-1761342352872-d50e9b69ebf2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MjJ8MHwxfHNlYXJjaHwxfHxjYWxtJTIwbmF0dXJlJTIwZm9yZXN0JTIwbW9ybmluZyUyMGxpZ2h0fGVufDB8fHx8MTc3NTUxMjY4OXww&ixlib=rb-4.1.0&q=85",
-      "description": "Warm morning sunlight streaming through forest trees, conveying peace and spiritual awakening. Use as full-bleed background."
-    },
-    "course_placeholder": {
-      "url": "https://images.unsplash.com/photo-1679560051901-90499016475a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MjJ8MHwxfHNlYXJjaHwzfHxjYWxtJTIwbmF0dXJlJTIwZm9yZXN0JTIwbW9ybmluZyUyMGxpZ2h0fGVufDB8fHx8MTc3NTUxMjY4OXww&ixlib=rb-4.1.0&q=85",
-      "description": "Calm nature scene for course card placeholders."
-    }
+    "images": [
+      {
+        "category": "hero_visual",
+        "url": "https://images.unsplash.com/photo-1761370981247-1dfd749ec96b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwxfHxkaXZlcnNlJTIwcGVvcGxlJTIwc3R1ZHlpbmclMjB0b2dldGhlciUyMHdhcm18ZW58MHx8fHwxNzc1NTIxNjg1fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Group of diverse people studying together in warm light. Use as the main hero image, potentially masked with rounded-2xl or layered with floating UI elements."
+      },
+      {
+        "category": "feature_collaboration",
+        "url": "https://images.unsplash.com/photo-1758525860435-502240649c59?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwzfHxkaXZlcnNlJTIwcGVvcGxlJTIwc3R1ZHlpbmclMjB0b2dldGhlciUyMHdhcm18ZW58MHx8fHwxNzc1NTIxNjg1fDA&ixlib=rb-4.1.0&q=85",
+        "description": "People collaborating at a table. Use for the 'Join existing groups' feature card inside a bento grid."
+      },
+      {
+        "category": "abstract_background",
+        "url": "https://images.unsplash.com/photo-1713640775951-e85a958314ed?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGFyY2hpdGVjdHVyZSUyMHdhcm0lMjBzYWdlJTIwZ3JlZW58ZW58MHx8fHwxNzc1NTIxNjk2fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Abstract warm sage background texture. Use sparingly as a subtle background layer or within decorative bento grids."
+      },
+      {
+        "category": "avatar_1",
+        "url": "https://images.pexels.com/photos/33646670/pexels-photo-33646670.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "User avatar for social proof or testimonial."
+      },
+      {
+        "category": "avatar_2",
+        "url": "https://images.pexels.com/photos/29852895/pexels-photo-29852895.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "User avatar for social proof or testimonial."
+      },
+      {
+        "category": "avatar_3",
+        "url": "https://images.unsplash.com/photo-1609371497456-3a55a205d5eb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdHMlMjBkaXZlcnNlfGVufDB8fHx8MTc3NTUyMTY5Nnww&ixlib=rb-4.1.0&q=85",
+        "description": "User avatar for social proof or testimonial."
+      }
+    ]
   },
-  "dependencies_to_add": [
-    "framer-motion",
-    "@phosphor-icons/react"
-  ],
-  "accessibility_and_testing": {
-    "focus_states": "Ensure all interactive elements have focus-visible ring.",
-    "testing": "All interactive elements MUST include data-testid attribute (e.g., data-testid='login-submit-button')."
-  },
-  "instructions_to_main_agent": "Implement these changes across the React components. Start by updating index.css and App.css with the new color and spacing variables. Then, refactor the bottom nav to use Phosphor icons and a floating pill layout. Update the Chat page to differentiate message bubbles and hide moderation tools behind hover/group states. Fix the Course Cards by adjusting the button and meta typography. Finally, refactor the Settings page into grouped lists."
+  "instructions_to_main_agent": [
+    "Build a high-converting, premium landing page for 'The Room' using React, Tailwind, and Framer Motion.",
+    "Utilize the existing 'Fraunces' (headings) and 'Manrope' (body) fonts.",
+    "Navigation: Create a sticky header with backdrop-blur-xl and the brand logo. Do not hide desktop links behind a hamburger.",
+    "Hero Section: Split layout (Grid). Left side text (H1, Subtitle, Primary CTA, Try Demo CTA). Right side: Immersive visual using the 'hero_visual' image with floating UI elements (e.g., glassmorphism cards showing 'Group Joined' or 'New Lesson').",
+    "Feature Section: Implement a 'Bento Grid' strategy. Mix wide, square, and tall cards (col-span-8, col-span-4). Emphasize features: Host Courses, Join Groups, Collaborate. Use 'feature_collaboration' image in one of the tall cards.",
+    "Authentication Integration: Build a custom Shadcn Dialog for Auth. Make it unified—users can switch between Login and Register inside the modal. Add a clear 'Try Demo' button inside the modal and on the hero that acts as a read-only guest login.",
+    "Social Proof: Add a section with overlapping avatars (flex -space-x-4) and a star rating to build trust.",
+    "Styling Constraints: Apply generous padding (`py-24`, `py-32`) to sections to create breathing room. Do not use generic Inter font or generic blue gradients.",
+    "Testing: Add `data-testid` attributes to all buttons, navigation links, and auth inputs."
+  ]
 }
