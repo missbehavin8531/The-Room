@@ -8,8 +8,11 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - **Platform Admin** (`kirah092804@gmail.com`): Full platform access, no specific group assignment.
 - **Teacher**: Admin access restricted to their assigned group(s). Has a dedicated setup wizard and dashboard.
 - **Member**: Assigned to groups via invite code.
+- **Guest**: Read-only access to demo group courses/lessons. Cannot chat, comment, or enroll. 4-hour session.
 
 ## Core Features (Implemented)
+- **Premium Landing Page** — Hero with CTAs, features bento grid, how-it-works steps, testimonials, CTA section, integrated auth modal
+- **Guest/Read-Only Demo Mode** — "Try Demo" button creates a guest JWT; guests can browse courses and lessons but cannot write
 - Multi-group support (users belong to multiple groups via `group_ids[]`)
 - Course management with lessons, resources, and drag-and-drop reordering
 - Real-time WebSocket chat with group scoping
@@ -21,39 +24,23 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - Attendance reporting
 - Teacher dashboard with "Share Invite" widget
 - Dark mode toggle, mobile-first responsiveness
-- **Security Log** for admins — tracks login success/failure, registrations, approvals, deletions, password resets
+- Security Log for admins
 
 ## UI/UX Design System
 - **Typography**: Fraunces (headings), Manrope (body)
 - **Cards**: `card-organic` class with glassmorphism
 - **Tabs**: Clean underline `lesson-tab` pattern
-- **Colors**: Earthy tones (sage, amber, olive), primary accent
+- **Colors**: Earthy tones (sage greens, warm ambers, olive tones), primary accent
 - **Animations**: `animate-fade-in`, `stagger-children`, entrance reveals
 - **Navigation**: Floating glassmorphic bottom pill with active dot indicator
 - **Toasts**: Auto-dismiss after 3 seconds
+- **Landing Page**: Sticky header, asymmetric hero grid, bento feature cards, floating notification pills
 - **Design reference**: `/app/design_guidelines.json`
 
 ## Architecture
-- **Backend**: FastAPI, MongoDB (motor), WebSockets, JWT auth
+- **Backend**: FastAPI, MongoDB (motor), WebSockets, JWT auth (including guest tokens)
 - **Frontend**: React, Tailwind CSS, Shadcn UI, Service Workers
 - **DB**: MongoDB with collections: users, groups, courses, lessons, resources, enrollments, chat_messages, attendance, security_logs
-
-## Security Hardening (Completed 4/6/2026)
-- Password reset token no longer leaked in API response
-- Registration enforces min 6-char passwords + name validation
-- Empty/whitespace chat messages blocked (REST + WebSocket)
-- Teacher CRUD scoped to own groups (delete users, update/delete/publish courses)
-- CORS tightened to env-based origins (CORS_ORIGINS / FRONTEND_URL)
-- Group deletion properly cleans `group_ids[]` via `$pull`
-- JWT_SECRET mandatory from env (no hardcoded fallback)
-- Resource download auth uses centralized JWT config
-- Private messages accept admin as recipient
-- Name length capped at 100 characters
-
-## Bug Fixes (4/6/2026)
-- Daily.co recording "active stream" error: auto-stops existing stream and retries
-- Toast notifications: set to auto-dismiss after 3 seconds (was lingering indefinitely)
-- Mobile scroll: increased bottom padding (pb-36) so content is not hidden behind floating nav
 
 ## Completed Work Timeline
 - Role Restructure (Admin/Teacher/Member) - DONE
@@ -65,10 +52,12 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - Real-time WebSocket chat - DONE (P2)
 - Zoom video upload + OAuth integration - DONE
 - Full UI/UX design overhaul (all pages) - DONE
-- CourseDetail + Progress page refinement - DONE (4/6/2026)
-- Security/QA hardening (13 fixes) - DONE (4/6/2026)
-- Security Log feature for admins - DONE (4/6/2026)
-- Bug fixes (recording, toasts, scroll) - DONE (4/6/2026)
+- CourseDetail + Progress page refinement - DONE
+- Security/QA hardening (13 fixes) - DONE
+- Security Log feature for admins - DONE
+- Bug fixes (recording, toasts, scroll) - DONE
+- 4 new demo courses (AI, Marketing, Wellness, Finance) - DONE
+- Premium Landing Page + Guest Demo Mode - DONE (4/7/2026)
 
 ## Upcoming Tasks
 - P2: Background sync for Offline Mode (Service Worker)
