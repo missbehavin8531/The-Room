@@ -91,6 +91,7 @@ export const LessonDetail = () => {
     const { lessonId } = useParams();
     const navigate = useNavigate();
     const { user, isTeacherOrAdmin } = useAuth();
+    const isGuest = user?.role === 'guest';
     const [lesson, setLesson] = useState(null);
     const [course, setCourse] = useState(null);
     const [activeTab, setActiveTab] = useState('now');
@@ -620,6 +621,17 @@ export const LessonDetail = () => {
                         {/* In-App Video Room - show if hosting_method is 'in_app' or 'both' */}
                         {(lesson.hosting_method === 'in_app' || lesson.hosting_method === 'both' || !lesson.hosting_method) && (
                             <>
+                                {isGuest ? (
+                                    <Card className="card-organic">
+                                        <CardContent className="p-6 text-center">
+                                            <Video className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+                                            <p className="text-sm font-semibold mb-1" style={{ fontFamily: "'Manrope', sans-serif" }}>Video Room</p>
+                                            <p className="text-xs text-muted-foreground mb-3">Sign up to join live video sessions with the group.</p>
+                                            <a href="/" className="text-xs text-primary font-semibold hover:underline">Sign up free</a>
+                                        </CardContent>
+                                    </Card>
+                                ) : (
+                                <>
                                 <VideoRoom 
                                     lessonId={lessonId} 
                                     onClose={() => {
@@ -645,6 +657,8 @@ export const LessonDetail = () => {
                                         <CheckCircle className="w-5 h-5" />
                                         <span className="font-medium">You've joined video!</span>
                                     </div>
+                                )}
+                                </>
                                 )}
                             </>
                         )}
@@ -1179,8 +1193,11 @@ export const LessonDetail = () => {
                                                         >
                                                             <Eye className="w-4 h-4" />
                                                         </Button>
-                                                        <a href={`${BACKEND_URL}/api/resources/${resource.id}/download?token=${localStorage.getItem('token')}`} download>
-                                                            <Button variant="ghost" size="sm" onClick={handleViewSlides}>
+                                                        <a href={isGuest ? '#' : `${BACKEND_URL}/api/resources/${resource.id}/download?token=${localStorage.getItem('token')}`}
+                                                            download={!isGuest}
+                                                            onClick={isGuest ? (e) => { e.preventDefault(); toast.error('Sign up to download resources'); } : handleViewSlides}
+                                                        >
+                                                            <Button variant="ghost" size="sm">
                                                                 <Download className="w-4 h-4" />
                                                             </Button>
                                                         </a>

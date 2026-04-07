@@ -29,8 +29,8 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 
 // Bottom nav: max 5 core items
 var bottomNavItems = [
-    { path: '/', icon: Home, label: 'Home' },
-    { path: '/courses', icon: BookOpen, label: 'Courses' },
+    { path: '/dashboard', icon: Home, label: 'Home' },
+    { path: '/dashboard', icon: BookOpen, label: 'Courses' },
     { path: '/search', icon: SearchIcon, label: 'Search' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/settings', icon: Settings, label: 'Settings' },
@@ -38,8 +38,8 @@ var bottomNavItems = [
 
 // Desktop top nav: all items
 var desktopNavItems = [
-    { path: '/', icon: Home, label: 'Home' },
-    { path: '/courses', icon: BookOpen, label: 'Courses' },
+    { path: '/dashboard', icon: Home, label: 'Home' },
+    { path: '/dashboard', icon: BookOpen, label: 'Courses' },
     { path: '/progress', icon: TrendingUp, label: 'Progress' },
     { path: '/search', icon: SearchIcon, label: 'Search' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
@@ -277,7 +277,7 @@ export var Layout = function Layout(props) {
             )}
 
             {/* Main Content */}
-            <main className="pb-36 md:pb-8 px-4 md:px-0">
+            <main className="pb-44 md:pb-8 px-4 md:px-0">
                 {children}
             </main>
 
