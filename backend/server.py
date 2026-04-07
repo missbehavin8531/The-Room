@@ -121,6 +121,126 @@ async def startup_migrate_courses():
     except Exception as e:
         logger.error(f"Migration error: {e}")
 
+
+@app.on_event("startup")
+async def seed_demo_courses():
+    """Ensure the DEMO2026 group has the introduction courses for Try Demo."""
+    try:
+        demo_group = await db.groups.find_one({'invite_code': 'DEMO2026'}, {'_id': 0})
+        if not demo_group:
+            logger.info("Demo seed: No DEMO2026 group found, skipping.")
+            return
+
+        gid = demo_group['id']
+        # Check which intro courses already exist in this group
+        existing = await db.courses.find(
+            {'group_id': gid, 'title': {'$regex': '^Introduction'}},
+            {'_id': 0, 'title': 1}
+        ).to_list(20)
+        existing_titles = {c['title'] for c in existing}
+
+        import uuid
+        from datetime import datetime, timezone, timedelta
+        now = datetime.now(timezone.utc)
+        teacher_id = demo_group.get('created_by', 'system')
+
+        demo_courses = [
+            {
+                'title': 'Introduction to the Gospel',
+                'description': 'A foundational course exploring the core teachings of the Christian Gospel, from creation to redemption.',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1529070538774-1327cb8751e8?w=600',
+                'lessons': [
+                    {'title': 'The Good News', 'description': 'Understanding the heart of the Gospel message.'},
+                    {'title': 'Faith and Grace', 'description': 'How faith and grace work together in the Christian life.'},
+                    {'title': 'Living in Christ', 'description': 'Practical application of Gospel truths in daily life.'},
+                ]
+            },
+            {
+                'title': 'Introduction to Artificial Intelligence',
+                'description': 'Explore the fundamentals of AI — from machine learning and neural networks to real-world applications.',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600',
+                'lessons': [
+                    {'title': 'What Is AI?', 'description': 'A beginner-friendly overview of artificial intelligence.'},
+                    {'title': 'Machine Learning Basics', 'description': 'How machines learn from data.'},
+                    {'title': 'AI Ethics & the Future', 'description': 'Navigating the ethical landscape of AI.'},
+                ]
+            },
+            {
+                'title': 'Introduction to Digital Marketing',
+                'description': 'Master the essentials of SEO, social media strategy, and online advertising.',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600',
+                'lessons': [
+                    {'title': 'SEO Fundamentals', 'description': 'How search engines work and how to rank.'},
+                    {'title': 'Social Media Strategy', 'description': 'Building an effective social media presence.'},
+                    {'title': 'Paid Advertising (Google & Meta Ads)', 'description': 'Getting started with paid campaigns.'},
+                ]
+            },
+            {
+                'title': 'Introduction to Mindfulness & Mental Wellness',
+                'description': 'Build a sustainable mindfulness practice for stress management and emotional well-being.',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600',
+                'lessons': [
+                    {'title': 'The Science of Mindfulness', 'description': 'Evidence-based benefits of mindfulness.'},
+                    {'title': 'Stress Management & Emotional Regulation', 'description': 'Practical techniques for managing stress.'},
+                    {'title': 'Building a Sustainable Wellness Routine', 'description': 'Creating lasting healthy habits.'},
+                ]
+            },
+            {
+                'title': 'Introduction to Finance Basics',
+                'description': 'Learn budgeting, investing fundamentals, and strategies for building long-term wealth.',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600',
+                'lessons': [
+                    {'title': 'Budgeting That Actually Works', 'description': 'Practical budgeting frameworks.'},
+                    {'title': 'Investing 101', 'description': 'Stocks, bonds, and index funds explained.'},
+                    {'title': 'Building Long-Term Wealth', 'description': 'Strategies for financial freedom.'},
+                ]
+            },
+        ]
+
+        seeded = 0
+        for course_data in demo_courses:
+            if course_data['title'] in existing_titles:
+                continue
+
+            course_id = str(uuid.uuid4())
+            base_date = now + timedelta(days=seeded * 7)
+            course = {
+                'id': course_id,
+                'title': course_data['title'],
+                'description': course_data['description'],
+                'thumbnail_url': course_data['thumbnail_url'],
+                'is_published': True,
+                'unlock_type': 'all',
+                'teacher_id': teacher_id,
+                'teacher_name': 'Teacher',
+                'group_id': gid,
+                'created_at': now.isoformat()
+            }
+            await db.courses.insert_one(course)
+
+            for i, lesson in enumerate(course_data['lessons']):
+                lesson_date = (base_date + timedelta(days=i * 7)).strftime('%Y-%m-%d')
+                await db.lessons.insert_one({
+                    'id': str(uuid.uuid4()),
+                    'course_id': course_id,
+                    'title': lesson['title'],
+                    'description': lesson['description'],
+                    'lesson_date': lesson_date,
+                    'is_published': True,
+                    'order': i,
+                    'created_at': now.isoformat()
+                })
+
+            seeded += 1
+
+        if seeded:
+            logger.info(f"Demo seed: Created {seeded} introduction courses in '{demo_group['name']}'.")
+        else:
+            logger.info("Demo seed: All introduction courses already exist.")
+
+    except Exception as e:
+        logger.error(f"Demo seed error: {e}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
