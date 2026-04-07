@@ -216,30 +216,11 @@ async def get_all_lessons(user: dict = Depends(require_approved)):
 async def get_next_lesson(user: dict = Depends(require_approved)):
     today = datetime.now(timezone.utc).isoformat()[:10]
     
-    # Scope lessons to the user's groups (admin sees all)
-    group_filter = {}
-    if user['role'] != 'admin':
-        group_ids = user.get('group_ids', [])
-        group_id = user.get('group_id')
-        # Get course_ids that belong to the user's groups
-        course_query = {}
-        if group_ids:
-            course_query['group_id'] = {'$in': group_ids}
-        elif group_id:
-            course_query['group_id'] = group_id
-        if course_query:
-            user_courses = await db.courses.find(course_query, {'_id': 0, 'id': 1}).to_list(500)
-            user_course_ids = [c['id'] for c in user_courses]
-            if user_course_ids:
-                group_filter['course_id'] = {'$in': user_course_ids}
-            else:
-                return None
-    
-    query = {**group_filter, 'lesson_date': {'$gte': today}, 'is_published': True}
+    query = {'lesson_date': {'$gte': today}, 'is_published': True}
     lesson = await db.lessons.find_one(query, {'_id': 0}, sort=[('lesson_date', 1)])
     if lesson:
         return await get_lesson_with_details(lesson, user['id'], user['role'])
-    fallback_query = {**group_filter, 'is_published': True}
+    fallback_query = {'is_published': True}
     lesson = await db.lessons.find_one(fallback_query, {'_id': 0}, sort=[('created_at', -1)])
     if lesson:
         return await get_lesson_with_details(lesson, user['id'], user['role'])

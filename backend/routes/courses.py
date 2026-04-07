@@ -66,26 +66,10 @@ async def create_course(data: CourseCreate, user: dict = Depends(require_teacher
 async def get_courses(user: dict = Depends(require_approved)):
     user_id = user['id']
     is_teacher = user['role'] in ['teacher', 'admin']
-    group_ids = user.get('group_ids', [])
-    group_id = user.get('group_id')
     
     match_stage = {}
     if not is_teacher:
         match_stage['is_published'] = True
-    # Admin sees ALL courses globally; teachers/members see their group's + unassigned courses
-    if user['role'] != 'admin':
-        if group_ids:
-            match_stage['$or'] = [
-                {'group_id': {'$in': group_ids}},
-                {'group_id': None},
-                {'group_id': {'$exists': False}},
-            ]
-        elif group_id:
-            match_stage['$or'] = [
-                {'group_id': group_id},
-                {'group_id': None},
-                {'group_id': {'$exists': False}},
-            ]
     
     pipeline = [
         {'$match': match_stage},
