@@ -22,7 +22,7 @@ function getWsUrl() {
 }
 
 export const Chat = () => {
-    const { user, isTeacherOrAdmin } = useAuth();
+    const { user, isTeacherOrAdmin, isGuest } = useAuth();
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newMessage, setNewMessage] = useState('');
@@ -336,7 +336,13 @@ export const Chat = () => {
                         </div>
                     )}
 
-                    {/* Message Input */}
+                    {/* Message Input — hidden for guests */}
+                    {isGuest ? (
+                        <div className="p-4 border-t border-border text-center" data-testid="guest-chat-cta">
+                            <p className="text-sm text-muted-foreground mb-2">Sign up to join the conversation</p>
+                            <a href="/" className="text-sm text-primary font-semibold hover:underline">Sign up free</a>
+                        </div>
+                    ) : (
                     <div className="p-3 border-t border-border">
                         <form onSubmit={handleSendMessage} className="flex items-center gap-2">
                             <div className="flex-grow relative">
@@ -364,6 +370,7 @@ export const Chat = () => {
                             </div>
                         </form>
                     </div>
+                    )}
                 </Card>
             </div>
         </Layout>

@@ -101,6 +101,11 @@ async def websocket_chat(websocket: WebSocket):
         await websocket.close(code=4003, reason="Unauthorized")
         return
 
+    # Block guest tokens from WebSocket chat
+    if user.get('role') == 'guest':
+        await websocket.close(code=4003, reason="Guests cannot use live chat")
+        return
+
     await manager.connect(websocket, user)
 
     # Determine this user's room

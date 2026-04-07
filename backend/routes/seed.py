@@ -34,7 +34,7 @@ async def seed_data():
     teacher = {
         'id': teacher_id,
         'email': 'kirah092804@gmail.com',
-        'name': 'Shakira',
+        'name': 'Teacher',
         'password': hash_password('sZ3Og1s$f&ki'),
         'role': 'admin',
         'is_approved': True,
@@ -69,7 +69,7 @@ async def seed_data():
         'zoom_link': 'https://zoom.us/j/1234567890',
         'thumbnail_url': 'https://images.unsplash.com/photo-1610070835951-156b6921281d?w=800',
         'teacher_id': teacher_id,
-        'teacher_name': 'Shakira',
+        'teacher_name': 'Teacher',
         'is_published': True,
         'unlock_type': 'sequential',
         'group_id': group_id,
@@ -178,7 +178,7 @@ async def seed_data():
     
     chat_messages = [
         {'user_id': member_id, 'user_name': 'John Smith', 'content': 'Good morning everyone!'},
-        {'user_id': teacher_id, 'user_name': 'Shakira', 'content': 'Welcome to Sunday School chat! Feel free to ask questions.'},
+        {'user_id': teacher_id, 'user_name': 'Teacher', 'content': 'Welcome to Sunday School chat! Feel free to ask questions.'},
     ]
     for msg in chat_messages:
         await db.chat_messages.insert_one({

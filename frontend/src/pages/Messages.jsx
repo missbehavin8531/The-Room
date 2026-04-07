@@ -37,7 +37,7 @@ import {
 import { Label } from '../components/ui/label';
 
 export const Messages = () => {
-    const { user, isTeacher } = useAuth();
+    const { user, isTeacher, isGuest } = useAuth();
     const [messages, setMessages] = useState([]);
     const [teachers, setTeachers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -47,7 +47,7 @@ export const Messages = () => {
     const [sending, setSending] = useState(false);
 
     useEffect(() => {
-        fetchData();
+        if (!isGuest) fetchData();
     }, []);
 
     const fetchData = async () => {
@@ -108,6 +108,21 @@ export const Messages = () => {
         acc[key].messages.push(message);
         return acc;
     }, {});
+
+    if (isGuest) {
+        return (
+            <Layout>
+                <div className="page-container py-6 flex flex-col items-center justify-center min-h-[50vh]" data-testid="guest-messages-block">
+                    <Mail className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                    <h2 className="text-lg font-serif font-bold mb-2">Private Messaging</h2>
+                    <p className="text-sm text-muted-foreground mb-4 text-center max-w-xs">
+                        Sign up to send private messages to your teacher and receive feedback.
+                    </p>
+                    <a href="/" className="text-sm text-primary font-semibold hover:underline">Sign up free</a>
+                </div>
+            </Layout>
+        );
+    }
 
     if (loading) {
         return (

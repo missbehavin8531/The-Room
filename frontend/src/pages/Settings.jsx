@@ -176,7 +176,7 @@ function Settings() {
                 {/* Theme toggle — available to everyone including guests */}
                 <ThemeToggle />
 
-                {/* Everything below is hidden for guests */}
+                {/* Guests only see Theme Toggle + sign-up CTA */}
                 {isGuest ? (
                     <Card>
                         <CardContent className="p-6 text-center">
@@ -362,9 +362,6 @@ function Settings() {
                     </Card>
                 )}
 
-                )}
-
-                <ThemeToggle />
                 <NotificationSettings />
                 </>
                 )}

@@ -27,15 +27,6 @@ import {
 } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback } from './ui/avatar';
 
-// Bottom nav: max 5 core items
-var bottomNavItems = [
-    { path: '/dashboard', key: 'home', icon: Home, label: 'Home' },
-    { path: '/dashboard', key: 'courses', icon: BookOpen, label: 'Courses' },
-    { path: '/search', key: 'search', icon: SearchIcon, label: 'Search' },
-    { path: '/chat', key: 'chat', icon: MessageCircle, label: 'Chat' },
-    { path: '/settings', key: 'settings', icon: Settings, label: 'Settings' },
-];
-
 // Desktop top nav: all items
 var desktopNavItems = [
     { path: '/dashboard', key: 'home', icon: Home, label: 'Home' },
@@ -72,7 +63,12 @@ export var Layout = function Layout(props) {
     if (isTeacherOrAdmin) extraNav.push(attendanceNavItem);
     if (isAdmin) extraNav.push(adminNavItem);
     if (isTeacher && !isAdmin) extraNav.push(teacherNavItem);
-    var allDesktopNav = desktopNavItems.concat(extraNav);
+
+    // Guests: only Home/Courses, Chat (read-only), Settings
+    var filteredDesktop = isGuest
+        ? desktopNavItems.filter(function(i) { return i.key === 'home' || i.key === 'courses' || i.key === 'chat'; })
+        : desktopNavItems;
+    var allDesktopNav = filteredDesktop.concat(extraNav);
 
     if (!isApproved) {
         return (
@@ -217,16 +213,20 @@ export var Layout = function Layout(props) {
                                 </span>
                             </div>
                             <DropdownMenuSeparator />
+                            {!isGuest && (
                             <DropdownMenuItem asChild>
                                 <Link to="/progress" className="flex items-center">
                                     <TrendingUp className="w-4 h-4 mr-2" />Progress
                                 </Link>
                             </DropdownMenuItem>
+                            )}
+                            {!isGuest && (
                             <DropdownMenuItem asChild>
                                 <Link to="/messages" className="flex items-center">
                                     <Mail className="w-4 h-4 mr-2" />Messages
                                 </Link>
                             </DropdownMenuItem>
+                            )}
                             {isTeacherOrAdmin && (
                                 <DropdownMenuItem asChild>
                                     <Link to="/attendance" className="flex items-center">

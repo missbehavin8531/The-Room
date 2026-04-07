@@ -114,7 +114,7 @@ async def delete_chat_message(message_id: str, user: dict = Depends(require_teac
 # ============== PRIVATE MESSAGES ==============
 
 @router.post("/messages", response_model=PrivateMessageResponse)
-async def send_private_message(data: PrivateMessageCreate, user: dict = Depends(require_approved)):
+async def send_private_message(data: PrivateMessageCreate, user: dict = Depends(require_non_guest)):
     if not data.content or not data.content.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
     teacher = await db.users.find_one({'id': data.teacher_id, 'role': {'$in': ['teacher', 'admin']}}, {'_id': 0})
