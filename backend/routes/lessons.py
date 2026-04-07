@@ -26,7 +26,7 @@ async def get_lesson_with_details(lesson: dict, user_id: str, user_role: str = '
     is_completed = completion is not None
     
     is_unlocked = True
-    if user_role not in ['teacher', 'admin']:
+    if user_role not in ['teacher', 'admin', 'guest']:
         course = await db.courses.find_one({'id': lesson['course_id']}, {'_id': 0})
         unlock_type = course.get('unlock_type', 'sequential') if course else 'sequential'
         
@@ -123,7 +123,7 @@ async def get_lessons_batch(lessons: list, user_id: str, user_role: str = 'membe
         is_completed = lid in completed_lessons
 
         is_unlocked = True
-        if user_role not in ['teacher', 'admin']:
+        if user_role not in ['teacher', 'admin', 'guest']:
             course = courses_map.get(lesson['course_id'], {})
             unlock_type = course.get('unlock_type', 'sequential')
 

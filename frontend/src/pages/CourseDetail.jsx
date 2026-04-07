@@ -24,7 +24,7 @@ import {
 export const CourseDetail = () => {
     const { courseId } = useParams();
     const navigate = useNavigate();
-    const { isTeacherOrAdmin } = useAuth();
+    const { isTeacherOrAdmin, isGuest } = useAuth();
     const [course, setCourse] = useState(null);
     const [lessons, setLessons] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -221,7 +221,7 @@ export const CourseDetail = () => {
                     {lessons.length > 0 ? (
                         <div className="space-y-2 stagger-children">
                             {lessons.map((lesson, index) => {
-                                const isLocked = !lesson.is_unlocked;
+                                const isLocked = !lesson.is_unlocked && !isGuest;
                                 const isCompleted = lesson.is_completed;
                                 const isDraft = !lesson.is_published;
 

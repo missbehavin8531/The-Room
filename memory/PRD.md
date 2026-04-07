@@ -27,7 +27,7 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - **Cards**: `card-organic` with glassmorphism
 - **Layout**: 2-col course grid mobile, 3-col desktop
 - **Nav**: Desktop header nav + mobile avatar dropdown (no bottom bar). Single "Courses" tab (no separate Home tab) — "This Week" hero lives inside the Courses view.
-- **Guest Banner**: Persistent banner for read-only mode with "Sign up free" CTA
+- **Guest Course Access** — All lessons unlocked for guests regardless of sequential/scheduled unlock type. Guests can browse any course and lesson freely.
 
 ## Architecture
 - **Backend**: FastAPI, MongoDB (motor), WebSockets, JWT (including guest tokens)
