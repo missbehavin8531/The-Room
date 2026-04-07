@@ -7,3 +7,7 @@
 ## Demo Group
 - Name: The Room Demo Group
 - Invite Code: DEMO2026
+
+## Guest Access
+- No credentials needed. POST /api/auth/guest creates a read-only session.
+- Or click "Try Demo" button on the landing page.
