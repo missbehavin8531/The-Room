@@ -187,7 +187,7 @@ async def seed_demo_courses():
             {
                 'title': 'Introduction to the Gospel',
                 'description': 'A foundational course exploring the core teachings of the Christian Gospel, from creation to redemption.',
-                'thumbnail_url': 'https://images.unsplash.com/photo-1529070538774-1327cb8751e8?w=600',
+                'thumbnail_url': 'https://images.unsplash.com/photo-1566392062329-9935b9a7c950?w=600',
                 'lessons': [
                     {
                         'title': 'The Good News',
