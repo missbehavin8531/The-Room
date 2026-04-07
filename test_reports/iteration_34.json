@@ -1,0 +1,113 @@
+{
+  "summary": "Comprehensive testing of YouTube video integration and lesson content for all 15 demo lessons across 5 courses. All tests PASSED. Backend: 15/15 tests pass. Frontend: All UI tests pass.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "All 5 Introduction courses exist and are published",
+    "All 15 lessons have youtube_url field populated",
+    "All YouTube URLs match expected values (verified against seed data)",
+    "All lessons have recording_source='youtube'",
+    "All 15 lessons have 3+ discussion prompts each (45 total)",
+    "All lessons have teacher_notes with substantial content (Key Points/Concepts)",
+    "All lessons have reading_plan with weekly structure (Monday-Friday)",
+    "Lesson order is correct (0, 1, 2) within each course",
+    "Lesson titles match expected progression",
+    "Guest can access all lesson details and prompts",
+    "NEXT tab shows YouTube video embed (no 'No Replay Available' message)",
+    "AFTER tab shows Discussion Questions (no 'No discussion prompts' message)",
+    "AFTER tab shows 'This Week's Reading' section with daily reading plan",
+    "Teacher Notes display markdown-formatted key concepts",
+    "YouTube videos are relevant to lesson topics (verified by video titles)"
+  ],
+  "verified_lessons": {
+    "Introduction to the Gospel": {
+      "The Good News": {"youtube": "ZEjjOnDck2U", "video_title": "Introducing Essentials of Faith | RightNow Media 2024", "prompts": 3, "notes": true, "reading_plan": true},
+      "Faith and Grace": {"youtube": "A-zK3Uy-QcY", "prompts": 3, "notes": true, "reading_plan": true},
+      "Living in Christ": {"youtube": "u7pkTGIaoOo", "prompts": 3, "notes": true, "reading_plan": true}
+    },
+    "Introduction to Artificial Intelligence": {
+      "What Is AI?": {"youtube": "hKVNdNAIvD4", "video_title": "Artificial Intelligence Full Course", "prompts": 3, "notes": true, "reading_plan": true},
+      "Machine Learning Basics": {"youtube": "VZjLtRwsMGY", "prompts": 3, "notes": true, "reading_plan": true},
+      "AI Ethics & the Future": {"youtube": "wL_WvcQV19k", "prompts": 3, "notes": true, "reading_plan": true}
+    },
+    "Introduction to Digital Marketing": {
+      "SEO Fundamentals": {"youtube": "6IB4H4_teZA", "video_title": "Complete SEO Course for Beginners", "prompts": 3, "notes": true, "reading_plan": true},
+      "Social Media Strategy": {"youtube": "ljIjS9Kd9Ek", "prompts": 3, "notes": true, "reading_plan": true},
+      "Paid Advertising (Google & Meta Ads)": {"youtube": "6RXnGvkyjVw", "prompts": 3, "notes": true, "reading_plan": true}
+    },
+    "Introduction to Mindfulness & Mental Wellness": {
+      "The Science of Mindfulness": {"youtube": "z6X5oEIg6Ak", "video_title": "10-Minute Meditation For Stress | Goodful", "prompts": 3, "notes": true, "reading_plan": true},
+      "Stress Management & Emotional Regulation": {"youtube": "MIr3RsUWrdo", "prompts": 3, "notes": true, "reading_plan": true},
+      "Building a Sustainable Wellness Routine": {"youtube": "H_uc-uQ3Nkc", "prompts": 3, "notes": true, "reading_plan": true}
+    },
+    "Introduction to Finance Basics": {
+      "Budgeting That Actually Works": {"youtube": "Ycf9DqLuDpY", "video_title": "Easy Budget Tutorial 2024 | Budget Spreadsheet", "prompts": 3, "notes": true, "reading_plan": true},
+      "Investing 101": {"youtube": "-LpnYwt3seg", "prompts": 3, "notes": true, "reading_plan": true},
+      "Building Long-Term Wealth": {"youtube": "lT_gKGGpx6k", "prompts": 3, "notes": true, "reading_plan": true}
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_lesson_content.py",
+    "/app/test_reports/pytest/pytest_lesson_content.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "YouTube embed condition in LessonDetail.jsx (line 999) correctly checks for youtube_url OR recording_source='youtube'",
+    "Backend seed_demo_courses() properly sets youtube_url and recording_source='youtube' for all 15 lessons",
+    "Backend seed_demo_courses() includes youtube migration for pre-existing lessons (lines 379-400)",
+    "Discussion prompts seeded correctly with 3 prompts per lesson (45 total)",
+    "Teacher notes include markdown formatting with Key Points/Concepts",
+    "Reading plan includes weekly structure (Monday-Friday) for all lessons"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_lesson_content.py"
+  ],
+  "success_rate": {
+    "backend": "100% (15/15 tests passed)",
+    "frontend": "100% (All UI tests passed)"
+  },
+  "test_credentials": {
+    "admin": "kirah092804@gmail.com / sZ3Og1s$f&ki",
+    "demo_invite_code": "DEMO2026",
+    "guest_auth": "POST /api/auth/guest (no credentials needed)"
+  },
+  "seed_data_creation": "None - verified existing seed data from server.py startup",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 15 demo lessons across 5 courses verified to have: 1) YouTube video URLs (no 'No Replay Available'), 2) 3 discussion prompts each, 3) Teacher notes with Key Points/Concepts, 4) Reading plan with weekly structure. The 5 courses are: Introduction to the Gospel (3 lessons), Introduction to AI (3), Introduction to Digital Marketing (3), Introduction to Mindfulness (3), Introduction to Finance Basics (3). YouTube videos are relevant to lesson topics. Guest mode can browse all content.",
+  "features_verified": {
+    "youtube_videos": {
+      "all_15_lessons_have_youtube_url": "VERIFIED",
+      "no_replay_available_message_removed": "VERIFIED",
+      "videos_relevant_to_topics": "VERIFIED - Video titles match lesson subjects"
+    },
+    "discussion_prompts": {
+      "all_lessons_have_3_prompts": "VERIFIED - 45 total prompts",
+      "no_discussion_prompts_message_removed": "VERIFIED"
+    },
+    "teacher_notes": {
+      "all_lessons_have_notes": "VERIFIED",
+      "notes_have_key_concepts": "VERIFIED",
+      "markdown_formatting": "VERIFIED"
+    },
+    "reading_plan": {
+      "all_lessons_have_reading_plan": "VERIFIED",
+      "weekly_structure": "VERIFIED - Monday through Friday"
+    },
+    "lesson_flow": {
+      "correct_order": "VERIFIED - 0, 1, 2 within each course",
+      "logical_progression": "VERIFIED - Lessons build progressively"
+    },
+    "guest_access": {
+      "can_browse_all_lessons": "VERIFIED",
+      "can_see_videos_notes_prompts": "VERIFIED"
+    }
+  }
+}

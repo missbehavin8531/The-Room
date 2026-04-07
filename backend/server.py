@@ -192,18 +192,21 @@ async def seed_demo_courses():
                     {
                         'title': 'The Good News',
                         'description': 'Understanding the heart of the Gospel message.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=ZEjjOnDck2U',
                         'teacher_notes': '**Key Points:**\n\n1. The Gospel means "good news" — it is the announcement of salvation through Jesus Christ\n2. God created humanity for relationship, but sin separated us\n3. Jesus bridges the gap between God and humanity\n4. The Gospel is an invitation, not a requirement list\n\n*"For God so loved the world that he gave his one and only Son" — John 3:16*\n\n**Discussion Starter:** What does "good news" mean to you personally?',
                         'reading_plan': "**This Week's Reading:**\n\n- Monday: John 3:1-21 — Nicodemus and the New Birth\n- Tuesday: Romans 1:16-17 — The Power of the Gospel\n- Wednesday: 1 Corinthians 15:1-11 — The Resurrection\n- Thursday: Ephesians 2:1-10 — Saved by Grace\n- Friday: Psalm 96 — Sing a New Song",
                     },
                     {
                         'title': 'Faith and Grace',
                         'description': 'How faith and grace work together in the Christian life.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=A-zK3Uy-QcY',
                         'teacher_notes': '**Key Points:**\n\n1. Grace is God\'s unmerited favor — we cannot earn it\n2. Faith is our response to grace, not the cause of it\n3. "Works" flow from faith, not the other way around\n4. Grace transforms our identity before it changes our behavior\n\n*"For it is by grace you have been saved, through faith — and this is not from yourselves, it is the gift of God" — Ephesians 2:8*\n\n**Reflection:** Where do you struggle with trying to "earn" God\'s approval?',
                         'reading_plan': "**This Week's Reading:**\n\n- Monday: Romans 5:1-11 — Peace with God\n- Tuesday: Galatians 2:15-21 — Justified by Faith\n- Wednesday: Hebrews 11:1-16 — Heroes of Faith\n- Thursday: James 2:14-26 — Faith and Deeds\n- Friday: Titus 3:3-8 — Saved by Grace",
                     },
                     {
                         'title': 'Living in Christ',
                         'description': 'Practical application of Gospel truths in daily life.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=u7pkTGIaoOo',
                         'teacher_notes': '**Key Points:**\n\n1. Living in Christ means daily surrender, not perfection\n2. The Holy Spirit empowers us to live differently\n3. Community is essential — we are not meant to walk alone\n4. Spiritual disciplines (prayer, scripture, fellowship) are rhythms, not rules\n\n*"I have been crucified with Christ and I no longer live, but Christ lives in me" — Galatians 2:20*\n\n**Challenge:** Pick one spiritual discipline to practice daily this week.',
                         'reading_plan': "**This Week's Reading:**\n\n- Monday: Colossians 3:1-17 — Life in Christ\n- Tuesday: Romans 12:1-8 — Living Sacrifice\n- Wednesday: Philippians 4:4-13 — Content in Christ\n- Thursday: 1 John 4:7-21 — God is Love\n- Friday: Psalm 1 — The Blessed Life",
                     },
@@ -217,18 +220,21 @@ async def seed_demo_courses():
                     {
                         'title': 'What Is AI?',
                         'description': 'A beginner-friendly overview of artificial intelligence.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=hKVNdNAIvD4',
                         'teacher_notes': '**Key Concepts:**\n\n1. **Artificial Intelligence** — Systems that can perform tasks typically requiring human intelligence\n2. **Narrow AI vs General AI** — Current AI is narrow (specialized), AGI remains theoretical\n3. **Real-World Examples** — Siri, Netflix recommendations, self-driving cars, ChatGPT\n4. **Brief History** — From Turing Test (1950) to modern large language models\n\n**Key Takeaway:** AI is a tool that augments human capability, not a replacement for human judgment.\n\n**Think About It:** What AI tools do you already use daily without realizing it?',
                         'reading_plan': "**This Week's Resources:**\n\n- Watch: \"AI Explained in 5 Minutes\" — YouTube\n- Read: \"What Is Artificial Intelligence?\" — IBM Research\n- Explore: Try asking ChatGPT a creative question\n- Reflect: List 5 ways AI already affects your daily routine",
                     },
                     {
                         'title': 'Machine Learning Basics',
                         'description': 'How machines learn from data.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=VZjLtRwsMGY',
                         'teacher_notes': '**Key Concepts:**\n\n1. **Supervised Learning** — Training with labeled data (e.g., classifying emails as spam/not spam)\n2. **Unsupervised Learning** — Finding patterns in unlabeled data (e.g., customer segmentation)\n3. **Neural Networks** — Inspired by the human brain, layers of connected nodes\n4. **Training Process** — Data in → Model learns → Predictions out → Feedback → Improve\n\n**Analogy:** Machine learning is like teaching a child to recognize animals by showing thousands of pictures, not by explaining rules.\n\n**Discussion:** What kinds of decisions should NOT be delegated to machine learning?',
                         'reading_plan': "**This Week's Resources:**\n\n- Watch: \"Machine Learning for Beginners\" — freeCodeCamp\n- Read: Google's ML Crash Course (first 3 modules)\n- Try: Teachable Machine by Google — train your own image classifier\n- Reflect: What data would you need to solve a problem you care about?",
                     },
                     {
                         'title': 'AI Ethics & the Future',
                         'description': 'Navigating the ethical landscape of AI.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=wL_WvcQV19k',
                         'teacher_notes': '**Key Concepts:**\n\n1. **Bias in AI** — Models inherit biases from training data. A biased dataset creates a biased AI\n2. **Privacy Concerns** — Facial recognition, data collection, surveillance\n3. **Job Displacement** — AI automates tasks, not entire jobs. Adaptation is key\n4. **Responsible AI** — Transparency, fairness, accountability, and human oversight\n\n**Case Study:** Amazon\'s AI recruiting tool was scrapped because it discriminated against women — trained on 10 years of male-dominated hiring data.\n\n**Big Question:** How do we ensure AI serves humanity equitably?',
                         'reading_plan': "**This Week's Resources:**\n\n- Watch: \"The Social Dilemma\" (Netflix) or \"Coded Bias\" documentary\n- Read: EU AI Act Summary — How Europe is regulating AI\n- Explore: AI Incident Database (incidentdatabase.ai)\n- Reflect: Write 3 principles you think should govern AI development",
                     },
@@ -242,18 +248,21 @@ async def seed_demo_courses():
                     {
                         'title': 'SEO Fundamentals',
                         'description': 'How search engines work and how to rank.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=6IB4H4_teZA',
                         'teacher_notes': '**Key Concepts:**\n\n1. **SEO = Search Engine Optimization** — Making your content discoverable on Google\n2. **How Google Works** — Crawl → Index → Rank using 200+ factors\n3. **On-Page SEO** — Keywords in titles, headers, meta descriptions, URL structure\n4. **Off-Page SEO** — Backlinks, domain authority, social signals\n5. **Technical SEO** — Site speed, mobile-friendliness, structured data\n\n**Quick Win:** Every page should have ONE primary keyword, used in the title, first paragraph, and meta description.\n\n**Assignment:** Google your own name or business. What shows up? What would you change?',
                         'reading_plan': "**This Week's Resources:**\n\n- Tool: Install \"MozBar\" Chrome extension and analyze 3 websites\n- Read: Moz Beginner's Guide to SEO (Chapters 1-3)\n- Watch: \"SEO in 2026\" — Ahrefs YouTube\n- Practice: Write a meta description for a page you own",
                     },
                     {
                         'title': 'Social Media Strategy',
                         'description': 'Building an effective social media presence.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=ljIjS9Kd9Ek',
                         'teacher_notes': '**Key Concepts:**\n\n1. **Platform Selection** — Go where your audience is, not everywhere\n   - Instagram/TikTok → Visual, younger demographic\n   - LinkedIn → B2B, professional\n   - Facebook → Community building, older demographic\n2. **Content Pillars** — Define 3-5 themes you consistently post about\n3. **The 80/20 Rule** — 80% value/education, 20% promotion\n4. **Engagement > Followers** — A small engaged audience beats a large passive one\n\n**Framework:** Every post should either Educate, Entertain, or Inspire.\n\n**Challenge:** Plan a week of social media content using only your phone.',
                         'reading_plan': "**This Week's Resources:**\n\n- Read: \"Building a StoryBrand\" by Donald Miller (Chapters 1-4)\n- Watch: Gary Vaynerchuk's \"Content Model\" on YouTube\n- Tool: Try Canva to create 3 social posts\n- Practice: Audit your own social media — what's working?",
                     },
                     {
                         'title': 'Paid Advertising (Google & Meta Ads)',
                         'description': 'Getting started with paid campaigns.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=6RXnGvkyjVw',
                         'teacher_notes': '**Key Concepts:**\n\n1. **Google Ads** — Intent-based: people are searching for solutions\n   - Search Ads, Display Ads, YouTube Ads\n   - Start with Search Ads targeting specific keywords\n2. **Meta Ads (Facebook/Instagram)** — Interest-based: interrupt people with relevant offers\n   - Powerful targeting: demographics, interests, behaviors\n   - Start with retargeting your website visitors\n3. **Budget Strategy** — Start with $10-20/day, test for 2 weeks, then scale winners\n4. **Key Metrics** — CPC (Cost Per Click), CTR (Click-Through Rate), ROAS (Return On Ad Spend)\n\n**Golden Rule:** Never run ads to a page that isn\'t optimized for conversion.\n\n**Assignment:** Create a mock ad campaign on paper: audience, message, budget, goal.',
                         'reading_plan': "**This Week's Resources:**\n\n- Watch: Google Skillshop — \"Google Ads Fundamentals\" (free cert)\n- Read: Facebook Blueprint — Module 1\n- Tool: Use Google Keyword Planner to research 10 keywords\n- Reflect: What's one product/service you'd advertise and to whom?",
                     },
@@ -267,18 +276,21 @@ async def seed_demo_courses():
                     {
                         'title': 'The Science of Mindfulness',
                         'description': 'Evidence-based benefits of mindfulness.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=z6X5oEIg6Ak',
                         'teacher_notes': '**Key Concepts:**\n\n1. **What Is Mindfulness?** — Paying attention to the present moment, without judgment\n2. **Neuroscience** — Regular practice physically changes the brain:\n   - Thickens the prefrontal cortex (decision-making)\n   - Shrinks the amygdala (stress/fear center)\n   - Strengthens neural pathways for focus\n3. **Research Results** — 8 weeks of meditation reduces anxiety by 58% (Johns Hopkins)\n4. **It\'s Not About Emptying Your Mind** — It\'s about observing thoughts without reacting\n\n**Practice:** Try the \"5-4-3-2-1\" grounding technique: Name 5 things you see, 4 you hear, 3 you touch, 2 you smell, 1 you taste.\n\n**Reflection:** When do you feel most "present" in your daily life?',
                         'reading_plan': "**This Week's Practice:**\n\n- Monday: 5 minutes of focused breathing (set a timer)\n- Tuesday: Body scan meditation (YouTube: \"10 min body scan\")\n- Wednesday: Mindful eating — eat one meal with zero distractions\n- Thursday: Walking meditation — 10 minutes outdoors, focus on each step\n- Friday: Gratitude journaling — write 3 things you're grateful for",
                     },
                     {
                         'title': 'Stress Management & Emotional Regulation',
                         'description': 'Practical techniques for managing stress.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=MIr3RsUWrdo',
                         'teacher_notes': '**Key Concepts:**\n\n1. **Stress Response** — Fight/flight/freeze is a survival mechanism, not a lifestyle\n2. **Acute vs Chronic Stress** — Short-term stress is normal; chronic stress destroys health\n3. **The STOP Technique:**\n   - **S** — Stop what you\'re doing\n   - **T** — Take a breath\n   - **O** — Observe your thoughts and feelings\n   - **P** — Proceed with awareness\n4. **Emotional Regulation** — Name the emotion to tame it. "I am angry" → "I notice I\'m feeling anger"\n5. **Boundaries** — Saying "no" is a form of self-care, not selfishness\n\n**Exercise:** The next time you feel stressed, pause and rate it 1-10. Just the act of rating reduces intensity.\n\n**Discussion:** What\'s your default stress response — fight, flight, or freeze?',
                         'reading_plan': "**This Week's Practice:**\n\n- Daily: Practice the STOP technique at least once\n- Read: \"The Body Keeps the Score\" by Bessel van der Kolk (Chapters 1-2)\n- Watch: \"How to Make Stress Your Friend\" — Kelly McGonigal TED Talk\n- Journal: Track your stress levels (1-10) morning and evening for 5 days",
                     },
                     {
                         'title': 'Building a Sustainable Wellness Routine',
                         'description': 'Creating lasting healthy habits.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=H_uc-uQ3Nkc',
                         'teacher_notes': '**Key Concepts:**\n\n1. **Habit Stacking** — Attach new habits to existing ones ("After I brush my teeth, I meditate for 2 min")\n2. **Start Embarrassingly Small** — 2 minutes of meditation > 0 minutes. Don\'t aim for perfection\n3. **The 4 Pillars of Wellness:**\n   - Sleep (7-9 hours, consistent schedule)\n   - Movement (30 min daily, any form)\n   - Nutrition (whole foods, hydration)\n   - Connection (meaningful relationships)\n4. **Self-Compassion** — Missing a day doesn\'t reset your progress. Consistency > perfection\n\n**Your Wellness Blueprint:** Pick ONE habit from each pillar. Practice all four for the next 7 days.\n\n**Final Reflection:** What does "wellness" mean to YOU — not what society says it should look like?',
                         'reading_plan': "**This Week's Practice:**\n\n- Read: \"Atomic Habits\" by James Clear (Chapters 1-4)\n- Create: Your personal \"Wellness Blueprint\" — 1 habit per pillar\n- Track: Use a simple checkbox to mark each habit daily\n- Share: Tell someone your plan (accountability doubles success rates)",
                     },
@@ -292,18 +304,21 @@ async def seed_demo_courses():
                     {
                         'title': 'Budgeting That Actually Works',
                         'description': 'Practical budgeting frameworks.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=Ycf9DqLuDpY',
                         'teacher_notes': '**Key Concepts:**\n\n1. **The 50/30/20 Rule:**\n   - 50% Needs (rent, food, utilities, insurance)\n   - 30% Wants (dining out, entertainment, subscriptions)\n   - 20% Savings & Debt Repayment\n2. **Zero-Based Budgeting** — Every dollar gets a job. Income minus expenses = zero\n3. **Track Before You Budget** — Spend 2 weeks tracking every purchase before creating a budget\n4. **Emergency Fund** — 3-6 months of expenses. Start with $1,000 as a starter emergency fund\n5. **Automate** — Set up automatic transfers on payday. You can\'t spend what you don\'t see\n\n**Exercise:** Calculate your current 50/30/20 split. Most people are shocked by their "wants" percentage.\n\n**Discussion:** What\'s the hardest part of budgeting for you?',
                         'reading_plan': "**This Week's Resources:**\n\n- Tool: Download a free budget template (Google Sheets or Notion)\n- Read: \"The Total Money Makeover\" by Dave Ramsey (Chapters 1-3)\n- Watch: \"How to Budget\" — Two Cents (YouTube)\n- Action: Track EVERY expense for the next 7 days (use your phone's notes app)",
                     },
                     {
                         'title': 'Investing 101',
                         'description': 'Stocks, bonds, and index funds explained.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=-LpnYwt3seg',
                         'teacher_notes': '**Key Concepts:**\n\n1. **Why Invest?** — Inflation erodes cash at ~3%/year. Your savings account is losing value\n2. **Asset Classes:**\n   - **Stocks** — Ownership in a company. Higher risk, higher return (~10%/yr historically)\n   - **Bonds** — Lending money to government/companies. Lower risk, lower return (~5%/yr)\n   - **Index Funds** — A basket of stocks that tracks the market. Best for beginners\n3. **Compound Interest** — $200/month at 8% for 30 years = $298,000 (you only invested $72,000)\n4. **Dollar-Cost Averaging** — Invest the same amount regularly regardless of price\n5. **Time > Timing** — Time in the market beats timing the market, every time\n\n**The #1 Rule:** Never invest money you\'ll need in the next 5 years.\n\n**Assignment:** Open a practice brokerage account and "buy" an index fund.',
                         'reading_plan': "**This Week's Resources:**\n\n- Read: \"The Little Book of Common Sense Investing\" by John Bogle (Chapters 1-3)\n- Watch: \"Stock Market for Beginners\" — Graham Stephan (YouTube)\n- Tool: Use a compound interest calculator — see your future wealth\n- Explore: Look at Vanguard's VTSAX or Fidelity's FZROX index funds",
                     },
                     {
                         'title': 'Building Long-Term Wealth',
                         'description': 'Strategies for financial freedom.',
+                        'youtube_url': 'https://www.youtube.com/watch?v=lT_gKGGpx6k',
                         'teacher_notes': '**Key Concepts:**\n\n1. **Financial Freedom** — When your passive income exceeds your expenses\n2. **The Wealth Equation:** Earn more + Spend less + Invest the difference\n3. **Retirement Accounts:**\n   - **401(k)** — Employer match = free money. Always max the match\n   - **Roth IRA** — Tax-free growth. Contribute up to $7,000/year\n   - **HSA** — Triple tax advantage for healthcare expenses\n4. **Multiple Income Streams** — Don\'t rely solely on a paycheck\n   - Side business, rental income, dividends, freelancing\n5. **Protect Your Wealth** — Insurance, estate planning, avoid lifestyle inflation\n\n**The FIRE Framework:** Financial Independence, Retire Early — save 50%+ of income, invest aggressively, retire in 10-15 years.\n\n**Final Challenge:** Write your 5-year financial goal. Be specific: amount, timeline, purpose.',
                         'reading_plan': "**This Week's Resources:**\n\n- Read: \"Rich Dad Poor Dad\" by Robert Kiyosaki (Chapters 1-4)\n- Watch: \"How to Retire Early\" — Ali Abdaal (YouTube)\n- Tool: Calculate your FIRE number (25x your annual expenses)\n- Action: Set up ONE automated investment this week, even if it's just $25/month",
                     },
@@ -334,7 +349,7 @@ async def seed_demo_courses():
 
             for i, lesson in enumerate(course_data['lessons']):
                 lesson_date = (base_date + timedelta(days=i * 7)).strftime('%Y-%m-%d')
-                await db.lessons.insert_one({
+                lesson_doc = {
                     'id': str(uuid.uuid4()),
                     'course_id': course_id,
                     'title': lesson['title'],
@@ -346,7 +361,11 @@ async def seed_demo_courses():
                     'discussion_locked': False,
                     'order': i,
                     'created_at': now.isoformat()
-                })
+                }
+                if lesson.get('youtube_url'):
+                    lesson_doc['youtube_url'] = lesson['youtube_url']
+                    lesson_doc['recording_source'] = 'youtube'
+                await db.lessons.insert_one(lesson_doc)
 
             seeded += 1
             logger.info(f"Demo seed: Created '{course_data['title']}' with {len(course_data['lessons'])} lessons")
@@ -355,6 +374,30 @@ async def seed_demo_courses():
             logger.info(f"Demo seed: Total {seeded} new courses created in '{target_group.get('name')}'.")
         else:
             logger.info("Demo seed: All 5 introduction courses already exist.")
+
+        # Ensure all demo lessons have youtube_url set (migration for pre-existing lessons)
+        yt_map = {
+            'The Good News': 'https://www.youtube.com/watch?v=ZEjjOnDck2U',
+            'Faith and Grace': 'https://www.youtube.com/watch?v=A-zK3Uy-QcY',
+            'Living in Christ': 'https://www.youtube.com/watch?v=u7pkTGIaoOo',
+            'What Is AI?': 'https://www.youtube.com/watch?v=hKVNdNAIvD4',
+            'Machine Learning Basics': 'https://www.youtube.com/watch?v=VZjLtRwsMGY',
+            'AI Ethics & the Future': 'https://www.youtube.com/watch?v=wL_WvcQV19k',
+            'SEO Fundamentals': 'https://www.youtube.com/watch?v=6IB4H4_teZA',
+            'Social Media Strategy': 'https://www.youtube.com/watch?v=ljIjS9Kd9Ek',
+            'Paid Advertising (Google & Meta Ads)': 'https://www.youtube.com/watch?v=6RXnGvkyjVw',
+            'The Science of Mindfulness': 'https://www.youtube.com/watch?v=z6X5oEIg6Ak',
+            'Stress Management & Emotional Regulation': 'https://www.youtube.com/watch?v=MIr3RsUWrdo',
+            'Building a Sustainable Wellness Routine': 'https://www.youtube.com/watch?v=H_uc-uQ3Nkc',
+            'Budgeting That Actually Works': 'https://www.youtube.com/watch?v=Ycf9DqLuDpY',
+            'Investing 101': 'https://www.youtube.com/watch?v=-LpnYwt3seg',
+            'Building Long-Term Wealth': 'https://www.youtube.com/watch?v=lT_gKGGpx6k',
+        }
+        for title, yt_url in yt_map.items():
+            await db.lessons.update_many(
+                {'title': title, '$or': [{'youtube_url': {'$exists': False}}, {'youtube_url': None}]},
+                {'$set': {'youtube_url': yt_url, 'recording_source': 'youtube'}}
+            )
 
         # FINAL SAFETY: Ensure ALL courses in the DB are published and have valid group_id
         await db.courses.update_many(
@@ -365,6 +408,108 @@ async def seed_demo_courses():
             {'$or': [{'group_id': {'$exists': False}}, {'group_id': None}]},
             {'$set': {'group_id': gid}}
         )
+
+        # Seed discussion prompts for demo lessons that don't have any
+        prompts_map = {
+            'The Good News': [
+                'What does the Gospel mean to you personally? How has it shaped your understanding of God?',
+                'Read John 3:16-17. Why do you think God chose to send His Son rather than simply forgive from a distance?',
+                'How would you explain the "good news" to someone who has never heard it before — in one sentence?',
+            ],
+            'Faith and Grace': [
+                'Where in your life do you find yourself trying to "earn" God\'s approval instead of resting in grace?',
+                'How does understanding grace change the way you view your own mistakes and failures?',
+                'James 2:17 says faith without works is dead. How do you balance grace with action in your daily life?',
+            ],
+            'Living in Christ': [
+                'Which spiritual discipline is hardest for you to practice consistently? Why?',
+                'Galatians 2:20 says "Christ lives in me." What does that look like practically on a Monday morning?',
+                'How has your community helped you grow in your walk with Christ?',
+            ],
+            'What Is AI?': [
+                'What AI tools do you already use daily? Were you surprised by any?',
+                'Do you think AI is more of a tool or a threat? What shapes your perspective?',
+                'If you could design an AI to solve one problem in your community, what would it do?',
+            ],
+            'Machine Learning Basics': [
+                'What kinds of decisions should NEVER be delegated to machine learning? Why?',
+                'Can you think of an analogy that captures how machines "learn"?',
+                'What data would you need to build a model that solves a problem you care about?',
+            ],
+            'AI Ethics & the Future': [
+                'Who should be held accountable when AI causes harm — developers, the company, or users?',
+                'How do you balance the convenience of AI with privacy concerns?',
+                'Write down 3 principles you think should govern all AI development.',
+            ],
+            'SEO Fundamentals': [
+                'Google your own name or business. What shows up? What would you change?',
+                'If you had to pick ONE keyword to rank #1 for, what would it be and why?',
+                'How does understanding Google change the way you think about creating content?',
+            ],
+            'Social Media Strategy': [
+                'Which social media platform do you spend the most time on? Is it the right one for your audience?',
+                'Think about a brand that does social media well. What makes their content engaging?',
+                'Plan 3 posts using the "Educate, Entertain, or Inspire" framework.',
+            ],
+            'Paid Advertising (Google & Meta Ads)': [
+                'Have you ever clicked on an ad and bought something? What made it effective?',
+                'If you had $500 for your first ad campaign, what would you do with it?',
+                'Why should you optimize a landing page BEFORE running paid ads?',
+            ],
+            'The Science of Mindfulness': [
+                'When do you feel most "present" in your daily life? What makes those moments different?',
+                'Try the 5-4-3-2-1 grounding technique right now. What did you notice?',
+                'What misconception about mindfulness did this lesson clarify for you?',
+            ],
+            'Stress Management & Emotional Regulation': [
+                'What\'s your default stress response — fight, flight, or freeze?',
+                'Try the STOP technique this week. Share how it went.',
+                'How does naming an emotion change your experience of it?',
+            ],
+            'Building a Sustainable Wellness Routine': [
+                'What does "wellness" mean to YOU personally?',
+                'Pick one habit from each of the 4 Pillars. Can you commit for 7 days?',
+                'Why is starting "embarrassingly small" more effective than ambitious goals?',
+            ],
+            'Budgeting That Actually Works': [
+                'Calculate your 50/30/20 split. Were you surprised by the results?',
+                'What\'s the hardest part of budgeting for you?',
+                'If you could automate one financial habit today, what would it be?',
+            ],
+            'Investing 101': [
+                'What was your biggest fear or misconception about investing before this lesson?',
+                'Use a compound interest calculator: What would $200/month at 8% for 30 years become?',
+                'Why does "time in the market" beat "timing the market"?',
+            ],
+            'Building Long-Term Wealth': [
+                'Write your 5-year financial goal: amount, timeline, and purpose.',
+                'Which wealth-building strategy feels most achievable for you right now?',
+                'The FIRE framework suggests saving 50%+. What savings rate is realistic for you?',
+            ],
+        }
+        
+        demo_lessons = await db.lessons.find(
+            {'title': {'$in': list(prompts_map.keys())}},
+            {'_id': 0, 'id': 1, 'title': 1}
+        ).to_list(100)
+        
+        prompts_seeded = 0
+        for lesson in demo_lessons:
+            existing = await db.teacher_prompts.count_documents({'lesson_id': lesson['id']})
+            if existing > 0:
+                continue
+            for i, question in enumerate(prompts_map.get(lesson['title'], [])):
+                await db.teacher_prompts.insert_one({
+                    'id': str(uuid.uuid4()),
+                    'lesson_id': lesson['id'],
+                    'question': question,
+                    'order': i,
+                    'created_at': now.isoformat(),
+                })
+                prompts_seeded += 1
+        
+        if prompts_seeded:
+            logger.info(f"Demo seed: Created {prompts_seeded} discussion prompts.")
 
     except Exception as e:
         logger.error(f"Demo seed error: {e}", exc_info=True)
