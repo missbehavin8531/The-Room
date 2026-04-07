@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import GuestMessagesPage from '../components/GuestMessagesPage';
 import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
@@ -110,18 +112,7 @@ export const Messages = () => {
     }, {});
 
     if (isGuest) {
-        return (
-            <Layout>
-                <div className="page-container py-6 flex flex-col items-center justify-center min-h-[50vh]" data-testid="guest-messages-block">
-                    <Mail className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                    <h2 className="text-lg font-serif font-bold mb-2">Private Messaging</h2>
-                    <p className="text-sm text-muted-foreground mb-4 text-center max-w-xs">
-                        Sign up to send private messages to your teacher and receive feedback.
-                    </p>
-                    <a href="/" className="text-sm text-primary font-semibold hover:underline">Sign up free</a>
-                </div>
-            </Layout>
-        );
+        return <GuestMessagesPage />;
     }
 
     if (loading) {

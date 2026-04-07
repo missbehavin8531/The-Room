@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { progressAPI } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { getInitials, cn } from '../lib/utils';
+import GuestProgressPage from '../components/GuestProgressPage';
 import {
     Flame, BookOpen, CheckCircle, TrendingUp, Users,
     ChevronRight, GraduationCap, Award
@@ -38,18 +39,7 @@ const ProgressPage = () => {
     };
 
     if (isGuest) {
-        return (
-            <Layout>
-                <div className="page-container py-6 flex flex-col items-center justify-center min-h-[50vh]" data-testid="guest-progress-block">
-                    <TrendingUp className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                    <h2 className="text-lg font-serif font-bold mb-2">Your Progress</h2>
-                    <p className="text-sm text-muted-foreground mb-4 text-center max-w-xs">
-                        Sign up to track your lesson progress, streaks, and course completions.
-                    </p>
-                    <a href="/" className="text-sm text-primary font-semibold hover:underline">Sign up free</a>
-                </div>
-            </Layout>
-        );
+        return <GuestProgressPage />;
     }
 
     if (loading) {
