@@ -18,6 +18,8 @@ router = APIRouter(prefix="/api")
 @router.post("/courses", response_model=CourseResponse)
 async def create_course(data: CourseCreate, user: dict = Depends(require_teacher_or_admin)):
     course_id = str(uuid.uuid4())
+    # Use first group from group_ids array (multi-group support), fallback to legacy group_id
+    course_group_id = (user.get('group_ids') or [None])[0] or user.get('group_id')
     course = {
         'id': course_id,
         'title': data.title,
@@ -27,7 +29,7 @@ async def create_course(data: CourseCreate, user: dict = Depends(require_teacher
         'unlock_type': data.unlock_type,
         'teacher_id': user['id'],
         'teacher_name': user['name'],
-        'group_id': user.get('group_id'),
+        'group_id': course_group_id,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.courses.insert_one(course)
@@ -43,12 +45,20 @@ async def get_courses(user: dict = Depends(require_approved)):
     match_stage = {}
     if not is_teacher:
         match_stage['is_published'] = True
-    # Admin sees ALL courses globally; teachers/members see only their group's
+    # Admin sees ALL courses globally; teachers/members see their group's + unassigned courses
     if user['role'] != 'admin':
         if group_ids:
-            match_stage['group_id'] = {'$in': group_ids}
+            match_stage['$or'] = [
+                {'group_id': {'$in': group_ids}},
+                {'group_id': None},
+                {'group_id': {'$exists': False}},
+            ]
         elif group_id:
-            match_stage['group_id'] = group_id
+            match_stage['$or'] = [
+                {'group_id': group_id},
+                {'group_id': None},
+                {'group_id': {'$exists': False}},
+            ]
     
     pipeline = [
         {'$match': match_stage},
