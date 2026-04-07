@@ -99,8 +99,9 @@ async def zoom_callback(request: Request, code: str = Query(...), state: str = Q
     except Exception as e:
         logger.error(f"Zoom OAuth code exchange failed: {e}")
         # Redirect to settings with error
-        base = FRONTEND_URL or os.environ.get("REACT_APP_BACKEND_URL", "")
-        return RedirectResponse(url=f"{base}/settings?zoom=error")
+        scheme = request.headers.get("x-forwarded-proto", "https")
+        host = request.headers.get("host", "")
+        return RedirectResponse(url=f"{scheme}://{host}/settings?zoom=error")
 
     expires_at = datetime.now(timezone.utc) + timedelta(seconds=token_data.get("expires_in", 3600))
 
@@ -134,8 +135,9 @@ async def zoom_callback(request: Request, code: str = Query(...), state: str = Q
         upsert=True,
     )
 
-    base = FRONTEND_URL or os.environ.get("REACT_APP_BACKEND_URL", "")
-    return RedirectResponse(url=f"{base}/settings?zoom=connected")
+    scheme = request.headers.get("x-forwarded-proto", "https")
+    host = request.headers.get("host", "")
+    return RedirectResponse(url=f"{scheme}://{host}/settings?zoom=connected")
 
 
 # ── Disconnect ───────────────────────────────────────────────
