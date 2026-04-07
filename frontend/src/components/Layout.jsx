@@ -210,40 +210,14 @@ export var Layout = function Layout(props) {
                             </div>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem asChild>
-                                <Link to="/progress" className="flex items-center">
-                                    <TrendingUp className="w-4 h-4 mr-2" />Progress
+                                <Link to="/settings" className="flex items-center">
+                                    <Settings className="w-4 h-4 mr-2" />Settings
                                 </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                                <Link to="/messages" className="flex items-center">
-                                    <Mail className="w-4 h-4 mr-2" />Messages
-                                </Link>
-                            </DropdownMenuItem>
-                            {isTeacherOrAdmin && (
-                                <DropdownMenuItem asChild>
-                                    <Link to="/attendance" className="flex items-center">
-                                        <Calendar className="w-4 h-4 mr-2" />Attendance
-                                    </Link>
-                                </DropdownMenuItem>
-                            )}
-                            {isAdmin && (
-                                <DropdownMenuItem asChild>
-                                    <Link to="/admin" className="flex items-center">
-                                        <Shield className="w-4 h-4 mr-2" />Admin Panel
-                                    </Link>
-                                </DropdownMenuItem>
-                            )}
                             {isAdmin && (
                                 <DropdownMenuItem asChild>
                                     <Link to="/security-log" className="flex items-center">
                                         <ShieldAlert className="w-4 h-4 mr-2" />Security Log
-                                    </Link>
-                                </DropdownMenuItem>
-                            )}
-                            {isTeacher && !isAdmin && (
-                                <DropdownMenuItem asChild>
-                                    <Link to="/teacher-dashboard" className="flex items-center">
-                                        <Users className="w-4 h-4 mr-2" />My Group
                                     </Link>
                                 </DropdownMenuItem>
                             )}
@@ -254,6 +228,27 @@ export var Layout = function Layout(props) {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
+
+                {/* Mobile Nav Tabs */}
+                <nav className="flex items-center gap-1 px-3 pb-2 overflow-x-auto scrollbar-hide" data-testid="mobile-nav-tabs">
+                    {allDesktopNav.map(function(item) {
+                        return (
+                            <Link
+                                key={item.key || item.path}
+                                to={item.path}
+                                className={cn(
+                                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors shrink-0",
+                                    location.pathname === item.path
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                )}
+                            >
+                                <item.icon className="w-3.5 h-3.5" />
+                                {item.label}
+                            </Link>
+                        );
+                    })}
+                </nav>
             </header>
 
             {/* Guest Banner */}
