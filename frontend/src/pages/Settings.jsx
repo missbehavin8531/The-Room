@@ -17,6 +17,7 @@ function Settings() {
     var currentUser = auth.user;
     var refreshUser = auth.refreshUser;
     var isTeacherOrAdmin = auth.isTeacherOrAdmin;
+    var isGuest = currentUser?.role === 'guest';
 
     var [searchParams, setSearchParams] = useSearchParams();
 
@@ -172,6 +173,19 @@ function Settings() {
                     Settings
                 </h1>
 
+                {/* Theme toggle — available to everyone including guests */}
+                <ThemeToggle />
+
+                {/* Everything below is hidden for guests */}
+                {isGuest ? (
+                    <Card>
+                        <CardContent className="p-6 text-center">
+                            <p className="text-sm text-muted-foreground mb-2">Sign up to access full settings</p>
+                            <a href="/" className="text-sm text-primary font-semibold hover:underline">Sign up free</a>
+                        </CardContent>
+                    </Card>
+                ) : (
+                <>
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-lg">
@@ -348,8 +362,12 @@ function Settings() {
                     </Card>
                 )}
 
+                )}
+
                 <ThemeToggle />
                 <NotificationSettings />
+                </>
+                )}
             </div>
         </Layout>
     );

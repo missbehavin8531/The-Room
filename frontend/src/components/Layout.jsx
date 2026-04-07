@@ -277,41 +277,9 @@ export var Layout = function Layout(props) {
             )}
 
             {/* Main Content */}
-            <main className="pb-44 md:pb-8 px-4 md:px-0">
+            <main className="pb-8 px-4 md:px-0">
                 {children}
             </main>
-
-            {/* Mobile Bottom Navigation — Floating Pill */}
-            <nav className="md:hidden bottom-nav-float animate-slide-up" data-testid="mobile-nav">
-                {bottomNavItems.map(function(item) {
-                    var isActive = location.pathname === item.path;
-                    return (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            data-testid={'nav-' + item.label.toLowerCase()}
-                            className="flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-2xl transition-all duration-200"
-                        >
-                            <item.icon
-                                className={cn(
-                                    "w-[22px] h-[22px] transition-all duration-200",
-                                    isActive ? "text-primary scale-110" : "text-muted-foreground"
-                                )}
-                                strokeWidth={isActive ? 2.5 : 1.8}
-                            />
-                            <span className={cn(
-                                "text-[10px] transition-colors duration-200",
-                                isActive ? "text-primary font-bold" : "text-muted-foreground font-medium"
-                            )}>
-                                {item.label}
-                            </span>
-                            {isActive && (
-                                <span className="w-1 h-1 rounded-full bg-primary -mt-0.5" />
-                            )}
-                        </Link>
-                    );
-                })}
-            </nav>
         </div>
     );
 };
