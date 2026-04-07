@@ -4,7 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 import os
 import logging
 
-from database import client, UPLOAD_DIR
+from database import client, db, UPLOAD_DIR
 
 # Import routers
 from auth import router as auth_router
@@ -64,6 +64,62 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+@app.on_event("startup")
+async def startup_migrate_courses():
+    """Auto-fix courses with orphaned group_ids on every startup."""
+    try:
+        # Get all active groups
+        all_groups = await db.groups.find({}, {'_id': 0, 'id': 1}).to_list(500)
+        valid_group_ids = {g['id'] for g in all_groups}
+
+        if not valid_group_ids:
+            logger.info("Migration: No groups found, skipping course fix.")
+            return
+
+        # Find courses with missing, null, or orphaned group_ids
+        all_courses = await db.courses.find({}, {'_id': 0, 'id': 1, 'group_id': 1, 'title': 1}).to_list(5000)
+        orphaned = [c for c in all_courses if not c.get('group_id') or c.get('group_id') not in valid_group_ids]
+
+        if not orphaned:
+            logger.info("Migration: All courses have valid group_ids.")
+            return
+
+        # Find the most populated group to assign orphaned courses to
+        best_group_id = None
+        best_count = -1
+        for gid in valid_group_ids:
+            count = await db.users.count_documents({'$or': [{'group_ids': gid}, {'group_id': gid}]})
+            if count > best_count:
+                best_count = count
+                best_group_id = gid
+
+        if not best_group_id:
+            logger.warning("Migration: No group with users found.")
+            return
+
+        group_doc = await db.groups.find_one({'id': best_group_id}, {'_id': 0, 'name': 1})
+        group_name = group_doc.get('name', 'Unknown') if group_doc else 'Unknown'
+
+        # Reassign orphaned courses
+        orphaned_ids = [c['id'] for c in orphaned]
+        result = await db.courses.update_many(
+            {'id': {'$in': orphaned_ids}},
+            {'$set': {'group_id': best_group_id}}
+        )
+        logger.info(f"Migration: Reassigned {result.modified_count} orphaned courses to '{group_name}' ({best_group_id})")
+
+        # Also fix lessons belonging to these courses
+        orphaned_course_ids = [c['id'] for c in orphaned]
+        lesson_result = await db.lessons.update_many(
+            {'course_id': {'$in': orphaned_course_ids}, '$or': [{'group_id': {'$exists': False}}, {'group_id': None}]},
+            {'$set': {'group_id': best_group_id}}
+        )
+        if lesson_result.modified_count:
+            logger.info(f"Migration: Updated group_id on {lesson_result.modified_count} lessons.")
+
+    except Exception as e:
+        logger.error(f"Migration error: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

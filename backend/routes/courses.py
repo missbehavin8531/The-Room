@@ -10,9 +10,36 @@ from database import db, UPLOAD_DIR
 from models import (
     CourseCreate, CourseUpdate, CourseResponse, EnrollmentResponse
 )
-from auth import require_approved, require_teacher_or_admin
+from auth import require_approved, require_teacher_or_admin, require_admin
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api")
+
+
+@router.post("/admin/courses/fix-groups")
+async def fix_course_groups(user: dict = Depends(require_admin)):
+    """Admin endpoint: Reassign ALL courses to the admin's primary group."""
+    group_ids = user.get('group_ids', [])
+    group_id = group_ids[0] if group_ids else user.get('group_id')
+    if not group_id:
+        raise HTTPException(status_code=400, detail="You have no group assigned. Join or create a group first.")
+    
+    group = await db.groups.find_one({'id': group_id}, {'_id': 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Update ALL courses to this group
+    result = await db.courses.update_many({}, {'$set': {'group_id': group_id}})
+    logger.info(f"Admin fix-groups: {result.modified_count} courses reassigned to '{group['name']}'")
+    
+    return {
+        'message': f"All courses reassigned to '{group['name']}'",
+        'courses_updated': result.modified_count,
+        'group_id': group_id,
+        'group_name': group['name']
+    }
 
 
 @router.post("/courses", response_model=CourseResponse)

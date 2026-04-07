@@ -27,7 +27,8 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - **Cards**: `card-organic` with glassmorphism
 - **Layout**: 2-col course grid mobile, 3-col desktop
 - **Nav**: Desktop header nav + mobile avatar dropdown (no bottom bar). Single "Courses" tab (no separate Home tab) — "This Week" hero lives inside the Courses view.
-- **Guest Course Access** — All lessons unlocked for guests regardless of sequential/scheduled unlock type. Guests can browse any course and lesson freely.
+- **Startup Migration**: Auto-detects and fixes courses with orphaned/mismatched `group_id` on every server boot. Finds the most populated group and reassigns orphaned courses. Admin also has `/api/admin/courses/fix-groups` manual endpoint.
+- **Upcoming Lesson**: `/api/lessons/next/upcoming` now respects group boundaries (previously showed lessons from any group).
 
 ## Architecture
 - **Backend**: FastAPI, MongoDB (motor), WebSockets, JWT (including guest tokens)
