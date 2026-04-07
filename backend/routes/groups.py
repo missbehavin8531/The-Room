@@ -61,6 +61,14 @@ async def create_group(data: GroupCreate, user: dict = Depends(require_teacher_o
 async def get_my_group(user: dict = Depends(require_approved)):
     group_ids = user.get('group_ids', [])
     group_id = group_ids[0] if group_ids else user.get('group_id')
+    
+    # Admin with no group — return the first available group
+    if not group_id and user.get('role') == 'admin':
+        any_group = await db.groups.find_one({}, {'_id': 0})
+        if any_group:
+            member_count = await db.users.count_documents({'group_ids': any_group['id']})
+            return GroupResponse(**any_group, member_count=member_count)
+    
     if not group_id:
         raise HTTPException(status_code=404, detail="You are not part of any group")
 

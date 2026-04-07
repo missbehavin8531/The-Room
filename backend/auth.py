@@ -47,7 +47,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
                 'role': 'guest',
                 'is_approved': True,
                 'group_ids': payload.get('group_ids', []),
-                'group_id': payload.get('group_ids', [None])[0],
+                'group_id': (payload.get('group_ids') or [None])[0],
             }
         user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
         if not user:
