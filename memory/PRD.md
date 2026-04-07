@@ -5,59 +5,41 @@ Mobile-first Small Group Learning Platform for one church (v1), named "The Room"
 Value proposition: "A weekly discipleship hub: meet live, share resources, discuss, and follow up."
 
 ## Roles & Responsibilities
-- **Platform Admin** (`kirah092804@gmail.com`): Full platform access, no specific group assignment.
-- **Teacher**: Admin access restricted to their assigned group(s). Has a dedicated setup wizard and dashboard.
+- **Platform Admin** (`kirah092804@gmail.com`): Full platform access globally.
+- **Teacher**: Admin access restricted to their assigned group(s).
 - **Member**: Assigned to groups via invite code.
-- **Guest**: Read-only access to demo group courses/lessons. Cannot chat, comment, or enroll. 4-hour session.
+- **Guest**: Read-only demo access. Can browse courses/lessons. Cannot chat, enroll, join video, or download resources.
 
 ## Core Features (Implemented)
-- **Premium Landing Page** — Hero with CTAs, features bento grid, how-it-works steps, testimonials, CTA section, integrated auth modal
-- **Guest/Read-Only Demo Mode** — "Try Demo" button creates a guest JWT; guests can browse courses and lessons but cannot write
-- Multi-group support (users belong to multiple groups via `group_ids[]`)
-- Course management with lessons, resources, and drag-and-drop reordering
-- Real-time WebSocket chat with group scoping
-- Service Worker offline caching (P1)
-- Daily.co in-app video conferencing
-- Zoom OAuth auto-import + manual recording upload
-- Email notifications (Resend) and web push
-- Progress tracking with bento stats, SVG ring, per-course bars
-- Attendance reporting
-- Teacher dashboard with "Share Invite" widget
-- Dark mode toggle, mobile-first responsiveness
-- Security Log for admins
+- **Premium Landing Page** — Hero, features bento grid, how-it-works, testimonials, CTA, auth modal
+- **Guest/Read-Only Demo Mode** — "Try Demo" creates a 4hr guest JWT; restricted from video/downloads/chat
+- **Merged Home + Courses** — Single unified dashboard with "This Week" hero + 2-column course grid
+- Multi-group support, course management, drag-and-drop reordering
+- Real-time WebSocket chat, Service Worker offline caching
+- Daily.co video, Zoom OAuth auto-import, manual recording upload
+- Email notifications (Resend), web push, progress tracking, attendance
+- Security Log for admins, dark mode, mobile-first design
 
 ## UI/UX Design System
 - **Typography**: Fraunces (headings), Manrope (body)
-- **Cards**: `card-organic` class with glassmorphism
-- **Tabs**: Clean underline `lesson-tab` pattern
-- **Colors**: Earthy tones (sage greens, warm ambers, olive tones), primary accent
-- **Animations**: `animate-fade-in`, `stagger-children`, entrance reveals
-- **Navigation**: Floating glassmorphic bottom pill with active dot indicator
-- **Toasts**: Auto-dismiss after 3 seconds
-- **Landing Page**: Sticky header, asymmetric hero grid, bento feature cards, floating notification pills
-- **Design reference**: `/app/design_guidelines.json`
+- **Cards**: `card-organic` with glassmorphism
+- **Layout**: 2-col course grid mobile, 3-col desktop
+- **Nav**: Floating glassmorphic bottom pill, Home + Courses both → /dashboard
+- **Padding**: `pb-44` mobile to clear floating nav
 
 ## Architecture
-- **Backend**: FastAPI, MongoDB (motor), WebSockets, JWT auth (including guest tokens)
+- **Backend**: FastAPI, MongoDB (motor), WebSockets, JWT (including guest tokens)
 - **Frontend**: React, Tailwind CSS, Shadcn UI, Service Workers
-- **DB**: MongoDB with collections: users, groups, courses, lessons, resources, enrollments, chat_messages, attendance, security_logs
+- **Routing**: / = landing (unauthenticated) or dashboard (authenticated), /dashboard = merged home+courses
 
 ## Completed Work Timeline
-- Role Restructure (Admin/Teacher/Member) - DONE
-- Multi-group architecture migration - DONE
-- Drag-and-drop resource reordering - DONE
-- Daily.co video fixes - DONE
-- Share Invite feature - DONE
-- Offline mode (Service Worker) - DONE (P1)
-- Real-time WebSocket chat - DONE (P2)
+- Role Restructure, Multi-group migration, Drag-and-drop - DONE
+- Daily.co video, Share Invite, Offline mode (P1), WebSocket chat (P2) - DONE
 - Zoom video upload + OAuth integration - DONE
 - Full UI/UX design overhaul (all pages) - DONE
-- CourseDetail + Progress page refinement - DONE
-- Security/QA hardening (13 fixes) - DONE
-- Security Log feature for admins - DONE
-- Bug fixes (recording, toasts, scroll) - DONE
-- 4 new demo courses (AI, Marketing, Wellness, Finance) - DONE
+- Security/QA hardening (13 fixes) + Security Log - DONE
 - Premium Landing Page + Guest Demo Mode - DONE (4/7/2026)
+- Merged Home+Courses page, 2-col grid, scroll fix, guest video/download guards - DONE (4/7/2026)
 
 ## Upcoming Tasks
 - P2: Background sync for Offline Mode (Service Worker)

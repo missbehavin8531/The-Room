@@ -29,21 +29,21 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 
 // Bottom nav: max 5 core items
 var bottomNavItems = [
-    { path: '/dashboard', icon: Home, label: 'Home' },
-    { path: '/dashboard', icon: BookOpen, label: 'Courses' },
-    { path: '/search', icon: SearchIcon, label: 'Search' },
-    { path: '/chat', icon: MessageCircle, label: 'Chat' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
+    { path: '/dashboard', key: 'home', icon: Home, label: 'Home' },
+    { path: '/dashboard', key: 'courses', icon: BookOpen, label: 'Courses' },
+    { path: '/search', key: 'search', icon: SearchIcon, label: 'Search' },
+    { path: '/chat', key: 'chat', icon: MessageCircle, label: 'Chat' },
+    { path: '/settings', key: 'settings', icon: Settings, label: 'Settings' },
 ];
 
 // Desktop top nav: all items
 var desktopNavItems = [
-    { path: '/dashboard', icon: Home, label: 'Home' },
-    { path: '/dashboard', icon: BookOpen, label: 'Courses' },
-    { path: '/progress', icon: TrendingUp, label: 'Progress' },
-    { path: '/search', icon: SearchIcon, label: 'Search' },
-    { path: '/chat', icon: MessageCircle, label: 'Chat' },
-    { path: '/messages', icon: Mail, label: 'Messages' },
+    { path: '/dashboard', key: 'home', icon: Home, label: 'Home' },
+    { path: '/dashboard', key: 'courses', icon: BookOpen, label: 'Courses' },
+    { path: '/progress', key: 'progress', icon: TrendingUp, label: 'Progress' },
+    { path: '/search', key: 'search', icon: SearchIcon, label: 'Search' },
+    { path: '/chat', key: 'chat', icon: MessageCircle, label: 'Chat' },
+    { path: '/messages', key: 'messages', icon: Mail, label: 'Messages' },
 ];
 
 var adminNavItem = { path: '/admin', icon: Shield, label: 'Admin' };
@@ -124,7 +124,7 @@ export var Layout = function Layout(props) {
                             {allDesktopNav.map(function(item) {
                                 return (
                                     <Link
-                                        key={item.path}
+                                        key={item.key || item.path}
                                         to={item.path}
                                         className={cn(
                                             "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors",
