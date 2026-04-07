@@ -42,6 +42,33 @@ async def fix_course_groups(user: dict = Depends(require_admin)):
     }
 
 
+@router.get("/admin/debug-courses")
+async def debug_courses(user: dict = Depends(require_admin)):
+    """Diagnostic endpoint: shows all courses, groups, and their relationships."""
+    courses = await db.courses.find({}, {'_id': 0, 'id': 1, 'title': 1, 'group_id': 1, 'is_published': 1}).to_list(100)
+    groups = await db.groups.find({}, {'_id': 0}).to_list(100)
+    group_map = {g['id']: g.get('name', 'Unknown') for g in groups}
+    
+    course_info = []
+    for c in courses:
+        gid = c.get('group_id')
+        lesson_count = await db.lessons.count_documents({'course_id': c['id']})
+        course_info.append({
+            'title': c['title'],
+            'group_id': gid,
+            'group_name': group_map.get(gid, 'ORPHANED/MISSING') if gid else 'NO GROUP',
+            'is_published': c.get('is_published'),
+            'lesson_count': lesson_count
+        })
+    
+    return {
+        'total_courses': len(courses),
+        'total_groups': len(groups),
+        'groups': [{'id': g['id'], 'name': g.get('name'), 'invite_code': g.get('invite_code')} for g in groups],
+        'courses': course_info
+    }
+
+
 @router.post("/courses", response_model=CourseResponse)
 async def create_course(data: CourseCreate, user: dict = Depends(require_teacher_or_admin)):
     course_id = str(uuid.uuid4())

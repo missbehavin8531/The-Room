@@ -124,25 +124,64 @@ async def startup_migrate_courses():
 
 @app.on_event("startup")
 async def seed_demo_courses():
-    """Ensure the DEMO2026 group has the introduction courses for Try Demo."""
+    """Ensure introduction courses exist in the database. Finds the best target group automatically."""
     try:
-        demo_group = await db.groups.find_one({'invite_code': 'DEMO2026'}, {'_id': 0})
-        if not demo_group:
-            logger.info("Demo seed: No DEMO2026 group found, skipping.")
+        # Strategy: find target group by priority
+        # 1. Group with invite code DEMO2026
+        # 2. Group named "The Room Demo Group"  
+        # 3. Most populated group
+        # 4. Any group at all
+        target_group = await db.groups.find_one({'invite_code': 'DEMO2026'}, {'_id': 0})
+        if not target_group:
+            target_group = await db.groups.find_one({'name': {'$regex': 'demo', '$options': 'i'}}, {'_id': 0})
+        if not target_group:
+            # Find most populated group
+            all_groups = await db.groups.find({}, {'_id': 0}).to_list(100)
+            best, best_count = None, -1
+            for g in all_groups:
+                cnt = await db.users.count_documents({'$or': [{'group_ids': g['id']}, {'group_id': g['id']}]})
+                if cnt > best_count:
+                    best_count = cnt
+                    best = g
+            target_group = best
+        if not target_group:
+            # Last resort: any group
+            target_group = await db.groups.find_one({}, {'_id': 0})
+        
+        if not target_group:
+            logger.warning("Demo seed: No groups exist at all. Cannot seed courses.")
             return
 
-        gid = demo_group['id']
-        # Check which intro courses already exist in this group
+        gid = target_group['id']
+        logger.info(f"Demo seed: Target group = '{target_group.get('name')}' ({gid})")
+
+        # Check which intro courses already exist ANYWHERE in the database
         existing = await db.courses.find(
-            {'group_id': gid, 'title': {'$regex': '^Introduction'}},
-            {'_id': 0, 'title': 1}
-        ).to_list(20)
+            {'title': {'$regex': '^Introduction'}},
+            {'_id': 0, 'title': 1, 'group_id': 1}
+        ).to_list(50)
         existing_titles = {c['title'] for c in existing}
+        
+        # Also move any existing intro courses to the target group if they're orphaned
+        for c in existing:
+            if c.get('group_id') != gid:
+                await db.courses.update_one(
+                    {'title': c['title']},
+                    {'$set': {'group_id': gid}}
+                )
+                logger.info(f"Demo seed: Moved '{c['title']}' to target group.")
 
         import uuid
         from datetime import datetime, timezone, timedelta
         now = datetime.now(timezone.utc)
-        teacher_id = demo_group.get('created_by', 'system')
+        
+        # Find the admin/teacher for this group
+        teacher = await db.users.find_one(
+            {'role': {'$in': ['admin', 'teacher']}},
+            {'_id': 0, 'id': 1, 'name': 1}
+        )
+        teacher_id = teacher['id'] if teacher else 'system'
+        teacher_name = teacher.get('name', 'Teacher') if teacher else 'Teacher'
 
         demo_courses = [
             {
@@ -212,7 +251,7 @@ async def seed_demo_courses():
                 'is_published': True,
                 'unlock_type': 'all',
                 'teacher_id': teacher_id,
-                'teacher_name': 'Teacher',
+                'teacher_name': teacher_name,
                 'group_id': gid,
                 'created_at': now.isoformat()
             }
@@ -232,14 +271,25 @@ async def seed_demo_courses():
                 })
 
             seeded += 1
+            logger.info(f"Demo seed: Created '{course_data['title']}' with {len(course_data['lessons'])} lessons")
 
         if seeded:
-            logger.info(f"Demo seed: Created {seeded} introduction courses in '{demo_group['name']}'.")
+            logger.info(f"Demo seed: Total {seeded} new courses created in '{target_group.get('name')}'.")
         else:
-            logger.info("Demo seed: All introduction courses already exist.")
+            logger.info("Demo seed: All 5 introduction courses already exist.")
+
+        # FINAL SAFETY: Ensure ALL courses in the DB are published and have valid group_id
+        await db.courses.update_many(
+            {'$or': [{'is_published': {'$exists': False}}, {'is_published': None}]},
+            {'$set': {'is_published': True}}
+        )
+        await db.courses.update_many(
+            {'$or': [{'group_id': {'$exists': False}}, {'group_id': None}]},
+            {'$set': {'group_id': gid}}
+        )
 
     except Exception as e:
-        logger.error(f"Demo seed error: {e}")
+        logger.error(f"Demo seed error: {e}", exc_info=True)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
