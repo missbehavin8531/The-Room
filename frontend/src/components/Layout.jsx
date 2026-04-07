@@ -59,12 +59,13 @@ export var Layout = function Layout(props) {
     var isTeacherOrAdmin = auth.isTeacherOrAdmin;
     var isAdmin = auth.isAdmin;
     var isTeacher = auth.isTeacher;
+    var isGuest = auth.isGuest;
     var location = useLocation();
     var navigate = useNavigate();
 
     function handleLogout() {
         logout();
-        navigate('/login');
+        navigate('/');
     }
 
     var extraNav = [];
@@ -262,6 +263,18 @@ export var Layout = function Layout(props) {
                     </DropdownMenu>
                 </div>
             </header>
+
+            {/* Guest Banner */}
+            {isGuest && (
+                <div className="bg-primary/10 border-b border-primary/20 px-4 py-2.5 flex items-center justify-between gap-3">
+                    <p className="text-xs font-medium text-primary" style={{ fontFamily: "'Manrope', sans-serif" }} data-testid="guest-banner">
+                        You're browsing as a guest (read-only)
+                    </p>
+                    <Link to="/" onClick={handleLogout} className="text-xs font-bold text-primary hover:underline whitespace-nowrap" data-testid="guest-signup-link">
+                        Sign up free
+                    </Link>
+                </div>
+            )}
 
             {/* Main Content */}
             <main className="pb-36 md:pb-8 px-4 md:px-0">

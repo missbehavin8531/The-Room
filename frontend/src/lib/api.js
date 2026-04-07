@@ -27,7 +27,8 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            window.location.href = '/login';
+            const isGuest = JSON.parse(localStorage.getItem('user') || '{}')?.role === 'guest';
+            window.location.href = isGuest ? '/' : '/login';
         }
         return Promise.reject(error);
     }
@@ -37,6 +38,7 @@ api.interceptors.response.use(
 export const authAPI = {
     register: (data) => api.post('/auth/register', data),
     login: (data) => api.post('/auth/login', data),
+    guest: () => api.post('/auth/guest'),
     getMe: () => api.get('/auth/me'),
     getOnboardingStatus: () => api.get('/auth/onboarding-status'),
     completeOnboarding: () => api.post('/auth/onboarding-complete'),

@@ -38,6 +38,17 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     try:
         token = credentials.credentials
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        # Guest token — return a synthetic user dict
+        if payload.get('role') == 'guest':
+            return {
+                'id': payload['user_id'],
+                'email': 'guest@demo',
+                'name': 'Guest',
+                'role': 'guest',
+                'is_approved': True,
+                'group_ids': payload.get('group_ids', []),
+                'group_id': payload.get('group_ids', [None])[0],
+            }
         user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
@@ -48,6 +59,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise HTTPException(status_code=401, detail="Invalid token")
 
 async def require_approved(user: dict = Depends(get_current_user)):
+    if user.get('role') == 'guest':
+        return user  # Guests pass through — individual endpoints restrict writes
     if not user.get('is_approved'):
         raise HTTPException(status_code=403, detail="Account pending approval")
     return user
@@ -55,6 +68,11 @@ async def require_approved(user: dict = Depends(get_current_user)):
 async def require_teacher_or_admin(user: dict = Depends(require_approved)):
     if user['role'] not in ['teacher', 'admin']:
         raise HTTPException(status_code=403, detail="Teacher or admin access required")
+    return user
+
+async def require_non_guest(user: dict = Depends(require_approved)):
+    if user.get('role') == 'guest':
+        raise HTTPException(status_code=403, detail="Guest accounts cannot perform this action. Please sign up for free.")
     return user
 
 async def require_admin(user: dict = Depends(require_approved)):
@@ -353,3 +371,33 @@ async def reset_password(data: ResetPasswordRequest):
     )
     
     return {'message': 'Password has been reset successfully. You can now log in with your new password.'}
+
+
+
+@router.post("/auth/guest")
+async def guest_login():
+    """Create a read-only guest session for the demo group."""
+    demo_group = await db.groups.find_one({'invite_code': 'DEMO2026'}, {'_id': 0})
+    group_ids = [demo_group['id']] if demo_group else []
+
+    guest_id = f"guest-{uuid.uuid4().hex[:8]}"
+    payload = {
+        'user_id': guest_id,
+        'email': 'guest@demo',
+        'role': 'guest',
+        'group_ids': group_ids,
+        'exp': datetime.now(timezone.utc) + timedelta(hours=4)
+    }
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+    return {
+        'token': token,
+        'user': {
+            'id': guest_id,
+            'email': 'guest@demo',
+            'name': 'Guest',
+            'role': 'guest',
+            'is_approved': True,
+            'group_ids': group_ids,
+        }
+    }

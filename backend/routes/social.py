@@ -9,7 +9,7 @@ from models import (
     ChatMessageCreate, ChatMessageResponse,
     PrivateMessageCreate, PrivateMessageResponse
 )
-from auth import require_approved, require_teacher_or_admin
+from auth import require_approved, require_teacher_or_admin, require_non_guest
 
 router = APIRouter(prefix="/api")
 
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api")
 # ============== COMMENTS ==============
 
 @router.post("/lessons/{lesson_id}/comments", response_model=CommentResponse)
-async def create_comment(lesson_id: str, data: CommentCreate, user: dict = Depends(require_approved)):
+async def create_comment(lesson_id: str, data: CommentCreate, user: dict = Depends(require_non_guest)):
     if user.get('is_muted'):
         raise HTTPException(status_code=403, detail="You are muted and cannot post")
     if not data.content or not data.content.strip():
@@ -66,7 +66,7 @@ async def delete_comment(comment_id: str, user: dict = Depends(require_teacher_o
 # ============== GLOBAL CHAT ==============
 
 @router.post("/chat", response_model=ChatMessageResponse)
-async def send_chat_message(data: ChatMessageCreate, user: dict = Depends(require_approved)):
+async def send_chat_message(data: ChatMessageCreate, user: dict = Depends(require_non_guest)):
     if user.get('is_muted'):
         raise HTTPException(status_code=403, detail="You are muted and cannot chat")
     if not data.content or not data.content.strip():

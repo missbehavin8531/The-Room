@@ -24,6 +24,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import TeacherSetup from './pages/TeacherSetup';
 import TeacherDashboard from './pages/TeacherDashboard';
 import SecurityLog from './pages/SecurityLog';
+import LandingPage from './pages/LandingPage';
 
 // Components
 import { Onboarding } from './components/Onboarding';
@@ -42,7 +43,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, requireTeacher = false
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/" replace />;
     }
 
     if (needsGroupSetup) {
@@ -73,7 +74,7 @@ const TeacherSetupRoute = ({ children }) => {
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/" replace />;
     }
 
     if (!needsGroupSetup) {
@@ -112,6 +113,23 @@ const OnboardingOverlay = () => {
     if (!needsOnboarding || needsGroupSetup) return null;
     
     return <Onboarding onComplete={completeOnboarding} />;
+};
+
+// Home Route — Landing page when not authenticated, Dashboard when authenticated
+const HomeRoute = () => {
+    const { isAuthenticated, loading, needsGroupSetup } = useAuth();
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+    if (isAuthenticated) {
+        if (needsGroupSetup) return <Navigate to="/teacher-setup" replace />;
+        return <Dashboard />;
+    }
+    return <LandingPage />;
 };
 
 function AppRoutes() {
@@ -156,8 +174,9 @@ function AppRoutes() {
             />
 
             {/* Protected Routes */}
+            <Route path="/" element={<HomeRoute />} />
             <Route
-                path="/"
+                path="/dashboard"
                 element={
                     <ProtectedRoute>
                         <Dashboard />
