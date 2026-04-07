@@ -14,7 +14,7 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - **Premium Landing Page** — Hero, features bento grid, how-it-works, testimonials, CTA, auth modal
 - **Guest/Read-Only Demo Mode** — "Try Demo" creates a 4hr guest JWT; restricted from video/downloads/chat/messages
 - **Merged Home + Courses** — Single unified dashboard with "This Week" hero + 2-column course grid
-- **Guest Restrictions** — Chat: read-only with demo conversation, no input; Messages: completely blocked; Settings: only ThemeToggle; Nav: only Home/Courses/Chat
+- **Guest Restrictions** — All tabs visible like real app; Chat: read-only with demo conversation; Messages & Progress: blocked with sign-up CTAs; Settings: only ThemeToggle; Search & Courses: read-only browsing
 - Multi-group support, course management, drag-and-drop reordering
 - Real-time WebSocket chat, Service Worker offline caching
 - Daily.co video, Zoom OAuth auto-import, manual recording upload

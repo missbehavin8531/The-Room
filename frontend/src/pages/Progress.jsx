@@ -14,13 +14,13 @@ import {
 } from 'lucide-react';
 
 const ProgressPage = () => {
-    const { isTeacherOrAdmin } = useAuth();
+    const { isTeacherOrAdmin, isGuest } = useAuth();
     const [progress, setProgress] = useState(null);
     const [students, setStudents] = useState(null);
     const [loading, setLoading] = useState(true);
     const [tab, setTab] = useState('my');
 
-    useEffect(() => { loadData(); }, []);
+    useEffect(() => { if (!isGuest) loadData(); }, []);
 
     const loadData = async () => {
         try {
@@ -36,6 +36,21 @@ const ProgressPage = () => {
             setLoading(false);
         }
     };
+
+    if (isGuest) {
+        return (
+            <Layout>
+                <div className="page-container py-6 flex flex-col items-center justify-center min-h-[50vh]" data-testid="guest-progress-block">
+                    <TrendingUp className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                    <h2 className="text-lg font-serif font-bold mb-2">Your Progress</h2>
+                    <p className="text-sm text-muted-foreground mb-4 text-center max-w-xs">
+                        Sign up to track your lesson progress, streaks, and course completions.
+                    </p>
+                    <a href="/" className="text-sm text-primary font-semibold hover:underline">Sign up free</a>
+                </div>
+            </Layout>
+        );
+    }
 
     if (loading) {
         return (

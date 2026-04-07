@@ -62,10 +62,8 @@ export var Layout = function Layout(props) {
     if (isAdmin) extraNav.push(adminNavItem);
     if (isTeacher && !isAdmin) extraNav.push(teacherNavItem);
 
-    // Guests: only Courses, Chat (read-only)
-    var filteredDesktop = isGuest
-        ? desktopNavItems.filter(function(i) { return i.key === 'courses' || i.key === 'chat'; })
-        : desktopNavItems;
+    // Guests see the same nav as real users (all tabs visible, pages handle restrictions)
+    var filteredDesktop = desktopNavItems;
     var allDesktopNav = filteredDesktop.concat(extraNav);
 
     if (!isApproved) {
@@ -211,20 +209,16 @@ export var Layout = function Layout(props) {
                                 </span>
                             </div>
                             <DropdownMenuSeparator />
-                            {!isGuest && (
                             <DropdownMenuItem asChild>
                                 <Link to="/progress" className="flex items-center">
                                     <TrendingUp className="w-4 h-4 mr-2" />Progress
                                 </Link>
                             </DropdownMenuItem>
-                            )}
-                            {!isGuest && (
                             <DropdownMenuItem asChild>
                                 <Link to="/messages" className="flex items-center">
                                     <Mail className="w-4 h-4 mr-2" />Messages
                                 </Link>
                             </DropdownMenuItem>
-                            )}
                             {isTeacherOrAdmin && (
                                 <DropdownMenuItem asChild>
                                     <Link to="/attendance" className="flex items-center">
