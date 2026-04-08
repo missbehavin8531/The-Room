@@ -141,10 +141,92 @@ async def get_group_members(group_id: str, user: dict = Depends(require_admin)):
         raise HTTPException(status_code=404, detail="Group not found")
 
     members = await db.users.find(
-        {'group_id': group_id},
+        {'group_ids': group_id},
         {'_id': 0, 'password': 0}
     ).to_list(1000)
     return [UserResponse(**m) for m in members]
+
+
+@router.delete("/groups/{group_id}/members/{user_id}")
+async def remove_member_from_group(group_id: str, user_id: str, user: dict = Depends(require_admin)):
+    """Remove a user from a specific group (without deleting them)."""
+    group = await db.groups.find_one({'id': group_id}, {'_id': 0})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    target = await db.users.find_one({'id': user_id}, {'_id': 0, 'password': 0})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if target.get('role') == 'admin':
+        raise HTTPException(status_code=403, detail="Cannot remove admin from groups")
+
+    if group_id not in target.get('group_ids', []):
+        raise HTTPException(status_code=400, detail="User is not in this group")
+
+    # Pull group from group_ids array
+    await db.users.update_one(
+        {'id': user_id},
+        {'$pull': {'group_ids': group_id}}
+    )
+
+    # If this was their primary group_id, update to next remaining or null
+    if target.get('group_id') == group_id:
+        updated = await db.users.find_one({'id': user_id}, {'_id': 0, 'group_ids': 1})
+        remaining = updated.get('group_ids', [])
+        new_primary = remaining[0] if remaining else None
+        await db.users.update_one({'id': user_id}, {'$set': {'group_id': new_primary}})
+
+    return {
+        'message': f"{target['name']} removed from {group['name']}",
+        'user_id': user_id,
+        'group_id': group_id,
+    }
+
+
+@router.put("/groups/{group_id}/members/{user_id}/move")
+async def move_member_to_group(group_id: str, user_id: str, target_group_id: str = Query(...), user: dict = Depends(require_admin)):
+    """Move a user from one group to another."""
+    source_group = await db.groups.find_one({'id': group_id}, {'_id': 0})
+    if not source_group:
+        raise HTTPException(status_code=404, detail="Source group not found")
+
+    target_group = await db.groups.find_one({'id': target_group_id}, {'_id': 0})
+    if not target_group:
+        raise HTTPException(status_code=404, detail="Target group not found")
+
+    if group_id == target_group_id:
+        raise HTTPException(status_code=400, detail="Source and target group are the same")
+
+    target = await db.users.find_one({'id': user_id}, {'_id': 0, 'password': 0})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if target.get('role') == 'admin':
+        raise HTTPException(status_code=403, detail="Cannot move admin between groups")
+
+    if group_id not in target.get('group_ids', []):
+        raise HTTPException(status_code=400, detail="User is not in the source group")
+
+    # Atomic: remove from source, add to target
+    await db.users.update_one(
+        {'id': user_id},
+        {
+            '$pull': {'group_ids': group_id},
+            '$set': {'group_id': target_group_id},
+        }
+    )
+    await db.users.update_one(
+        {'id': user_id},
+        {'$addToSet': {'group_ids': target_group_id}}
+    )
+
+    return {
+        'message': f"{target['name']} moved from {source_group['name']} to {target_group['name']}",
+        'user_id': user_id,
+        'from_group': source_group['name'],
+        'to_group': target_group['name'],
+    }
 
 
 @router.get("/groups/{group_id}/invite-code")

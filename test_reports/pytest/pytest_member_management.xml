@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="10" time="7.196" timestamp="2026-04-08T01:34:08.799024+00:00" hostname="agent-env-5bcbc21a-8c93-4f46-9423-9f1d64ede92f"><testcase classname="backend.tests.test_member_management.TestMemberManagement" name="test_get_group_members_endpoint" time="0.641" /><testcase classname="backend.tests.test_member_management.TestMemberManagement" name="test_remove_member_from_group" time="0.725"><failure message="AssertionError: Approval failed: {&quot;detail&quot;:&quot;User not found&quot;}&#10;assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">backend/tests/test_member_management.py:86: in test_remove_member_from_group
+    assert approve_res.status_code == 200, f"Approval failed: {approve_res.text}"
+E   AssertionError: Approval failed: {"detail":"User not found"}
+E   assert 404 == 200
+E    +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_member_management.TestMemberManagement" name="test_move_member_between_groups" time="0.930"><failure message="AssertionError: Move failed: {&quot;detail&quot;:&quot;User not found&quot;}&#10;assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">backend/tests/test_member_management.py:155: in test_move_member_between_groups
+    assert move_res.status_code == 200, f"Move failed: {move_res.text}"
+E   AssertionError: Move failed: {"detail":"User not found"}
+E   assert 404 == 200
+E    +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_member_management.TestMemberManagement" name="test_admin_guard_remove" time="0.522" /><testcase classname="backend.tests.test_member_management.TestMemberManagement" name="test_admin_guard_move" time="0.808" /><testcase classname="backend.tests.test_member_management.TestMemberManagement" name="test_remove_nonexistent_user" time="0.440" /><testcase classname="backend.tests.test_member_management.TestMemberManagement" name="test_move_to_same_group" time="0.818" /><testcase classname="backend.tests.test_member_management.TestMemberManagement" name="test_remove_user_not_in_group" time="0.763"><failure message="AssertionError: Expected 400, got 404&#10;assert 404 == 400&#10; +  where 404 = &lt;Response [404]&gt;.status_code">backend/tests/test_member_management.py:267: in test_remove_user_not_in_group
+    assert remove_res.status_code == 400, f"Expected 400, got {remove_res.status_code}"
+E   AssertionError: Expected 400, got 404
+E   assert 404 == 400
+E    +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_member_management.TestMultiGroupJoin" name="test_join_another_group" time="0.900"><failure message="AssertionError: Join failed: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_member_management.py:333: in test_join_another_group
+    assert join_res.status_code == 200, f"Join failed: {join_res.text}"
+E   AssertionError: Join failed: {"detail":"Invalid token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_member_management.TestGroupMembersQuery" name="test_members_query_uses_group_ids_array" time="0.535" /></testsuite></testsuites>

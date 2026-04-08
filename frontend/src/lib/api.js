@@ -262,6 +262,8 @@ export const groupsAPI = {
     update: (groupId, data) => api.put(`/groups/${groupId}`, data),
     delete: (groupId) => api.delete(`/groups/${groupId}`),
     getMembers: (groupId) => api.get(`/groups/${groupId}/members`),
+    removeMember: (groupId, userId) => api.delete(`/groups/${groupId}/members/${userId}`),
+    moveMember: (groupId, userId, targetGroupId) => api.put(`/groups/${groupId}/members/${userId}/move?target_group_id=${targetGroupId}`),
     getInviteCode: (groupId) => api.get(`/groups/${groupId}/invite-code`),
     regenerateCode: (groupId) => api.post(`/groups/${groupId}/regenerate-code`),
     join: (inviteCode) => api.post(`/groups/join?invite_code=${inviteCode}`),

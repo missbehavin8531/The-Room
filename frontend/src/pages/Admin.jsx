@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { 
     Shield, Users, BookOpen, MessageSquare, CheckCircle,
     UserCheck, UserX, Clock, Volume2, VolumeX, Trash2, AlertTriangle,
-    Copy, RefreshCw, UserPlus, Loader2, Plus, ChevronDown, ChevronUp, Edit3, X
+    Copy, RefreshCw, UserPlus, Loader2, Plus, ChevronDown, ChevronUp, Edit3, X, ArrowRightLeft
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -57,6 +57,10 @@ export const Admin = () => {
     const [editingName, setEditingName] = useState('');
     const [deletingGroupId, setDeletingGroupId] = useState(null);
     const [assignTargetGroup, setAssignTargetGroup] = useState(null);
+    const [removingMember, setRemovingMember] = useState(null); // { groupId, userId, name }
+    const [movingMember, setMovingMember] = useState(null); // { groupId, userId, name }
+    const [moveTargetGroupId, setMoveTargetGroupId] = useState('');
+    const [actionLoading, setActionLoading] = useState(null);
 
     useEffect(() => {
         fetchData();
@@ -224,6 +228,47 @@ export const Admin = () => {
         } catch (error) {
             toast.error('Failed to cleanup test data');
             setShowCleanupDialog(false);
+        }
+    };
+
+    const handleRemoveMember = async () => {
+        if (!removingMember) return;
+        setActionLoading(`remove-${removingMember.userId}`);
+        try {
+            const res = await groupsAPI.removeMember(removingMember.groupId, removingMember.userId);
+            toast.success(res.data.message);
+            setGroupMembers(prev => ({
+                ...prev,
+                [removingMember.groupId]: (prev[removingMember.groupId] || []).filter(m => m.id !== removingMember.userId)
+            }));
+            setRemovingMember(null);
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Failed to remove member');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleMoveMember = async () => {
+        if (!movingMember || !moveTargetGroupId) return;
+        setActionLoading(`move-${movingMember.userId}`);
+        try {
+            const res = await groupsAPI.moveMember(movingMember.groupId, movingMember.userId, moveTargetGroupId);
+            toast.success(res.data.message);
+            setGroupMembers(prev => ({
+                ...prev,
+                [movingMember.groupId]: (prev[movingMember.groupId] || []).filter(m => m.id !== movingMember.userId)
+            }));
+            // Clear cached members for target group so it reloads
+            setGroupMembers(prev => { const updated = { ...prev }; delete updated[moveTargetGroupId]; return updated; });
+            setMovingMember(null);
+            setMoveTargetGroupId('');
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.detail || 'Failed to move member');
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -634,16 +679,43 @@ export const Admin = () => {
                                                     <p className="text-sm text-muted-foreground py-2">No members yet</p>
                                                 ) : (
                                                     members.map(m => (
-                                                        <div key={m.id} className="flex items-center gap-2 py-1.5">
+                                                        <div key={m.id} className="flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-muted/30 transition-colors" data-testid={`group-member-${m.id}`}>
                                                             <Avatar className="w-7 h-7"><AvatarFallback className="text-[10px] bg-primary/10 text-primary">{getInitials(m.name)}</AvatarFallback></Avatar>
                                                             <div className="flex-grow min-w-0">
                                                                 <p className="text-sm truncate">{m.name}</p>
+                                                                <p className="text-[10px] text-muted-foreground truncate">{m.email}</p>
                                                             </div>
-                                                            <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                                                            <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0",
                                                                 m.role === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
                                                                 m.role === 'teacher' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
                                                                 'bg-muted text-muted-foreground'
                                                             )}>{m.role}</span>
+                                                            {m.role !== 'admin' && (
+                                                                <div className="flex items-center gap-1 shrink-0">
+                                                                    {allGroups.length > 1 && (
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="outline"
+                                                                            className="h-7 text-xs px-2"
+                                                                            onClick={() => { setMovingMember({ groupId: g.id, userId: m.id, name: m.name }); setMoveTargetGroupId(''); }}
+                                                                            disabled={actionLoading === `move-${m.id}`}
+                                                                            data-testid={`move-member-${m.id}`}
+                                                                        >
+                                                                            {actionLoading === `move-${m.id}` ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Move'}
+                                                                        </Button>
+                                                                    )}
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        className="h-7 text-xs px-2 text-destructive hover:text-destructive"
+                                                                        onClick={() => setRemovingMember({ groupId: g.id, userId: m.id, name: m.name })}
+                                                                        disabled={actionLoading === `remove-${m.id}`}
+                                                                        data-testid={`remove-member-${m.id}`}
+                                                                    >
+                                                                        {actionLoading === `remove-${m.id}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserX className="w-3.5 h-3.5" />}
+                                                                    </Button>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     ))
                                                 )}
@@ -666,6 +738,52 @@ export const Admin = () => {
                                 </CardContent>
                             </Card>
                         )}
+
+                        {/* Remove Member Dialog */}
+                        <AlertDialog open={!!removingMember} onOpenChange={() => setRemovingMember(null)}>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Remove from Group?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This will remove <strong>{removingMember?.name}</strong> from this group. They will still have an account and can rejoin with an invite code.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleRemoveMember} className="bg-destructive text-destructive-foreground" data-testid="confirm-remove-member">
+                                        Remove
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+
+                        {/* Move Member Dialog */}
+                        <AlertDialog open={!!movingMember} onOpenChange={() => { setMovingMember(null); setMoveTargetGroupId(''); }}>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Move Member to Another Group</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Move <strong>{movingMember?.name}</strong> to a different group. They will be removed from the current group and added to the selected one.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <div className="py-3">
+                                    <Select value={moveTargetGroupId} onValueChange={setMoveTargetGroupId}>
+                                        <SelectTrigger data-testid="move-target-group-select"><SelectValue placeholder="Select target group" /></SelectTrigger>
+                                        <SelectContent>
+                                            {allGroups.filter(g => g.id !== movingMember?.groupId).map(g => (
+                                                <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleMoveMember} disabled={!moveTargetGroupId} data-testid="confirm-move-member">
+                                        Move Member
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
 
                         {/* Delete Group Dialog */}
                         <AlertDialog open={!!deletingGroupId} onOpenChange={() => setDeletingGroupId(null)}>
