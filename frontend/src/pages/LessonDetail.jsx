@@ -321,11 +321,14 @@ export const LessonDetail = () => {
     };
 
     const handleMarkAttended = async () => {
+        // Optimistic: mark immediately
+        setCompletedActions(prev => [...new Set([...prev, 'marked_attended'])]);
+        toast.success('Marked as attended!');
         try {
             await attendanceAPI.record(lessonId, 'marked_attended');
-            setCompletedActions(prev => [...new Set([...prev, 'marked_attended'])]);
-            toast.success('Marked as attended!');
         } catch (error) {
+            // Revert on failure
+            setCompletedActions(prev => prev.filter(a => a !== 'marked_attended'));
             toast.error('Failed to mark attendance');
         }
     };
@@ -334,20 +337,40 @@ export const LessonDetail = () => {
         e.preventDefault();
         if (!newReply.trim() || !activePromptId) return;
 
+        const replyContent = newReply.trim();
+        const tempId = `temp-${Date.now()}`;
+        const optimisticReply = {
+            id: tempId,
+            content: replyContent,
+            user_name: user?.name || 'You',
+            created_at: new Date().toISOString(),
+            _sending: true,
+        };
+
+        // Optimistic: show reply immediately
+        setPromptReplies(prev => ({
+            ...prev,
+            [activePromptId]: [...(prev[activePromptId] || []), optimisticReply]
+        }));
+        setNewReply('');
+        setCompletedActions(prev => [...new Set([...prev, 'responded'])]);
+        toast.success('Response submitted!');
+
         setSubmittingReply(true);
         try {
-            const res = await teacherPromptsAPI.reply(activePromptId, newReply.trim());
+            const res = await teacherPromptsAPI.reply(activePromptId, replyContent);
             setPromptReplies(prev => ({
                 ...prev,
-                [activePromptId]: [...(prev[activePromptId] || []), res.data]
+                [activePromptId]: (prev[activePromptId] || []).map(r => r.id === tempId ? { ...res.data, _sending: false } : r)
             }));
-            setNewReply('');
-            
-            // Record attendance for responding
             await attendanceAPI.record(lessonId, 'responded');
-            setCompletedActions(prev => [...new Set([...prev, 'responded'])]);
-            toast.success('Response submitted!');
         } catch (error) {
+            // Revert optimistic reply
+            setPromptReplies(prev => ({
+                ...prev,
+                [activePromptId]: (prev[activePromptId] || []).filter(r => r.id !== tempId)
+            }));
+            setCompletedActions(prev => prev.filter(a => a !== 'responded'));
             const message = error.response?.data?.detail || 'Failed to submit response';
             toast.error(message);
         } finally {

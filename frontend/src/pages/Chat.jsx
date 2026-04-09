@@ -147,18 +147,28 @@ export const Chat = () => {
             }
         }
 
-        // Fallback to REST
+        // Fallback to REST — with optimistic UI
+        const tempId = `temp-${Date.now()}`;
+        const optimisticMsg = {
+            id: tempId,
+            user_id: user?.id,
+            user_name: user?.name || 'You',
+            content,
+            created_at: new Date().toISOString(),
+            _sending: true,
+        };
+        setMessages(prev => [...prev, optimisticMsg]);
+        setNewMessage('');
+        inputRef.current?.focus();
+        setTimeout(scrollToBottom, 50);
+
         setSending(true);
         try {
             const response = await chatAPI.send(content);
-            setMessages(prev => {
-                if (prev.some(m => m.id === response.data.id)) return prev;
-                return [...prev, response.data];
-            });
-            setNewMessage('');
-            inputRef.current?.focus();
-            setTimeout(scrollToBottom, 50);
+            setMessages(prev => prev.map(m => m.id === tempId ? { ...response.data, _sending: false } : m));
         } catch (error) {
+            // Remove the optimistic message on failure
+            setMessages(prev => prev.filter(m => m.id !== tempId));
             const message = error.response?.data?.detail || 'Failed to send message';
             toast.error(message);
         } finally {
@@ -167,15 +177,20 @@ export const Chat = () => {
     };
 
     const handleDeleteMessage = async (messageId) => {
+        // Optimistic: remove immediately
+        const prevMessages = messages;
+        setMessages(prev => prev.filter(m => m.id !== messageId));
+
         if (isConnected) {
             wsSend({ type: 'delete', message_id: messageId });
             return;
         }
         try {
             await chatAPI.delete(messageId);
-            setMessages(messages.filter(m => m.id !== messageId));
             toast.success('Message deleted');
         } catch (error) {
+            // Revert on failure
+            setMessages(prevMessages);
             toast.error('Failed to delete message');
         }
     };
@@ -249,8 +264,20 @@ export const Chat = () => {
                     {/* Messages Area */}
                     <ScrollArea className="flex-grow p-4" ref={scrollRef}>
                         {loading ? (
-                            <div className="flex items-center justify-center h-full">
-                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                            <div className="space-y-4 p-2">
+                                {[...Array(6)].map((_, i) => (
+                                    <div key={i} className={cn("flex gap-2.5 animate-pulse", i % 3 === 0 && "flex-row-reverse")} style={{ animationDelay: `${i * 80}ms` }}>
+                                        {i % 3 !== 0 && <div className="w-7 h-7 rounded-full bg-muted flex-shrink-0 mt-3" />}
+                                        <div className={cn("max-w-[65%] space-y-1.5", i % 3 === 0 && "ml-auto")}>
+                                            {i % 3 !== 0 && <div className="h-3 w-16 bg-muted rounded" />}
+                                            <div className={cn("rounded-2xl p-3 space-y-1.5", i % 3 === 0 ? "bg-primary/10" : "bg-muted")}>
+                                                <div className="h-3 w-full bg-muted-foreground/10 rounded" style={{ width: `${60 + (i * 17) % 40}%` }} />
+                                                {i % 2 === 0 && <div className="h-3 w-2/3 bg-muted-foreground/10 rounded" />}
+                                            </div>
+                                            <div className="h-2 w-10 bg-muted rounded" />
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : messages.length > 0 ? (
                             <div className="space-y-3">
@@ -284,10 +311,14 @@ export const Chat = () => {
                                                 </div>
                                                 <div className={cn(
                                                     "chat-bubble inline-block text-left",
-                                                    isOwn ? "chat-bubble-own" : "chat-bubble-other"
+                                                    isOwn ? "chat-bubble-own" : "chat-bubble-other",
+                                                    message._sending && "opacity-60"
                                                 )}>
                                                     <p className="text-sm leading-relaxed">{message.content}</p>
                                                 </div>
+                                                {message._sending && (
+                                                    <p className="text-[10px] text-muted-foreground mt-0.5 italic">Sending...</p>
+                                                )}
 
                                                 {/* Moderation — hidden until hover */}
                                                 {isTeacherOrAdmin && (

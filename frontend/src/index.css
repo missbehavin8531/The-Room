@@ -170,8 +170,52 @@
 .card-hover { transition: all 0.3s ease; }
 .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(74, 103, 65, 0.12); }
 
-/* Button press effect */
+/* Button press effect — apply globally to all interactive buttons */
 .btn-press:active { transform: scale(0.95); }
+
+/* Global button active feedback */
+button:not(:disabled):active,
+[role="button"]:not(:disabled):active {
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+}
+
+/* Smooth image loading with blur-up */
+img[src] {
+    transition: opacity 0.3s ease;
+}
+
+/* Enhanced skeleton pulse — warmer feel */
+@keyframes skeletonPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.animate-pulse {
+    animation: skeletonPulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Scale-in animation for newly appeared elements */
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in {
+    animation: scaleIn 0.2s ease-out forwards;
+}
+
+/* Slide in from right for confirmation dialogs */
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(12px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in-right {
+    animation: slideInRight 0.25s ease-out forwards;
+}
+
+/* Smooth count transitions */
+.transition-number {
+    transition: all 0.3s ease-out;
+}
 
 /* Slide-in from bottom for bottom nav */
 @keyframes slideUp {

@@ -13,7 +13,7 @@ import { LessonWizard } from '../components/LessonWizard';
 import { formatDate, cn } from '../lib/utils';
 import {
     ArrowRight, BookOpen, Plus, Search, Users,
-    UserPlus, Calendar, EyeOff, Loader2, CheckCircle
+    UserPlus, Calendar, EyeOff, CheckCircle
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -26,7 +26,6 @@ export const Dashboard = () => {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [enrolling, setEnrolling] = useState(null);
     const [showCourseWizard, setShowCourseWizard] = useState(false);
     const [showLessonWizard, setShowLessonWizard] = useState(false);
     const [newCourseForLesson, setNewCourseForLesson] = useState(null);
@@ -60,24 +59,27 @@ export const Dashboard = () => {
         e.preventDefault();
         e.stopPropagation();
         if (isGuest) { toast.error('Sign up to enroll in courses'); return; }
-        setEnrolling(courseId);
+        // Optimistic: update UI immediately
+        setCourses(prev => prev.map(c =>
+            c.id === courseId
+                ? { ...c, is_enrolled: !isEnrolled, enrollment_count: isEnrolled ? c.enrollment_count - 1 : c.enrollment_count + 1 }
+                : c
+        ));
+        toast.success(isEnrolled ? 'Unenrolled from course' : 'Enrolled in course!');
         try {
             if (isEnrolled) {
                 await coursesAPI.unenroll(courseId);
-                toast.success('Unenrolled from course');
             } else {
                 await coursesAPI.enroll(courseId);
-                toast.success('Enrolled in course!');
             }
-            setCourses(courses.map(c =>
+        } catch (error) {
+            // Revert on failure
+            setCourses(prev => prev.map(c =>
                 c.id === courseId
-                    ? { ...c, is_enrolled: !isEnrolled, enrollment_count: isEnrolled ? c.enrollment_count - 1 : c.enrollment_count + 1 }
+                    ? { ...c, is_enrolled: isEnrolled, enrollment_count: isEnrolled ? c.enrollment_count + 1 : c.enrollment_count - 1 }
                     : c
             ));
-        } catch (error) {
             toast.error(error.response?.data?.detail || 'Failed to update enrollment');
-        } finally {
-            setEnrolling(null);
         }
     };
 
@@ -290,12 +292,11 @@ export const Dashboard = () => {
                                                     ) : (
                                                         <Button
                                                             size="sm"
-                                                            className="btn-primary w-full h-7 rounded-lg text-[11px]"
+                                                            className="btn-primary w-full h-7 rounded-lg text-[11px] transition-all"
                                                             onClick={(e) => handleEnroll(e, course.id, false)}
-                                                            disabled={enrolling === course.id}
                                                             data-testid={`enroll-${course.id}`}
                                                         >
-                                                            {enrolling === course.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <><UserPlus className="w-3 h-3 mr-1" /> Enroll</>}
+                                                            <UserPlus className="w-3 h-3 mr-1" /> Enroll
                                                         </Button>
                                                     )
                                                 )}

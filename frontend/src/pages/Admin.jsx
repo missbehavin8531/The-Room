@@ -169,33 +169,45 @@ export const Admin = () => {
     };
 
     const handleApproveUser = async (userId) => {
+        // Optimistic: move from pending to approved immediately
+        const approvedUser = pendingUsers.find(u => u.id === userId);
+        setPendingUsers(prev => prev.filter(u => u.id !== userId));
+        if (approvedUser) setUsers(prev => [...prev, { ...approvedUser, is_approved: true }]);
+        toast.success('User approved!');
         try {
             await usersAPI.approve(userId);
-            setPendingUsers(prev => prev.filter(u => u.id !== userId));
-            setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_approved: true } : u));
-            toast.success('User approved!');
             fetchData();
         } catch (error) {
+            // Revert
+            if (approvedUser) {
+                setPendingUsers(prev => [...prev, approvedUser]);
+                setUsers(prev => prev.filter(u => u.id !== userId));
+            }
             toast.error('Failed to approve user');
         }
     };
 
     const handleUpdateRole = async (userId, role) => {
+        const prevRole = users.find(u => u.id === userId)?.role;
+        // Optimistic
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u));
+        toast.success(`Role updated to ${role}`);
         try {
             await usersAPI.updateRole(userId, role);
-            setUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u));
-            toast.success(`Role updated to ${role}`);
         } catch (error) {
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: prevRole } : u));
             toast.error('Failed to update role');
         }
     };
 
     const handleMuteUser = async (userId, muted) => {
+        // Optimistic
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_muted: muted } : u));
+        toast.success(muted ? 'User muted' : 'User unmuted');
         try {
             await usersAPI.mute(userId, muted);
-            setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_muted: muted } : u));
-            toast.success(muted ? 'User muted' : 'User unmuted');
         } catch (error) {
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_muted: !muted } : u));
             toast.error('Failed to update user');
         }
     };
