@@ -46,6 +46,7 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - Guest Mode Finalization: bottom nav removed, Settings restricted, Chat read-only, Messages blocked, demo chat seeded, teacher renamed - DONE (4/7/2026)
 - Rich Demo Content: YouTube videos added to all 15 lessons, 45 discussion prompts seeded, broken Gospel thumbnail fixed - DONE (4/7/2026)
 - Group Member Management: Remove member from group, Move member between groups, Admin UI with per-member actions, admin guard protection - DONE (4/8/2026)
+- Perceived Performance: Skeleton loaders (Chat, TeacherDashboard), optimistic UI (enrollment, chat send/delete, attendance, admin actions, prompt replies), global button press feedback, enhanced CSS animations - DONE (4/9/2026)
 
 ## Upcoming Tasks
 - P2: Background sync for Offline Mode (Service Worker)
