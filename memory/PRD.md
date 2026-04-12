@@ -52,6 +52,7 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - P1 Offline Mode: Service Worker with cache-first static, network-first API with cache fallback, IndexedDB queue for offline writes, background sync replay, offline banner in Layout - DONE (4/12/2026)
 - P2 Chat Reactions & Read Receipts: Toggle emoji reactions (6 emojis), reaction badges with counts, mark-read endpoint, "Seen by..." read receipts - DONE (4/12/2026)
 - P3 QR Code Invite: QR code in Teacher Dashboard Share Invite section with Save QR download button - DONE (4/12/2026)
+- Chat Message Editing: Authors can edit their own messages via inline editing, (edited) indicator shown, optimistic UI with rollback, guests blocked - DONE (4/12/2026)
 
 ## Upcoming Tasks
 - P2: Background sync for Offline Mode (Service Worker)
