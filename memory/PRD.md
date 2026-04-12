@@ -47,6 +47,11 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - Rich Demo Content: YouTube videos added to all 15 lessons, 45 discussion prompts seeded, broken Gospel thumbnail fixed - DONE (4/7/2026)
 - Group Member Management: Remove member from group, Move member between groups, Admin UI with per-member actions, admin guard protection - DONE (4/8/2026)
 - Perceived Performance: Skeleton loaders (Chat, TeacherDashboard), optimistic UI (enrollment, chat send/delete, attendance, admin actions, prompt replies), global button press feedback, enhanced CSS animations - DONE (4/9/2026)
+- Bug Fix: Lesson unlock now triggers when "I Attended" is marked (attendance creates lesson_completion) - DONE (4/12/2026)
+- Bug Fix: Recording URL no longer mandatory when creating lessons - DONE (4/12/2026)
+- P1 Offline Mode: Service Worker with cache-first static, network-first API with cache fallback, IndexedDB queue for offline writes, background sync replay, offline banner in Layout - DONE (4/12/2026)
+- P2 Chat Reactions & Read Receipts: Toggle emoji reactions (6 emojis), reaction badges with counts, mark-read endpoint, "Seen by..." read receipts - DONE (4/12/2026)
+- P3 QR Code Invite: QR code in Teacher Dashboard Share Invite section with Save QR download button - DONE (4/12/2026)
 
 ## Upcoming Tasks
 - P2: Background sync for Offline Mode (Service Worker)
