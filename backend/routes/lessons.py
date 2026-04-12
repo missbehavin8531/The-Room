@@ -52,7 +52,7 @@ async def get_lesson_with_details(lesson: dict, user_id: str, user_role: str = '
                     'user_id': user_id
                 })
                 is_unlocked = prev_completion is not None
-            if lesson.get('order', 1) == 1:
+            if lesson.get('order', 0) <= 1:
                 is_unlocked = True
     
     youtube_url = lesson.get('youtube_url') or (lesson.get('recording_url') if lesson.get('recording_source') == 'youtube' else None)

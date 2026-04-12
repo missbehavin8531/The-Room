@@ -418,7 +418,7 @@ export const LessonEditor = () => {
                         
                         {(lesson.recording_source === 'youtube' || lesson.recording_source === 'external') && (
                             <div className="space-y-2 animate-fade-in">
-                                <Label>{lesson.recording_source === 'youtube' ? 'YouTube URL' : 'Video URL'} *</Label>
+                                <Label>{lesson.recording_source === 'youtube' ? 'YouTube URL' : 'Video URL'} <span className="text-muted-foreground text-xs">(optional)</span></Label>
                                 <Input
                                     value={lesson.recording_url}
                                     onChange={(e) => setLesson({ ...lesson, recording_url: e.target.value })}

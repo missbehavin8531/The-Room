@@ -189,6 +189,7 @@ class ChatMessageResponse(BaseModel):
     user_name: str
     content: str
     is_hidden: bool = False
+    reactions: list = []
     created_at: str
 
 class PrivateMessageCreate(BaseModel):

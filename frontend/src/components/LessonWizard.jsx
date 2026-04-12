@@ -55,7 +55,7 @@ export const LessonWizard = ({ courseId, courseName, onClose, onSuccess }) => {
                 return true;
             case 'recording':
                 if (lesson.recording_source === 'youtube' || lesson.recording_source === 'external') {
-                    return lesson.recording_url.trim().length > 0;
+                    return true; // Recording URL is optional
                 }
                 return true;
             default:
@@ -297,7 +297,7 @@ export const LessonWizard = ({ courseId, courseName, onClose, onSuccess }) => {
                         {(lesson.recording_source === 'youtube' || lesson.recording_source === 'external') && (
                             <div className="space-y-2 animate-fade-in">
                                 <Label htmlFor="recording_url">
-                                    {lesson.recording_source === 'youtube' ? 'YouTube URL' : 'Video URL'} *
+                                    {lesson.recording_source === 'youtube' ? 'YouTube URL' : 'Video URL'} <span className="text-muted-foreground text-xs">(optional)</span>
                                 </Label>
                                 <Input
                                     id="recording_url"

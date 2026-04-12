@@ -9,8 +9,9 @@ import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { chatAPI } from '../lib/api';
 import { formatRelativeTime, getInitials, cn } from '../lib/utils';
 import { toast } from 'sonner';
-import { Send, Loader2, Trash2, Eye, EyeOff, MessageCircle, Wifi, WifiOff, Users } from 'lucide-react';
+import { Send, Loader2, Trash2, Eye, EyeOff, MessageCircle, Wifi, WifiOff, Users, SmilePlus } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { ChatReactions, ChatActionBar, ReadReceipts } from '../components/ChatWidgets';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -28,6 +29,8 @@ export const Chat = () => {
     const [newMessage, setNewMessage] = useState('');
     const [sending, setSending] = useState(false);
     const [typingUsers, setTypingUsers] = useState([]);
+    const [readReceipts, setReadReceipts] = useState([]);
+    const [reactionPickerFor, setReactionPickerFor] = useState(null);
     const scrollRef = useRef(null);
     const inputRef = useRef(null);
     const typingTimeout = useRef(null);
@@ -124,10 +127,40 @@ export const Chat = () => {
         try {
             const response = await chatAPI.getMessages(100);
             setMessages(response.data);
+            // Mark chat as read + fetch read receipts
+            if (!isGuest) chatAPI.markRead().catch(() => {});
+            chatAPI.getReadReceipts().then(r => setReadReceipts(r.data)).catch(() => {});
         } catch (error) {
             console.error('Failed to fetch messages:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleReaction = async (messageId, emoji) => {
+        // Optimistic: toggle reaction immediately
+        setMessages(prev => prev.map(m => {
+            if (m.id !== messageId) return m;
+            const reactions = [...(m.reactions || [])];
+            const idx = reactions.findIndex(r => r.emoji === emoji);
+            if (idx >= 0) {
+                if (reactions[idx].user_reacted) {
+                    reactions[idx] = { ...reactions[idx], count: reactions[idx].count - 1, user_reacted: false };
+                    if (reactions[idx].count <= 0) reactions.splice(idx, 1);
+                } else {
+                    reactions[idx] = { ...reactions[idx], count: reactions[idx].count + 1, user_reacted: true };
+                }
+            } else {
+                reactions.push({ emoji, count: 1, users: [user?.name], user_reacted: true });
+            }
+            return { ...m, reactions };
+        }));
+        setReactionPickerFor(null);
+        try {
+            await chatAPI.react(messageId, emoji);
+        } catch (error) {
+            // Refresh on failure to get correct state
+            fetchMessages();
         }
     };
 
@@ -320,28 +353,29 @@ export const Chat = () => {
                                                     <p className="text-[10px] text-muted-foreground mt-0.5 italic">Sending...</p>
                                                 )}
 
-                                                {/* Moderation — hidden until hover */}
-                                                {isTeacherOrAdmin && (
-                                                    <div className={cn(
-                                                        "flex gap-0.5 mt-0.5 opacity-0 group-hover/msg:opacity-100 transition-opacity",
-                                                        isOwn ? "justify-end" : "justify-start"
-                                                    )}>
-                                                        <button
-                                                            onClick={() => handleHideMessage(message.id, !message.is_hidden)}
-                                                            className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
-                                                            data-testid={`hide-msg-${message.id}`}
-                                                        >
-                                                            {message.is_hidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteMessage(message.id)}
-                                                            className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                                                            data-testid={`delete-msg-${message.id}`}
-                                                        >
-                                                            <Trash2 className="w-3 h-3" />
-                                                        </button>
-                                                    </div>
-                                                )}
+                                                {/* Reactions */}
+                                                <ChatReactions
+                                                    reactions={message.reactions}
+                                                    messageId={message.id}
+                                                    isOwn={isOwn}
+                                                    isGuest={isGuest}
+                                                    onReact={handleReaction}
+                                                />
+
+                                                {/* Action bar: react + moderation */}
+                                                <ChatActionBar
+                                                    messageId={message.id}
+                                                    isOwn={isOwn}
+                                                    isGuest={isGuest}
+                                                    isSending={message._sending}
+                                                    isTeacherOrAdmin={isTeacherOrAdmin}
+                                                    isHidden={message.is_hidden}
+                                                    pickerOpen={reactionPickerFor === message.id}
+                                                    onTogglePicker={() => setReactionPickerFor(reactionPickerFor === message.id ? null : message.id)}
+                                                    onReact={handleReaction}
+                                                    onHide={handleHideMessage}
+                                                    onDelete={handleDeleteMessage}
+                                                />
                                             </div>
                                         </div>
                                     );
@@ -356,6 +390,9 @@ export const Chat = () => {
                             </div>
                         )}
                     </ScrollArea>
+
+                    {/* Read Receipts */}
+                    <ReadReceipts receipts={readReceipts} currentUserId={user?.id} />
 
                     {/* Typing Indicator */}
                     {typingUsers.length > 0 && (

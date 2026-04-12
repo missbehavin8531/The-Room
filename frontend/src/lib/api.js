@@ -112,6 +112,10 @@ export const chatAPI = {
     send: (content) => api.post('/chat', { content }),
     hide: (messageId, hidden) => api.put(`/chat/${messageId}/hide?hidden=${hidden}`),
     delete: (messageId) => api.delete(`/chat/${messageId}`),
+    react: (messageId, emoji) => api.post(`/chat/${messageId}/react?emoji=${encodeURIComponent(emoji)}`),
+    getReactions: (messageId) => api.get(`/chat/${messageId}/reactions`),
+    markRead: () => api.post('/chat/mark-read'),
+    getReadReceipts: () => api.get('/chat/read-receipts'),
 };
 
 // Private Messages API

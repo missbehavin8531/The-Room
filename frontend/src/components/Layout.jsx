@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -14,6 +14,8 @@ import {
     TrendingUp,
     Calendar,
     ShieldAlert,
+    WifiOff,
+    RefreshCw,
 } from 'lucide-react';
 import { cn, getInitials } from '../lib/utils';
 import { Button } from './ui/button';
@@ -25,6 +27,7 @@ import {
     DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback } from './ui/avatar';
+import { toast } from 'sonner';
 
 // Desktop top nav: all items
 var desktopNavItems = [
@@ -51,6 +54,62 @@ export var Layout = function Layout(props) {
     var isGuest = auth.isGuest;
     var location = useLocation();
     var navigate = useNavigate();
+    var [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+    // Offline/online detection + background sync replay
+    useEffect(function() {
+        function goOffline() { setIsOffline(true); }
+        function goOnline() {
+            setIsOffline(false);
+            // Replay queued offline actions
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'REPLAY_QUEUE' });
+            }
+        }
+        window.addEventListener('offline', goOffline);
+        window.addEventListener('online', goOnline);
+
+        // Listen for SW messages about replayed actions
+        function onSWMessage(event) {
+            if (event.data && event.data.type === 'QUEUE_REPLAYED') {
+                toast.success(event.data.count + ' offline action(s) synced!');
+            }
+            if (event.data && event.data.type === 'ACTION_QUEUED') {
+                toast.info('Saved offline. Will sync when back online.');
+            }
+        }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', onSWMessage);
+        }
+
+        return function() {
+            window.removeEventListener('offline', goOffline);
+            window.removeEventListener('online', goOnline);
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.removeEventListener('message', onSWMessage);
+            }
+        };
+    }, []);
+
+    // Cache warming: pre-cache key API responses after auth
+    useEffect(function() {
+        if (!user || isGuest) return;
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            var token = localStorage.getItem('token');
+            if (!token) return;
+            var backendUrl = process.env.REACT_APP_BACKEND_URL;
+            navigator.serviceWorker.controller.postMessage({
+                type: 'CACHE_API',
+                urls: [
+                    backendUrl + '/api/courses',
+                    backendUrl + '/api/my-progress',
+                    backendUrl + '/api/chat',
+                    backendUrl + '/api/enrollments/my',
+                ],
+                headers: { Authorization: 'Bearer ' + token }
+            });
+        }
+    }, [user, isGuest]);
 
     function handleLogout() {
         logout();
@@ -260,6 +319,16 @@ export var Layout = function Layout(props) {
                     <Link to="/" onClick={handleLogout} className="text-xs font-bold text-primary hover:underline whitespace-nowrap" data-testid="guest-signup-link">
                         Sign up free
                     </Link>
+                </div>
+            )}
+
+            {/* Offline Banner */}
+            {isOffline && (
+                <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center gap-2 animate-fade-in" data-testid="offline-banner">
+                    <WifiOff className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                    <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                        You're offline — viewing cached content. Changes will sync when reconnected.
+                    </p>
                 </div>
             )}
 

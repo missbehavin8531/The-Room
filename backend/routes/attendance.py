@@ -35,6 +35,22 @@ async def record_attendance(data: AttendanceCreate, user: dict = Depends(require
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.attendance.insert_one(attendance)
+
+    # When user marks attended, also mark lesson as completed (unlocks next lesson)
+    if data.action == 'marked_attended':
+        existing_completion = await db.lesson_completions.find_one({
+            'lesson_id': data.lesson_id,
+            'user_id': user['id']
+        })
+        if not existing_completion:
+            await db.lesson_completions.insert_one({
+                'id': str(uuid.uuid4()),
+                'lesson_id': data.lesson_id,
+                'course_id': lesson.get('course_id', ''),
+                'user_id': user['id'],
+                'completed_at': datetime.now(timezone.utc).isoformat()
+            })
+
     return AttendanceResponse(**attendance)
 
 @router.get("/attendance/lesson/{lesson_id}", response_model=List[AttendanceResponse])
@@ -79,7 +95,7 @@ async def get_attendance_report(
         query['lesson_id'] = lesson_id
     elif course_id:
         lessons = await db.lessons.find({'course_id': course_id}, {'id': 1}).to_list(100)
-        lesson_ids = [l['id'] for l in lessons]
+        lesson_ids = [ls['id'] for ls in lessons]
         query['lesson_id'] = {'$in': lesson_ids}
     
     attendance = await db.attendance.find(query, {'_id': 0}).to_list(10000)
@@ -142,7 +158,7 @@ async def reset_attendance(
 ):
     if course_id:
         lessons = await db.lessons.find({'course_id': course_id}, {'id': 1}).to_list(100)
-        lesson_ids = [l['id'] for l in lessons]
+        lesson_ids = [ls['id'] for ls in lessons]
         r1 = await db.attendance.delete_many({'lesson_id': {'$in': lesson_ids}})
         r2 = await db.lesson_completions.delete_many({'course_id': course_id})
         return {'message': f'Reset attendance for course. Deleted {r1.deleted_count} records and {r2.deleted_count} completions.'}
