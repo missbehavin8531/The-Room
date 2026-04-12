@@ -189,6 +189,8 @@ class ChatMessageResponse(BaseModel):
     user_name: str
     content: str
     is_hidden: bool = False
+    is_edited: bool = False
+    edited_at: Optional[str] = None
     reactions: list = []
     created_at: str
 

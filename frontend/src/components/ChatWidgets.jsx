@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from '../lib/utils';
-import { SmilePlus, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { SmilePlus, Eye, EyeOff, Trash2, Pencil } from 'lucide-react';
 
 var REACTION_EMOJIS = ['👍', '❤️', '😂', '🙏', '🔥', '👏'];
 
@@ -31,12 +31,22 @@ export function ChatReactions({ reactions, messageId, isOwn, isGuest, onReact })
     );
 }
 
-export function ChatActionBar({ messageId, isOwn, isGuest, isSending, isTeacherOrAdmin, isHidden, pickerOpen, onTogglePicker, onReact, onHide, onDelete }) {
+export function ChatActionBar({ messageId, isOwn, isGuest, isSending, isTeacherOrAdmin, isHidden, pickerOpen, onTogglePicker, onReact, onHide, onDelete, onEdit }) {
     return (
         <div className={cn(
             "flex items-center gap-0.5 mt-0.5 opacity-0 group-hover/msg:opacity-100 transition-opacity",
             isOwn ? "justify-end" : "justify-start"
         )}>
+            {/* Edit button — only for own messages */}
+            {isOwn && !isGuest && !isSending && onEdit && (
+                <button
+                    onClick={onEdit}
+                    className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
+                    data-testid={"edit-msg-" + messageId}
+                >
+                    <Pencil className="w-3 h-3" />
+                </button>
+            )}
             {!isGuest && !isSending && (
                 <div className="relative">
                     <button

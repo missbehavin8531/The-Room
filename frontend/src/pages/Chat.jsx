@@ -31,6 +31,8 @@ export const Chat = () => {
     const [typingUsers, setTypingUsers] = useState([]);
     const [readReceipts, setReadReceipts] = useState([]);
     const [reactionPickerFor, setReactionPickerFor] = useState(null);
+    const [editingId, setEditingId] = useState(null);
+    const [editContent, setEditContent] = useState('');
     const scrollRef = useRef(null);
     const inputRef = useRef(null);
     const typingTimeout = useRef(null);
@@ -244,6 +246,37 @@ export const Chat = () => {
         }
     };
 
+    const startEditing = (message) => {
+        setEditingId(message.id);
+        setEditContent(message.content);
+    };
+
+    const cancelEditing = () => {
+        setEditingId(null);
+        setEditContent('');
+    };
+
+    const handleEditMessage = async () => {
+        if (!editContent.trim() || !editingId) return;
+        const prevContent = messages.find(m => m.id === editingId)?.content;
+        // Optimistic
+        setMessages(prev => prev.map(m =>
+            m.id === editingId ? { ...m, content: editContent.trim(), is_edited: true } : m
+        ));
+        setEditingId(null);
+        setEditContent('');
+        try {
+            await chatAPI.edit(editingId, editContent.trim());
+        } catch (error) {
+            // Revert
+            setMessages(prev => prev.map(m =>
+                m.id === editingId ? { ...m, content: prevContent, is_edited: m.is_edited } : m
+            ));
+            toast.error(error.response?.data?.detail || 'Failed to edit message');
+        }
+    };
+
+
     // Send typing indicator
     const handleInputChange = (e) => {
         setNewMessage(e.target.value);
@@ -347,7 +380,26 @@ export const Chat = () => {
                                                     isOwn ? "chat-bubble-own" : "chat-bubble-other",
                                                     message._sending && "opacity-60"
                                                 )}>
-                                                    <p className="text-sm leading-relaxed">{message.content}</p>
+                                                    {editingId === message.id ? (
+                                                        <div className="flex items-center gap-1.5 min-w-[180px]">
+                                                            <input
+                                                                type="text"
+                                                                value={editContent}
+                                                                onChange={(e) => setEditContent(e.target.value)}
+                                                                onKeyDown={(e) => { if (e.key === 'Enter') handleEditMessage(); if (e.key === 'Escape') cancelEditing(); }}
+                                                                className="flex-1 bg-transparent text-sm border-none outline-none p-0"
+                                                                autoFocus
+                                                                data-testid="edit-message-input"
+                                                            />
+                                                            <button onClick={handleEditMessage} className="text-xs text-primary font-medium hover:underline whitespace-nowrap" data-testid="edit-message-save">Save</button>
+                                                            <button onClick={cancelEditing} className="text-xs text-muted-foreground hover:underline">Cancel</button>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-sm leading-relaxed">
+                                                            {message.content}
+                                                            {message.is_edited && <span className="text-[10px] text-muted-foreground ml-1.5 italic">(edited)</span>}
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 {message._sending && (
                                                     <p className="text-[10px] text-muted-foreground mt-0.5 italic">Sending...</p>
@@ -362,7 +414,7 @@ export const Chat = () => {
                                                     onReact={handleReaction}
                                                 />
 
-                                                {/* Action bar: react + moderation */}
+                                                {/* Action bar: react + moderation + edit */}
                                                 <ChatActionBar
                                                     messageId={message.id}
                                                     isOwn={isOwn}
@@ -375,6 +427,7 @@ export const Chat = () => {
                                                     onReact={handleReaction}
                                                     onHide={handleHideMessage}
                                                     onDelete={handleDeleteMessage}
+                                                    onEdit={() => startEditing(message)}
                                                 />
                                             </div>
                                         </div>

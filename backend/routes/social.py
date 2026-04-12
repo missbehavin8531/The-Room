@@ -126,6 +126,26 @@ async def hide_chat_message(message_id: str, hidden: bool = Query(...), user: di
         raise HTTPException(status_code=404, detail="Message not found")
     return {'message': f'Message {"hidden" if hidden else "shown"}'}
 
+
+@router.put("/chat/{message_id}/edit")
+async def edit_chat_message(message_id: str, data: ChatMessageCreate, user: dict = Depends(require_non_guest)):
+    """Edit a chat message. Only the original author can edit."""
+    msg = await db.chat_messages.find_one({'id': message_id})
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    if msg['user_id'] != user['id']:
+        raise HTTPException(status_code=403, detail="You can only edit your own messages")
+    if not data.content or not data.content.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.chat_messages.update_one(
+        {'id': message_id},
+        {'$set': {'content': data.content.strip(), 'is_edited': True, 'edited_at': now}}
+    )
+    updated = await db.chat_messages.find_one({'id': message_id}, {'_id': 0})
+    return ChatMessageResponse(**updated)
+
 @router.delete("/chat/{message_id}")
 async def delete_chat_message(message_id: str, user: dict = Depends(require_teacher_or_admin)):
     result = await db.chat_messages.delete_one({'id': message_id})

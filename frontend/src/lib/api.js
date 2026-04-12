@@ -111,6 +111,7 @@ export const chatAPI = {
     getMessages: (limit = 100) => api.get(`/chat?limit=${limit}`),
     send: (content) => api.post('/chat', { content }),
     hide: (messageId, hidden) => api.put(`/chat/${messageId}/hide?hidden=${hidden}`),
+    edit: (messageId, content) => api.put(`/chat/${messageId}/edit`, { content }),
     delete: (messageId) => api.delete(`/chat/${messageId}`),
     react: (messageId, emoji) => api.post(`/chat/${messageId}/react?emoji=${encodeURIComponent(emoji)}`),
     getReactions: (messageId) => api.get(`/chat/${messageId}/reactions`),
