@@ -22,7 +22,7 @@ function getWsUrl() {
     return `${wsBase}/api/ws/chat?token=${token}`;
 }
 
-export const Chat = () => {
+export const Chat = ({ embedded }) => {
     const { user, isTeacherOrAdmin, isGuest } = useAuth();
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -290,10 +290,10 @@ export const Chat = () => {
         }
     };
 
-    return (
-        <Layout>
-            <div className="page-container py-6 h-[calc(100vh-10rem)] md:h-[calc(100vh-6rem)] flex flex-col">
-                {/* Header */}
+    var chatContent = (
+        <div className={embedded ? "flex flex-col h-full" : "page-container py-6 h-[calc(100vh-10rem)] md:h-[calc(100vh-6rem)] flex flex-col"}>
+            {/* Header — hidden when embedded in Connect */}
+            {!embedded && (
                 <div className="mb-3 flex items-center justify-between">
                     <div>
                         <h1 className="text-xl font-bold" style={{ fontFamily: "'Fraunces', serif" }}>
@@ -324,6 +324,7 @@ export const Chat = () => {
                         </span>
                     </div>
                 </div>
+            )}
 
                 {/* Chat Container */}
                 <Card className="card-organic flex-grow flex flex-col overflow-hidden">
@@ -494,8 +495,10 @@ export const Chat = () => {
                     )}
                 </Card>
             </div>
-        </Layout>
     );
+
+    if (embedded) return chatContent;
+    return <Layout>{chatContent}</Layout>;
 };
 
 export default Chat;

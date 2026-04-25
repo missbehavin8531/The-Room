@@ -4,18 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { 
     BookOpen, 
     MessageCircle, 
-    Mail, 
     Settings, 
     LogOut,
     User,
-    Users,
     Search as SearchIcon,
     Shield,
     TrendingUp,
-    Calendar,
     ShieldAlert,
     WifiOff,
-    RefreshCw,
 } from 'lucide-react';
 import { cn, getInitials } from '../lib/utils';
 import { Button } from './ui/button';
@@ -29,18 +25,12 @@ import {
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { toast } from 'sonner';
 
-// Desktop top nav: all items
-var desktopNavItems = [
-    { path: '/dashboard', key: 'courses', icon: BookOpen, label: 'Courses' },
-    { path: '/progress', key: 'progress', icon: TrendingUp, label: 'Progress' },
-    { path: '/search', key: 'search', icon: SearchIcon, label: 'Search' },
-    { path: '/chat', key: 'chat', icon: MessageCircle, label: 'Chat' },
-    { path: '/messages', key: 'messages', icon: Mail, label: 'Messages' },
-];
-
-var adminNavItem = { path: '/admin', icon: Shield, label: 'Admin' };
-var teacherNavItem = { path: '/teacher-dashboard', icon: Users, label: 'My Group' };
-var attendanceNavItem = { path: '/attendance', icon: Calendar, label: 'Attendance' };
+function isPathActive(matchPaths, pathname) {
+    return matchPaths.some(function(p) {
+        if (p === '/') return pathname === '/';
+        return pathname === p || pathname.startsWith(p + '/');
+    });
+}
 
 export var Layout = function Layout(props) {
     var children = props.children;
@@ -50,7 +40,6 @@ export var Layout = function Layout(props) {
     var isApproved = auth.isApproved;
     var isTeacherOrAdmin = auth.isTeacherOrAdmin;
     var isAdmin = auth.isAdmin;
-    var isTeacher = auth.isTeacher;
     var isGuest = auth.isGuest;
     var location = useLocation();
     var navigate = useNavigate();
@@ -61,7 +50,6 @@ export var Layout = function Layout(props) {
         function goOffline() { setIsOffline(true); }
         function goOnline() {
             setIsOffline(false);
-            // Replay queued offline actions
             if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                 navigator.serviceWorker.controller.postMessage({ type: 'REPLAY_QUEUE' });
             }
@@ -69,7 +57,6 @@ export var Layout = function Layout(props) {
         window.addEventListener('offline', goOffline);
         window.addEventListener('online', goOnline);
 
-        // Listen for SW messages about replayed actions
         function onSWMessage(event) {
             if (event.data && event.data.type === 'QUEUE_REPLAYED') {
                 toast.success(event.data.count + ' offline action(s) synced!');
@@ -116,15 +103,23 @@ export var Layout = function Layout(props) {
         navigate('/');
     }
 
-    var extraNav = [];
-    if (isTeacherOrAdmin) extraNav.push(attendanceNavItem);
-    if (isAdmin) extraNav.push(adminNavItem);
-    if (isTeacher && !isAdmin) extraNav.push(teacherNavItem);
+    // Build navigation — 4 core tabs
+    var navItems = [
+        { path: '/dashboard', icon: BookOpen, label: 'Home', match: ['/', '/dashboard', '/courses', '/lessons'] },
+        { path: '/connect', icon: MessageCircle, label: 'Connect', match: ['/connect'] },
+        { path: '/progress', icon: TrendingUp, label: 'Me', match: ['/progress', '/settings'] },
+    ];
 
-    // Guests see the same nav as real users (all tabs visible, pages handle restrictions)
-    var filteredDesktop = desktopNavItems;
-    var allDesktopNav = filteredDesktop.concat(extraNav);
+    if (isTeacherOrAdmin) {
+        navItems.push({
+            path: isAdmin ? '/admin' : '/teacher-dashboard',
+            icon: Shield,
+            label: 'Manage',
+            match: ['/admin', '/teacher-dashboard', '/attendance', '/security-log']
+        });
+    }
 
+    // Unapproved user screen
     if (!isApproved) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -155,9 +150,44 @@ export var Layout = function Layout(props) {
         );
     }
 
+    // Shared dropdown content for both mobile and desktop
+    var dropdownContent = (
+        <>
+            <div className="px-3 py-2">
+                <p className="text-sm font-medium">{user && user.name}</p>
+                <p className="text-xs text-muted-foreground">{user && user.email}</p>
+                <span className={cn(
+                    "inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium capitalize",
+                    user && user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                    user && user.role === 'teacher' ? 'bg-blue-100 text-blue-800' :
+                    'bg-green-100 text-green-800'
+                )}>
+                    {user && user.role}
+                </span>
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+                <Link to="/settings" className="flex items-center">
+                    <Settings className="w-4 h-4 mr-2" />Settings
+                </Link>
+            </DropdownMenuItem>
+            {isAdmin && (
+                <DropdownMenuItem asChild>
+                    <Link to="/security-log" className="flex items-center">
+                        <ShieldAlert className="w-4 h-4 mr-2" />Security Log
+                    </Link>
+                </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                <LogOut className="w-4 h-4 mr-2" />Sign Out
+            </DropdownMenuItem>
+        </>
+    );
+
     return (
         <div className="min-h-screen bg-background">
-            {/* Desktop Header - hidden on mobile */}
+            {/* Desktop Header */}
             <header className="hidden md:block sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-b border-border">
                 <div className="container mx-auto px-8">
                     <div className="flex items-center justify-between h-16">
@@ -171,18 +201,20 @@ export var Layout = function Layout(props) {
                             </div>
                         </Link>
 
-                        <nav className="flex items-center gap-1">
-                            {allDesktopNav.map(function(item) {
+                        <nav className="flex items-center gap-1" data-testid="desktop-nav">
+                            {navItems.map(function(item) {
+                                var active = isPathActive(item.match, location.pathname);
                                 return (
                                     <Link
-                                        key={item.key || item.path}
+                                        key={item.label}
                                         to={item.path}
                                         className={cn(
                                             "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors",
-                                            location.pathname === item.path
+                                            active
                                                 ? "bg-primary text-primary-foreground"
                                                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
                                         )}
+                                        data-testid={"nav-" + item.label.toLowerCase()}
                                     >
                                         <item.icon className="w-4 h-4" />
                                         {item.label}
@@ -191,47 +223,38 @@ export var Layout = function Layout(props) {
                             })}
                         </nav>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="flex items-center gap-2">
-                                    <Avatar className="w-8 h-8">
-                                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                                            {getInitials(user && user.name)}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <span className="hidden lg:inline">{user && user.name}</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                                <div className="px-2 py-1.5">
-                                    <p className="text-sm font-medium">{user && user.name}</p>
-                                    <p className="text-xs text-muted-foreground">{user && user.email}</p>
-                                    <span className={cn(
-                                        "inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium capitalize",
-                                        user && user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                                        user && user.role === 'teacher' ? 'bg-blue-100 text-blue-800' :
-                                        'bg-green-100 text-green-800'
-                                    )}>
-                                        {user && user.role}
-                                    </span>
-                                </div>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem asChild>
-                                    <Link to="/settings" className="flex items-center">
-                                        <Settings className="w-4 h-4 mr-2" />Settings
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                                    <LogOut className="w-4 h-4 mr-2" />Sign Out
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="rounded-full"
+                                onClick={function() { navigate('/search'); }}
+                                data-testid="header-search-btn"
+                            >
+                                <SearchIcon className="w-4 h-4" />
+                            </Button>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="flex items-center gap-2" data-testid="desktop-avatar-menu">
+                                        <Avatar className="w-8 h-8">
+                                            <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                                                {getInitials(user && user.name)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <span className="hidden lg:inline">{user && user.name}</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                    {dropdownContent}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            {/* Mobile Header - visible only on mobile */}
+            {/* Mobile Header — slim, no horizontal scrolling tabs */}
             <header className="md:hidden sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-b border-border">
                 <div className="flex items-center justify-between px-4 h-14">
                     <Link to="/" className="flex items-center gap-2">
@@ -244,70 +267,33 @@ export var Layout = function Layout(props) {
                         </div>
                     </Link>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="p-1.5">
-                                <Avatar className="w-8 h-8">
-                                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                                        {getInitials(user && user.name)}
-                                    </AvatarFallback>
-                                </Avatar>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52">
-                            <div className="px-3 py-2">
-                                <p className="text-sm font-medium">{user && user.name}</p>
-                                <p className="text-xs text-muted-foreground">{user && user.email}</p>
-                                <span className={cn(
-                                    "inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium capitalize",
-                                    user && user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                                    user && user.role === 'teacher' ? 'bg-blue-100 text-blue-800' :
-                                    'bg-green-100 text-green-800'
-                                )}>
-                                    {user && user.role}
-                                </span>
-                            </div>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                                <Link to="/settings" className="flex items-center">
-                                    <Settings className="w-4 h-4 mr-2" />Settings
-                                </Link>
-                            </DropdownMenuItem>
-                            {isAdmin && (
-                                <DropdownMenuItem asChild>
-                                    <Link to="/security-log" className="flex items-center">
-                                        <ShieldAlert className="w-4 h-4 mr-2" />Security Log
-                                    </Link>
-                                </DropdownMenuItem>
-                            )}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                                <LogOut className="w-4 h-4 mr-2" />Sign Out
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-9 h-9 rounded-full"
+                            onClick={function() { navigate('/search'); }}
+                            data-testid="mobile-search-btn"
+                        >
+                            <SearchIcon className="w-4 h-4" />
+                        </Button>
 
-                {/* Mobile Nav Tabs */}
-                <nav className="flex items-center gap-1 px-3 pb-2 overflow-x-auto scrollbar-hide" data-testid="mobile-nav-tabs">
-                    {allDesktopNav.map(function(item) {
-                        return (
-                            <Link
-                                key={item.key || item.path}
-                                to={item.path}
-                                className={cn(
-                                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors shrink-0",
-                                    location.pathname === item.path
-                                        ? "bg-primary text-primary-foreground"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                )}
-                            >
-                                <item.icon className="w-3.5 h-3.5" />
-                                {item.label}
-                            </Link>
-                        );
-                    })}
-                </nav>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="p-1.5" data-testid="mobile-avatar-menu">
+                                    <Avatar className="w-8 h-8">
+                                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                                            {getInitials(user && user.name)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-52">
+                                {dropdownContent}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
             </header>
 
             {/* Guest Banner */}
@@ -332,10 +318,39 @@ export var Layout = function Layout(props) {
                 </div>
             )}
 
-            {/* Main Content */}
-            <main className="pb-8 px-4 md:px-0">
+            {/* Main Content — extra bottom padding on mobile for tab bar */}
+            <main className="pb-20 md:pb-8 px-4 md:px-0">
                 {children}
             </main>
+
+            {/* Mobile Bottom Tab Bar */}
+            <nav
+                className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-border"
+                style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+                data-testid="bottom-tab-bar"
+            >
+                <div className="flex items-center justify-around h-16">
+                    {navItems.map(function(item) {
+                        var active = isPathActive(item.match, location.pathname);
+                        return (
+                            <Link
+                                key={item.label}
+                                to={item.path}
+                                className={cn(
+                                    "flex flex-col items-center justify-center gap-0.5 flex-1 py-2 transition-colors",
+                                    active ? "text-primary" : "text-muted-foreground"
+                                )}
+                                data-testid={"bottom-nav-" + item.label.toLowerCase()}
+                            >
+                                <item.icon className={cn("w-5 h-5 transition-all", active && "stroke-[2.5]")} />
+                                <span className={cn("text-[10px] font-medium transition-all", active && "font-semibold")}>
+                                    {item.label}
+                                </span>
+                            </Link>
+                        );
+                    })}
+                </div>
+            </nav>
         </div>
     );
 };

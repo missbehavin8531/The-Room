@@ -38,7 +38,7 @@ import {
 } from '../components/ui/select';
 import { Label } from '../components/ui/label';
 
-export const Messages = () => {
+export const Messages = ({ embedded }) => {
     const { user, isTeacher, isGuest } = useAuth();
     const [messages, setMessages] = useState([]);
     const [teachers, setTeachers] = useState([]);
@@ -112,6 +112,15 @@ export const Messages = () => {
     }, {});
 
     if (isGuest) {
+        if (embedded) {
+            return (
+                <div className="flex flex-col items-center justify-center py-12 text-center" data-testid="guest-messages-embedded">
+                    <Inbox className="w-12 h-12 text-muted-foreground/30 mb-4" />
+                    <p className="text-sm text-muted-foreground mb-2">Sign up to message teachers</p>
+                    <a href="/" className="text-sm text-primary font-semibold hover:underline">Sign up free</a>
+                </div>
+            );
+        }
         return <GuestMessagesPage />;
     }
 
@@ -130,11 +139,11 @@ export const Messages = () => {
         );
     }
 
-    return (
-        <Layout>
-            <div className="page-container py-6 space-y-6">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    var messagesContent = (
+        <div className={embedded ? "space-y-4 h-full flex flex-col" : "page-container py-6 space-y-6"}>
+            {/* Header */}
+            <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4", embedded && "flex-row items-center")}>
+                {!embedded && (
                     <div>
                         <h1 className="text-2xl font-serif font-bold flex items-center gap-2">
                             <Mail className="w-6 h-6 text-primary" />
@@ -147,15 +156,16 @@ export const Messages = () => {
                             }
                         </p>
                     </div>
+                )}
 
-                    {!isTeacher && (
-                        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button className="btn-primary" data-testid="new-message-btn">
-                                    <Send className="w-4 h-4 mr-2" />
-                                    New Message
-                                </Button>
-                            </DialogTrigger>
+                {!isTeacher && (
+                    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button className={embedded ? "btn-primary h-8 text-xs" : "btn-primary"} data-testid="new-message-btn">
+                                <Send className="w-4 h-4 mr-2" />
+                                New Message
+                            </Button>
+                        </DialogTrigger>
                             <DialogContent className="sm:max-w-md">
                                 <DialogHeader>
                                     <DialogTitle className="font-serif">Message a Teacher</DialogTitle>
@@ -269,8 +279,10 @@ export const Messages = () => {
                     </Card>
                 )}
             </div>
-        </Layout>
     );
+
+    if (embedded) return messagesContent;
+    return <Layout>{messagesContent}</Layout>;
 };
 
 export default Messages;

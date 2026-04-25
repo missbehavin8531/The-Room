@@ -15,6 +15,7 @@ import LessonEditor from './pages/LessonEditor';
 import TeacherResponses from './pages/TeacherResponses';
 import Chat from './pages/Chat';
 import Messages from './pages/Messages';
+import Connect from './pages/Connect';
 import Admin from './pages/Admin';
 import Progress from './pages/Progress';
 import Settings from './pages/Settings';
@@ -233,17 +234,17 @@ function AppRoutes() {
             />
             <Route
                 path="/chat"
-                element={
-                    <ProtectedRoute>
-                        <Chat />
-                    </ProtectedRoute>
-                }
+                element={<Navigate to="/connect" replace />}
             />
             <Route
                 path="/messages"
+                element={<Navigate to="/connect?tab=direct" replace />}
+            />
+            <Route
+                path="/connect"
                 element={
                     <ProtectedRoute>
-                        <Messages />
+                        <Connect />
                     </ProtectedRoute>
                 }
             />
