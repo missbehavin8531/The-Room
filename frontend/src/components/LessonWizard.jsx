@@ -108,8 +108,12 @@ export const LessonWizard = ({ courseId, courseName, onClose, onSuccess }) => {
                                 onChange={(e) => updateField('title', e.target.value)}
                                 placeholder="e.g., Introduction to Prayer"
                                 className="text-lg"
+                                maxLength={200}
                                 data-testid="lesson-title-input"
                             />
+                            {lesson.title.length > 160 && (
+                                <p className={cn("text-xs text-right", lesson.title.length >= 200 ? "text-destructive" : "text-muted-foreground")}>{lesson.title.length}/200</p>
+                            )}
                         </div>
                         
                         <div className="space-y-2">
@@ -120,8 +124,12 @@ export const LessonWizard = ({ courseId, courseName, onClose, onSuccess }) => {
                                 onChange={(e) => updateField('description', e.target.value)}
                                 placeholder="What will students learn in this lesson?"
                                 rows={3}
+                                maxLength={2000}
                                 data-testid="lesson-description-input"
                             />
+                            {lesson.description.length > 1600 && (
+                                <p className={cn("text-xs text-right", lesson.description.length >= 2000 ? "text-destructive" : "text-muted-foreground")}>{lesson.description.length}/2000</p>
+                            )}
                         </div>
                         
                         <div className="space-y-2">

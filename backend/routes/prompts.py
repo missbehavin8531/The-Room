@@ -14,6 +14,7 @@ from models import (
 )
 from auth import require_approved, require_teacher_or_admin
 from services.email_service import email_service
+from utils.sanitize import sanitize_text, LIMITS
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
@@ -140,6 +141,10 @@ async def reply_to_prompt(prompt_id: str, data: PromptReplyCreate, background_ta
     
     if user.get('is_muted'):
         raise HTTPException(status_code=403, detail="You are muted and cannot respond")
+    
+    data.content = sanitize_text(data.content, LIMITS['prompt_reply'])
+    if not data.content:
+        raise HTTPException(status_code=400, detail="Reply cannot be empty")
     
     lesson = await db.lessons.find_one({'id': prompt['lesson_id']}, {'_id': 0})
     

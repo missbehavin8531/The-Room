@@ -240,11 +240,10 @@ class ChangePasswordRequest(BaseModel):
 
 @router.put("/auth/update-name")
 async def update_name(data: UpdateNameRequest, user: dict = Depends(get_current_user)):
-    name = data.name.strip()
+    from utils.sanitize import sanitize_text, LIMITS
+    name = sanitize_text(data.name, LIMITS['user_name'])
     if not name:
         raise HTTPException(status_code=400, detail="Name cannot be empty")
-    if len(name) > 100:
-        raise HTTPException(status_code=400, detail="Name is too long (max 100 characters)")
     await db.users.update_one({'id': user['id']}, {'$set': {'name': name}})
     return {'message': 'Name updated successfully', 'name': name}
 

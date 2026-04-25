@@ -1,0 +1,62 @@
+{
+  "summary": "Tested Input Validation & Moderation: backend sanitization, max-length truncation, and chat rate limiting (10/30s). 7/9 backend tests passed. Frontend maxLength attributes and chat char counter verified. One real backend bug found: POST /api/messages (direct messages) is missing sanitize_text() so HTML is not stripped and 2000-char limit is not enforced.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/messages",
+        "issue": "Direct/private message endpoint does NOT call sanitize_text(). HTML/<script> tags are stored as-is and content can exceed the 2000-char limit (verified storing 2500 chars). Per the requirements, direct messages must strip HTML and truncate to 2000.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "POST /api/chat strips <b>/<i> HTML tags (clean text returned)",
+    "POST /api/chat with <script>alert(1)</script>text returns exactly 'text'",
+    "POST /api/chat with 1050 chars truncates response to 1000",
+    "PUT /api/chat/{id}/edit strips HTML and script tags on edit",
+    "POST /api/lessons/{id}/comments strips HTML and removes <script>",
+    "POST /api/courses with 250-char title truncates to 200; description HTML stripped while preserving text",
+    "Chat rate limit: first 10 messages return 200, 11th returns 429 within a 30s window",
+    "Frontend chat input has maxLength=1000 (verified live)",
+    "Frontend chat character counter (chat-char-count) shows '850/1000' when typing 850 chars (>800 trigger working)",
+    "Frontend code review: Messages.jsx textarea maxLength=2000 + message-char-count counter at >1600",
+    "Frontend code review: CourseWizard.jsx title maxLength=200, description maxLength=2000",
+    "Frontend code review: LessonWizard.jsx title maxLength=200, description maxLength=2000"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_input_validation_moderation.py",
+    "/app/test_reports/pytest/iv_moderation.xml"
+  ],
+  "action_items": [
+    "Fix POST /api/messages in /app/backend/routes/social.py send_private_message(): apply sanitize_text(data.content, LIMITS['direct_message']) before insert (mirror what create_comment / send_chat_message already do). Also reject empty content after sanitization.",
+    "(Optional consistency) Sanitization wasn't explicitly validated for groups create/rename, prompt replies, or auth update-name in this run. Files of reference indicate they're applied; main agent may want a targeted retest on /api/groups, /api/prompts/{id}/replies, and /api/auth/update-name."
+  ],
+  "critical_code_review_comments": [
+    "social.py send_private_message (lines 239-259) constructs message with raw data.content - missing sanitize_text() call. Inconsistent with send_chat_message (line 81) and create_comment (line 27). This is the only confirmed gap in the announced feature.",
+    "rate_limit.py: chat_rate_limiter is a process-local in-memory singleton. Acceptable for single-worker deployments but will misbehave under multi-worker uvicorn or horizontal scaling. Consider Redis-backed limiter for production.",
+    "sanitize.py strip_html_tags uses single-pass regex; nested malformed tags like '<<script>script>' would still be partially handled but is a known limitation. For the given requirements (strip tags, decode entities, truncate) implementation is correct.",
+    "websocket.py applies both sanitize_text and chat_rate_limiter on incoming WS 'message' events (lines 151-156) - correctly mirrors HTTP /api/chat.",
+    "Frontend maxLength on inputs is a UX guard only; backend truncation is the source of truth - which is correctly implemented for chat/comments/courses/lessons."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_input_validation_moderation.py (new)"
+  ],
+  "success_rate": {
+    "backend": "78% (7/9 pytest cases - both failures are the same /api/messages sanitize miss)",
+    "frontend": "100% on items verified (maxLength + char counter on chat; code-level confirmation for Messages/CourseWizard/LessonWizard)"
+  },
+  "test_credentials": {
+    "admin": "kirah092804@gmail.com / sZ3Og1s$f&ki"
+  },
+  "seed_data_creation": "Tests create transient chat/comment/private-message rows using admin account; one course is created and immediately deleted in TestCourseSanitization. Note: many short chat messages produced during rate-limit and sanitize tests remain in db.chat_messages.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Re-run /app/backend/tests/test_input_validation_moderation.py after main agent applies sanitize_text + LIMITS['direct_message'] in send_private_message. The rate-limit test sleeps 31s twice (~62s) before chat operations to clear the in-memory window; do not run concurrent chat tests against the same admin within 30s. WebSocket sanitize/rate-limit was verified by code review only (live WS test not executed).",
+  "rca of the issue": "Root cause: send_private_message in /app/backend/routes/social.py was not updated when input-validation feature was rolled out. The function inserts data.content directly into MongoDB. Reproduction: POST /api/messages with {teacher_id, content:'<b>x</b>'+'B'*2500} -> response.content contains raw HTML and length 2500. Fix: at the top of the handler, after the empty-content check, call data.content = sanitize_text(data.content, LIMITS['direct_message']) and then re-check for empty after sanitization (HTTPException 400)."
+}

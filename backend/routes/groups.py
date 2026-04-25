@@ -7,6 +7,7 @@ from typing import List
 from database import db
 from models import GroupCreate, GroupUpdate, GroupResponse, UserResponse
 from auth import require_approved, require_teacher_or_admin, require_admin
+from utils.sanitize import sanitize_text, LIMITS
 
 router = APIRouter(prefix="/api")
 
@@ -36,6 +37,9 @@ async def create_group(data: GroupCreate, user: dict = Depends(require_teacher_o
 
     group_id = str(uuid.uuid4())
     invite_code = generate_invite_code()
+    data.name = sanitize_text(data.name, LIMITS['group_name'])
+    if not data.name:
+        raise HTTPException(status_code=400, detail="Group name is required")
 
     group = {
         'id': group_id,

@@ -12,6 +12,7 @@ from models import (
     LessonBase, LessonCreate, LessonResponse, ResourceResponse
 )
 from auth import require_approved, require_teacher_or_admin
+from utils.sanitize import sanitize_text, LIMITS
 
 router = APIRouter(prefix="/api")
 
@@ -164,6 +165,10 @@ async def get_lessons_batch(lessons: list, user_id: str, user_role: str = 'membe
 
 @router.post("/lessons", response_model=LessonResponse)
 async def create_lesson(data: LessonCreate, user: dict = Depends(require_teacher_or_admin)):
+    data.title = sanitize_text(data.title, LIMITS['lesson_title'])
+    data.description = sanitize_text(data.description, LIMITS['lesson_description'])
+    if not data.title:
+        raise HTTPException(status_code=400, detail="Lesson title is required")
     course = await db.courses.find_one({'id': data.course_id})
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")

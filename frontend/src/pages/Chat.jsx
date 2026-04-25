@@ -204,8 +204,13 @@ export const Chat = ({ embedded }) => {
         } catch (error) {
             // Remove the optimistic message on failure
             setMessages(prev => prev.filter(m => m.id !== tempId));
+            const status = error.response?.status;
             const message = error.response?.data?.detail || 'Failed to send message';
-            toast.error(message);
+            if (status === 429) {
+                toast.error('Slow down! Too many messages. Wait a moment.');
+            } else {
+                toast.error(message);
+            }
         } finally {
             setSending(false);
         }
@@ -473,10 +478,16 @@ export const Chat = ({ embedded }) => {
                                     placeholder="Message..."
                                     value={newMessage}
                                     onChange={handleInputChange}
+                                    maxLength={1000}
                                     className="!rounded-full !pr-10 !py-5 text-sm"
                                     disabled={sending}
                                     data-testid="chat-input"
                                 />
+                                {newMessage.length > 800 && (
+                                    <span className={cn("absolute left-3 -top-5 text-[10px]", newMessage.length >= 1000 ? "text-destructive font-semibold" : "text-muted-foreground")} data-testid="chat-char-count">
+                                        {newMessage.length}/1000
+                                    </span>
+                                )}
                                 <Button
                                     type="submit"
                                     disabled={sending || !newMessage.trim()}

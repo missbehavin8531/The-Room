@@ -10,6 +10,8 @@ from models import (
     PrivateMessageCreate, PrivateMessageResponse
 )
 from auth import require_approved, require_teacher_or_admin, require_non_guest
+from utils.sanitize import sanitize_text, LIMITS
+from utils.rate_limit import chat_rate_limiter
 
 router = APIRouter(prefix="/api")
 
@@ -22,6 +24,9 @@ async def create_comment(lesson_id: str, data: CommentCreate, user: dict = Depen
         raise HTTPException(status_code=403, detail="You are muted and cannot post")
     if not data.content or not data.content.strip():
         raise HTTPException(status_code=400, detail="Comment cannot be empty")
+    data.content = sanitize_text(data.content, LIMITS['comment'])
+    if not data.content:
+        raise HTTPException(status_code=400, detail="Comment cannot be empty after sanitization")
     
     lesson = await db.lessons.find_one({'id': lesson_id})
     if not lesson:
@@ -71,6 +76,11 @@ async def send_chat_message(data: ChatMessageCreate, user: dict = Depends(requir
         raise HTTPException(status_code=403, detail="You are muted and cannot chat")
     if not data.content or not data.content.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
+    if chat_rate_limiter.is_rate_limited(user['id']):
+        raise HTTPException(status_code=429, detail="Too many messages. Please wait a moment.")
+    data.content = sanitize_text(data.content, LIMITS['chat_message'])
+    if not data.content:
+        raise HTTPException(status_code=400, detail="Message cannot be empty after sanitization")
     
     message_id = str(uuid.uuid4())
     message = {
@@ -137,6 +147,9 @@ async def edit_chat_message(message_id: str, data: ChatMessageCreate, user: dict
         raise HTTPException(status_code=403, detail="You can only edit your own messages")
     if not data.content or not data.content.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
+    data.content = sanitize_text(data.content, LIMITS['chat_message'])
+    if not data.content:
+        raise HTTPException(status_code=400, detail="Message cannot be empty after sanitization")
 
     now = datetime.now(timezone.utc).isoformat()
     await db.chat_messages.update_one(

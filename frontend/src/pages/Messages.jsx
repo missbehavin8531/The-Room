@@ -193,8 +193,14 @@ export const Messages = ({ embedded }) => {
                                             value={newMessage}
                                             onChange={(e) => setNewMessage(e.target.value)}
                                             rows={4}
+                                            maxLength={2000}
                                             data-testid="message-content-input"
                                         />
+                                        {newMessage.length > 1600 && (
+                                            <p className={cn("text-xs text-right", newMessage.length >= 2000 ? "text-destructive font-semibold" : "text-muted-foreground")} data-testid="message-char-count">
+                                                {newMessage.length}/2000
+                                            </p>
+                                        )}
                                     </div>
                                     <Button 
                                         type="submit" 

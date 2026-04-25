@@ -11,6 +11,7 @@ from models import (
     CourseCreate, CourseUpdate, CourseResponse, EnrollmentResponse
 )
 from auth import require_approved, require_teacher_or_admin, require_admin
+from utils.sanitize import sanitize_text, LIMITS
 import logging
 
 logger = logging.getLogger(__name__)
@@ -71,6 +72,10 @@ async def debug_courses(user: dict = Depends(require_admin)):
 
 @router.post("/courses", response_model=CourseResponse)
 async def create_course(data: CourseCreate, user: dict = Depends(require_teacher_or_admin)):
+    data.title = sanitize_text(data.title, LIMITS['course_title'])
+    data.description = sanitize_text(data.description, LIMITS['course_description'])
+    if not data.title:
+        raise HTTPException(status_code=400, detail="Course title is required")
     course_id = str(uuid.uuid4())
     # Use first group from group_ids array (multi-group support), fallback to legacy group_id
     course_group_id = (user.get('group_ids') or [None])[0] or user.get('group_id')

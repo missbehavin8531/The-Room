@@ -7,6 +7,8 @@ import jwt as pyjwt
 import asyncio
 
 from database import db, JWT_SECRET, JWT_ALGORITHM
+from utils.sanitize import sanitize_text, LIMITS
+from utils.rate_limit import chat_rate_limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -145,6 +147,12 @@ async def websocket_chat(websocket: WebSocket):
                     continue
                 if user.get('is_muted'):
                     await websocket.send_json({'type': 'error', 'message': 'You are muted'})
+                    continue
+                if chat_rate_limiter.is_rate_limited(user['id']):
+                    await websocket.send_json({'type': 'error', 'message': 'Too many messages. Please wait a moment.'})
+                    continue
+                content = sanitize_text(content, LIMITS['chat_message'])
+                if not content:
                     continue
 
                 message_id = str(uuid.uuid4())
