@@ -240,6 +240,9 @@ async def get_read_receipts(user: dict = Depends(require_approved)):
 async def send_private_message(data: PrivateMessageCreate, user: dict = Depends(require_non_guest)):
     if not data.content or not data.content.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
+    data.content = sanitize_text(data.content, LIMITS['direct_message'])
+    if not data.content:
+        raise HTTPException(status_code=400, detail="Message cannot be empty after sanitization")
     teacher = await db.users.find_one({'id': data.teacher_id, 'role': {'$in': ['teacher', 'admin']}}, {'_id': 0})
     if not teacher:
         raise HTTPException(status_code=404, detail="Teacher not found")

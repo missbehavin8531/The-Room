@@ -14,13 +14,11 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - **Premium Landing Page** — Hero, features bento grid, how-it-works, testimonials, CTA, auth modal
 - **Guest/Read-Only Demo Mode** — "Try Demo" creates a 4hr guest JWT; restricted from video/downloads/chat/messages
 - **Merged Home + Courses** — Single unified dashboard with "This Week" hero + 2-column course grid
-- **Guest Restrictions** — All tabs visible like real app; Chat: read-only with demo conversation; Messages & Progress: blocked with sign-up CTAs; Settings: only ThemeToggle; Search & Courses: read-only browsing
 - Multi-group support, course management, drag-and-drop reordering
 - Real-time WebSocket chat, Service Worker offline caching
 - Daily.co video, Zoom OAuth auto-import, manual recording upload
 - Email notifications (Resend), web push, progress tracking, attendance
 - Security Log for admins, dark mode, mobile-first design
-- No bottom navigation bar — top header + mobile dropdown only
 
 ## Information Architecture (Restructured 4/25/2026)
 ### Navigation: 4 Core Tabs (down from 8)
@@ -35,12 +33,35 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 ### Mobile: Slim header (logo + search + avatar) + bottom tab bar
 ### Avatar Dropdown: Settings, Security Log (admin only), Sign Out
 
+## Input Validation & Moderation (Implemented 4/25/2026)
+### Character Limits
+| Field | Max Length |
+|---|---|
+| Chat messages | 1000 |
+| Direct messages | 2000 |
+| Comments | 2000 |
+| Course title | 200 |
+| Course/Lesson description | 2000 |
+| Lesson title | 200 |
+| User name | 100 |
+| Group name | 100 |
+| Prompt replies | 2000 |
+
+### XSS/HTML Sanitization
+- All user text inputs pass through `sanitize_text()` which strips HTML/script tags, decodes entities, and enforces max length
+- Applied to: chat, messages, comments, courses, lessons, groups, prompts, name updates
+- Both REST API and WebSocket endpoints sanitized
+
+### Rate Limiting
+- Chat: 10 messages per 30 seconds per user (in-memory, returns HTTP 429)
+- Applied to both REST POST /api/chat and WebSocket chat messages
+
 ## UI/UX Design System
 - **Typography**: Fraunces (headings), Manrope (body)
 - **Cards**: `card-organic` with glassmorphism
 - **Layout**: 2-col course grid mobile, 3-col desktop
-- **Nav**: Desktop header nav (4 tabs) + mobile bottom tab bar. Single "Courses" tab via Home — "This Week" hero lives inside the Courses view.
-- **Startup Migration**: Auto-detects and fixes courses with orphaned/mismatched `group_id` on every server boot.
+- **Nav**: Desktop header nav (4 tabs) + mobile bottom tab bar
+- **Character Counters**: Show when near limit (80%+ usage) with red at max
 
 ## Architecture
 - **Backend**: FastAPI, MongoDB (motor), WebSockets, JWT (including guest tokens)
@@ -55,27 +76,23 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - Security/QA hardening (13 fixes) + Security Log - DONE
 - Premium Landing Page + Guest Demo Mode - DONE
 - Merged Home+Courses page, 2-col grid, scroll fix, guest video/download guards - DONE
-- Guest Mode Finalization: bottom nav removed, Settings restricted, Chat read-only, Messages blocked, demo chat seeded, teacher renamed - DONE (4/7/2026)
-- Rich Demo Content: YouTube videos added to all 15 lessons, 45 discussion prompts seeded, broken Gospel thumbnail fixed - DONE (4/7/2026)
-- Group Member Management: Remove member from group, Move member between groups, Admin UI with per-member actions, admin guard protection - DONE (4/8/2026)
-- Perceived Performance: Skeleton loaders (Chat, TeacherDashboard), optimistic UI (enrollment, chat send/delete, attendance, admin actions, prompt replies), global button press feedback, enhanced CSS animations - DONE (4/9/2026)
-- Bug Fix: Lesson unlock now triggers when "I Attended" is marked (attendance creates lesson_completion) - DONE (4/12/2026)
-- Bug Fix: Recording URL no longer mandatory when creating lessons - DONE (4/12/2026)
-- P1 Offline Mode: Service Worker with cache-first static, network-first API with cache fallback, IndexedDB queue for offline writes, background sync replay, offline banner in Layout - DONE (4/12/2026)
-- P2 Chat Reactions & Read Receipts: Toggle emoji reactions (6 emojis), reaction badges with counts, mark-read endpoint, "Seen by..." read receipts - DONE (4/12/2026)
-- P3 QR Code Invite: QR code in Teacher Dashboard Share Invite section with Save QR download button - DONE (4/12/2026)
-- Chat Message Editing: Authors can edit their own messages via inline editing, (edited) indicator shown, optimistic UI with rollback, guests blocked - DONE (4/12/2026)
-- **UX Restructuring Phase 1: Navigation Shell** — Reduced 8 nav items to 4 core tabs (Home, Connect, Me, Manage). Desktop: streamlined top header. Mobile: slim header + bottom tab bar (replaced horizontal scrolling tabs). Fixed Security Log missing from desktop dropdown. - DONE (4/25/2026)
-- **UX Restructuring Phase 2: Connect Page** — Merged Chat + Messages into unified /connect page with "Group Chat" and "Direct Messages" tabs. Old /chat and /messages routes redirect to /connect. - DONE (4/25/2026)
+- Guest Mode Finalization - DONE (4/7/2026)
+- Rich Demo Content: YouTube videos + 45 discussion prompts - DONE (4/7/2026)
+- Group Member Management: Remove/Move members - DONE (4/8/2026)
+- Perceived Performance: Skeleton loaders, optimistic UI - DONE (4/9/2026)
+- Bug Fixes: Lesson unlock, recording URL optional - DONE (4/12/2026)
+- P1 Offline Mode, P2 Chat Reactions/Read Receipts, P3 QR Code - DONE (4/12/2026)
+- Chat Message Editing - DONE (4/12/2026)
+- **UX Restructuring Phase 1+2**: 4-tab nav, bottom tab bar, Connect page (Chat+Messages merger), Security Log dropdown fix - DONE (4/25/2026)
+- **Input Validation & Moderation**: XSS sanitization, max char limits, chat rate limiting (10/30s) - DONE (4/25/2026)
 
-## Upcoming Tasks (UX Restructuring Phases 3-6)
+## Upcoming Tasks
 - Phase 3: "Me" Page — Merge Progress + Settings into one cohesive page
-- Phase 4: "Manage" Hub — Merge Admin + Teacher Dashboard + Attendance + Security Log into unified management page
-- Phase 5: Global Search (CMD+K) — Replace standalone Search page with floating command palette
-- Phase 6: Polish & Consistency — Standardize cards, spacing, animations
+- Phase 4: "Manage" Hub — Merge Admin + TeacherDashboard + Attendance + SecurityLog
+- Phase 5: Global Search (CMD+K) — Replace standalone Search page with command palette
+- Phase 6: Polish & Consistency
 
 ## Future/Backlog
-- P2: Input Validation & Moderation (max char limits, XSS sanitization, rate limiting)
 - P3: Video progress tracking
 - P4: Rate limiting on auth endpoints
 - P4: Push notifications/prompts for new lessons or chat messages
