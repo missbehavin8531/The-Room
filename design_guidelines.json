@@ -1,106 +1,104 @@
 {
-  "theme": "light",
-  "archetype": "Organic & Earthy",
-  "typography": {
-    "fonts": {
-      "headings": "Fraunces, serif",
-      "body": "Manrope, sans-serif"
-    },
-    "scales": {
-      "h1": "text-5xl sm:text-6xl lg:text-7xl font-serif tracking-tighter leading-tight text-foreground",
-      "h2": "text-3xl sm:text-4xl lg:text-5xl font-serif tracking-tight leading-snug text-foreground",
-      "h3": "text-2xl sm:text-3xl font-serif tracking-tight text-foreground",
-      "body_large": "text-lg sm:text-xl font-sans leading-relaxed text-muted-foreground",
-      "body": "text-base font-sans leading-relaxed text-muted-foreground",
-      "overline": "text-xs font-sans uppercase tracking-[0.2em] font-bold text-primary"
-    }
-  },
+  "project_name": "The Room",
+  "domain": "Mobile-first small group learning platform for churches",
+  "theme": "Light",
+  "archetype": "1 (Organic & Earthy)",
+  "emotional_tone": "Warm, trustworthy, distraction-free, welcoming, and community-focused. The UI must feel grounded, tactile, and calm—never clinical or overwhelmingly tech-heavy.",
   "colors": {
-    "background": "hsl(var(--background))",
-    "foreground": "hsl(var(--foreground))",
-    "primary": "hsl(var(--primary))",
-    "primary_foreground": "hsl(var(--primary-foreground))",
-    "secondary": "hsl(var(--secondary))",
-    "secondary_foreground": "hsl(var(--secondary-foreground))",
-    "accent": "hsl(var(--accent))",
-    "accent_foreground": "hsl(var(--accent-foreground))",
-    "card": "hsl(var(--card))",
-    "border": "hsl(var(--border))"
+    "background_base": "#FDFBF7",
+    "background_surface": "#FFFFFF",
+    "background_muted": "#F3F0E9",
+    "primary": "#E27D60",
+    "primary_hover": "#C96D53",
+    "primary_foreground": "#FFFFFF",
+    "secondary": "#85A98F",
+    "secondary_hover": "#76967F",
+    "secondary_foreground": "#FFFFFF",
+    "accent": "#E8AA42",
+    "neutral_text": "#2C3539",
+    "neutral_muted": "#6C7A89",
+    "border": "#E2E4E1",
+    "error": "#D9534F",
+    "success": "#5CB85C"
+  },
+  "typography": {
+    "font_families": {
+      "headings": "Outfit, sans-serif",
+      "body": "Work Sans, sans-serif"
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl font-semibold tracking-tight",
+      "h2": "text-2xl sm:text-3xl font-semibold tracking-tight",
+      "h3": "text-xl sm:text-2xl font-medium",
+      "h4": "text-lg font-medium",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm text-neutral_muted",
+      "overline": "text-xs font-semibold tracking-[0.2em] uppercase text-primary"
+    },
+    "rules": {
+      "headings_alignment": "Left-aligned for dashboard/app content; center-aligned only for marketing hero sections.",
+      "font_weight": "Avoid defaulting to bold. Use varying weights (e.g., medium, semibold) to establish hierarchy.",
+      "contrast": "Ensure all text meets APCA/WCAG AA contrast ratios against backgrounds."
+    }
   },
   "spacing_and_layout": {
-    "section_padding": "py-24 md:py-32 lg:py-40",
-    "container": "max-w-7xl mx-auto px-6 md:px-8",
-    "hero_layout": "grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center min-h-[90vh] pt-32 pb-20",
-    "bento_grid": "grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8",
-    "bento_spans": {
-      "wide": "col-span-1 md:col-span-8",
-      "square": "col-span-1 md:col-span-4",
-      "tall": "col-span-1 md:col-span-4 md:row-span-2"
+    "philosophy": "Generous Spacing. Use 2-3x more spacing than default to create a premium, calm environment.",
+    "container_padding": "p-6 md:p-8 lg:p-12",
+    "grid_system": "Bento grid protocol for the Home Dashboard. grid-cols-1 md:grid-cols-3 lg:grid-cols-4 with gap-6.",
+    "border_radius": "rounded-2xl for main cards, rounded-full for buttons/badges to maintain an approachable, organic feel.",
+    "surface_styles": {
+      "cards": "bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-border/60 rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1",
+      "headers": "bg-background_base/80 backdrop-blur-xl border-b border-border/40 z-50 sticky top-0"
     }
   },
-  "surface_strategies": {
-    "header": "backdrop-blur-xl bg-background/80 border-b border-border/50 sticky top-0 z-50",
-    "cards": "bg-card border border-border/50 rounded-2xl shadow-soft hover:shadow-soft-lg transition-all duration-300 overflow-hidden relative",
-    "glass_panel": "bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl shadow-soft",
-    "input": "bg-muted/50 border-transparent rounded-xl focus:bg-card focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
-  },
-  "motion_and_interactions": {
-    "scroll_reveal": "framer-motion viewport={{ once: true, margin: '-100px' }} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: 'easeOut' }}",
-    "stagger_children": "transition={{ staggerChildren: 0.1 }}",
-    "hover_lift": "hover:-translate-y-1 hover:shadow-soft-lg transition-transform duration-300 ease-out"
+  "restructuring_instructions": {
+    "core_problem_solved": "Consolidated 8 disconnected nav items into 4 unified core tabs, unifying the user experience and resolving RBAC (Role-Based Access Control) duplication.",
+    "global_navigation": {
+      "mobile": "Bottom Tab Navigation with 4 primary items: Home, Connect, Me, Manage (if Teacher/Admin).",
+      "desktop": "Collapsible Sidebar Navigation with the same 4 primary items + Global Top Header.",
+      "global_header": "Contains Global Search (CMD+K overlay, replacing standalone Search page), Notification Bell, and User Avatar Dropdown."
+    },
+    "module_mapping": {
+      "Home": "Merges Dashboard and Courses. Structure: Hero 'This Week' card (span full width) + Bento grid of available/active courses.",
+      "Connect": "Merges Chat and Messages into a Unified Inbox. Structure: Left pane (conversations list), Right pane (chat/message area). Top tabs toggle between 'Group Chat' and 'Direct Messages'.",
+      "Me": "Merges Progress and Settings. Structure: Two-column layout on desktop. Left column: 'My Progress' (streak, completed lessons). Right column: 'Settings' categorized into logical cards (Account, App Preferences, Zoom, Notifications).",
+      "Manage": "Merges Admin Panel, Teacher Dashboard, Attendance, and Security Log. ONLY visible to Teachers and Admins. Structure: Left-aligned vertical tabs for sub-sections: 'Members', 'Pending Approvals', 'Attendance Reports', 'Platform Stats', 'Security Audit Log' (fixing the hidden mobile bug by placing it clearly here for Admins)."
+    }
   },
   "components": {
-    "buttons": {
-      "primary": "inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground h-12 px-8 py-3 text-base font-semibold shadow-sm hover:bg-primary/90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:-translate-y-0.5",
-      "secondary": "inline-flex items-center justify-center rounded-full bg-transparent text-foreground h-12 px-8 py-3 text-base font-medium border border-border hover:bg-muted/50 transition-all hover:-translate-y-0.5",
-      "accent": "inline-flex items-center justify-center rounded-full bg-accent text-accent-foreground h-12 px-8 py-3 text-base font-semibold shadow-sm hover:bg-accent/90 transition-all hover:-translate-y-0.5"
+    "forms": "Use Shadcn forms. Inputs should have subtle backgrounds (bg-background_muted), no harsh borders, rounded-xl, and primary color focus rings (focus:ring-primary/50).",
+    "buttons": "Primary buttons: bg-primary text-white rounded-full px-6 py-2.5 font-medium hover:bg-primary_hover transition-colors. Secondary buttons: bg-secondary text-white rounded-full.",
+    "search": "Implement as a Shadcn Command palette (CMD+K) accessible from the global header, searching across courses, lessons, and discussions seamlessly.",
+    "tabs": "Use Shadcn Tabs for switching contexts (e.g., in Connect or Manage). Override default styles to be pill-shaped or soft-underlined, removing harsh boxy styles."
+  },
+  "motion_and_interaction": {
+    "page_transitions": "Subtle fade-in (opacity 0 to 1) and slide-up (translate-y-4 to 0) using Framer Motion.",
+    "micro_interactions": "Hover states on all interactive elements. Active states should slightly scale down (scale: 0.98).",
+    "accessibility": "Respect prefers-reduced-motion. Include aria-labels for all icons."
+  },
+  "testing": {
+    "attributes": "All interactive elements MUST include data-testid. Example: data-testid='bottom-nav-home', data-testid='connect-tab-direct', data-testid='search-cmd-k'."
+  },
+  "media_urls": {
+    "auth_hero_background": {
+      "url": "https://images.pexels.com/photos/5477692/pexels-photo-5477692.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Minimalist organic background for landing/login pages"
     },
-    "auth_integration": "Unified Auth Modal via Shadcn Dialog. No separate login page. Present a seamless tabbed or sliding interface for Login / Sign Up, styled premium. Include an explicit 'Try Demo (Guest Mode)' option in the auth flow.",
-    "icons": "lucide-react"
-  },
-  "media": {
-    "images": [
-      {
-        "category": "hero_visual",
-        "url": "https://images.unsplash.com/photo-1761370981247-1dfd749ec96b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwxfHxkaXZlcnNlJTIwcGVvcGxlJTIwc3R1ZHlpbmclMjB0b2dldGhlciUyMHdhcm18ZW58MHx8fHwxNzc1NTIxNjg1fDA&ixlib=rb-4.1.0&q=85",
-        "description": "Group of diverse people studying together in warm light. Use as the main hero image, potentially masked with rounded-2xl or layered with floating UI elements."
-      },
-      {
-        "category": "feature_collaboration",
-        "url": "https://images.unsplash.com/photo-1758525860435-502240649c59?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwzfHxkaXZlcnNlJTIwcGVvcGxlJTIwc3R1ZHlpbmclMjB0b2dldGhlciUyMHdhcm18ZW58MHx8fHwxNzc1NTIxNjg1fDA&ixlib=rb-4.1.0&q=85",
-        "description": "People collaborating at a table. Use for the 'Join existing groups' feature card inside a bento grid."
-      },
-      {
-        "category": "abstract_background",
-        "url": "https://images.unsplash.com/photo-1713640775951-e85a958314ed?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGFyY2hpdGVjdHVyZSUyMHdhcm0lMjBzYWdlJTIwZ3JlZW58ZW58MHx8fHwxNzc1NTIxNjk2fDA&ixlib=rb-4.1.0&q=85",
-        "description": "Abstract warm sage background texture. Use sparingly as a subtle background layer or within decorative bento grids."
-      },
-      {
-        "category": "avatar_1",
-        "url": "https://images.pexels.com/photos/33646670/pexels-photo-33646670.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-        "description": "User avatar for social proof or testimonial."
-      },
-      {
-        "category": "avatar_2",
-        "url": "https://images.pexels.com/photos/29852895/pexels-photo-29852895.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-        "description": "User avatar for social proof or testimonial."
-      },
-      {
-        "category": "avatar_3",
-        "url": "https://images.unsplash.com/photo-1609371497456-3a55a205d5eb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdHMlMjBkaXZlcnNlfGVufDB8fHx8MTc3NTUyMTY5Nnww&ixlib=rb-4.1.0&q=85",
-        "description": "User avatar for social proof or testimonial."
-      }
-    ]
-  },
-  "instructions_to_main_agent": [
-    "Build a high-converting, premium landing page for 'The Room' using React, Tailwind, and Framer Motion.",
-    "Utilize the existing 'Fraunces' (headings) and 'Manrope' (body) fonts.",
-    "Navigation: Create a sticky header with backdrop-blur-xl and the brand logo. Do not hide desktop links behind a hamburger.",
-    "Hero Section: Split layout (Grid). Left side text (H1, Subtitle, Primary CTA, Try Demo CTA). Right side: Immersive visual using the 'hero_visual' image with floating UI elements (e.g., glassmorphism cards showing 'Group Joined' or 'New Lesson').",
-    "Feature Section: Implement a 'Bento Grid' strategy. Mix wide, square, and tall cards (col-span-8, col-span-4). Emphasize features: Host Courses, Join Groups, Collaborate. Use 'feature_collaboration' image in one of the tall cards.",
-    "Authentication Integration: Build a custom Shadcn Dialog for Auth. Make it unified—users can switch between Login and Register inside the modal. Add a clear 'Try Demo' button inside the modal and on the hero that acts as a read-only guest login.",
-    "Social Proof: Add a section with overlapping avatars (flex -space-x-4) and a star rating to build trust.",
-    "Styling Constraints: Apply generous padding (`py-24`, `py-32`) to sections to create breathing room. Do not use generic Inter font or generic blue gradients.",
-    "Testing: Add `data-testid` attributes to all buttons, navigation links, and auth inputs."
-  ]
+    "community_group_1": {
+      "url": "https://images.unsplash.com/photo-1750090669076-9f4f3b4733cb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAxODF8MHwxfHNlYXJjaHwxfHxkaXZlcnNlJTIwc21hbGwlMjBncm91cCUyMGNvbW11bml0eSUyMG1lZXRpbmd8ZW58MHx8fHwxNzc3MTM1NDczfDA&ixlib=rb-4.1.0&q=85",
+      "description": "A diverse small group community meeting, useful for marketing or course thumbnails"
+    },
+    "community_group_2": {
+      "url": "https://images.unsplash.com/photo-1752659985859-c22670d79563?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAxODF8MHwxfHNlYXJjaHwzfHxkaXZlcnNlJTIwc21hbGwlMjBncm91cCUyMGNvbW11bml0eSUyMG1lZXRpbmd8ZW58MHx8fHwxNzc3MTM1NDczfDA&ixlib=rb-4.1.0&q=85",
+      "description": "People collaborating, ideal for group chat headers or empty states"
+    },
+    "avatar_placeholder_1": {
+      "url": "https://images.unsplash.com/photo-1502452213786-a5bc0a67e963?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA0MTJ8MHwxfHNlYXJjaHwxfHxzbWlsaW5nJTIwZnJpZW5kbHklMjBwZXJzb24lMjBwb3J0cmFpdCUyMGF2YXRhcnxlbnwwfHx8fDE3NzcxMzU0ODZ8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Smiling person avatar, for user profile placeholders"
+    },
+    "avatar_placeholder_2": {
+      "url": "https://images.pexels.com/photos/36828104/pexels-photo-36828104.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Young smiling person avatar, for member list placeholders"
+    }
+  }
 }
