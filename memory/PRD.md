@@ -22,18 +22,30 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - Security Log for admins, dark mode, mobile-first design
 - No bottom navigation bar — top header + mobile dropdown only
 
+## Information Architecture (Restructured 4/25/2026)
+### Navigation: 4 Core Tabs (down from 8)
+- **Home** (BookOpen) → /dashboard — "This Week" hero + course grid
+- **Connect** (MessageCircle) → /connect — Unified inbox merging Chat + Messages
+  - Tab: "Group Chat" — Real-time WebSocket group chat with reactions, editing, read receipts
+  - Tab: "Direct Messages" — Private 1-on-1 messages to teachers
+- **Me** (TrendingUp) → /progress — My progress (streak, lessons, courses)
+- **Manage** (Shield) → /admin or /teacher-dashboard — Role-based management hub (Teacher/Admin only)
+
+### Desktop: Top header nav with 4 tabs + search icon + avatar dropdown
+### Mobile: Slim header (logo + search + avatar) + bottom tab bar
+### Avatar Dropdown: Settings, Security Log (admin only), Sign Out
+
 ## UI/UX Design System
 - **Typography**: Fraunces (headings), Manrope (body)
 - **Cards**: `card-organic` with glassmorphism
 - **Layout**: 2-col course grid mobile, 3-col desktop
-- **Nav**: Desktop header nav + mobile avatar dropdown (no bottom bar). Single "Courses" tab (no separate Home tab) — "This Week" hero lives inside the Courses view.
-- **Startup Migration**: Auto-detects and fixes courses with orphaned/mismatched `group_id` on every server boot. Finds the most populated group and reassigns orphaned courses. Admin also has `/api/admin/courses/fix-groups` manual endpoint.
-- **Upcoming Lesson**: `/api/lessons/next/upcoming` now respects group boundaries (previously showed lessons from any group).
+- **Nav**: Desktop header nav (4 tabs) + mobile bottom tab bar. Single "Courses" tab via Home — "This Week" hero lives inside the Courses view.
+- **Startup Migration**: Auto-detects and fixes courses with orphaned/mismatched `group_id` on every server boot.
 
 ## Architecture
 - **Backend**: FastAPI, MongoDB (motor), WebSockets, JWT (including guest tokens)
 - **Frontend**: React, Tailwind CSS, Shadcn UI, Service Workers
-- **Routing**: / = landing (unauthenticated) or dashboard (authenticated), /dashboard = merged home+courses
+- **Routing**: / = landing (unauthenticated) or dashboard (authenticated), /dashboard = merged home+courses, /connect = merged chat+messages
 
 ## Completed Work Timeline
 - Role Restructure, Multi-group migration, Drag-and-drop - DONE
@@ -53,12 +65,17 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - P2 Chat Reactions & Read Receipts: Toggle emoji reactions (6 emojis), reaction badges with counts, mark-read endpoint, "Seen by..." read receipts - DONE (4/12/2026)
 - P3 QR Code Invite: QR code in Teacher Dashboard Share Invite section with Save QR download button - DONE (4/12/2026)
 - Chat Message Editing: Authors can edit their own messages via inline editing, (edited) indicator shown, optimistic UI with rollback, guests blocked - DONE (4/12/2026)
+- **UX Restructuring Phase 1: Navigation Shell** — Reduced 8 nav items to 4 core tabs (Home, Connect, Me, Manage). Desktop: streamlined top header. Mobile: slim header + bottom tab bar (replaced horizontal scrolling tabs). Fixed Security Log missing from desktop dropdown. - DONE (4/25/2026)
+- **UX Restructuring Phase 2: Connect Page** — Merged Chat + Messages into unified /connect page with "Group Chat" and "Direct Messages" tabs. Old /chat and /messages routes redirect to /connect. - DONE (4/25/2026)
 
-## Upcoming Tasks
-- P2: Background sync for Offline Mode (Service Worker)
-- P2: Read receipts and reactions in WebSocket Chat
+## Upcoming Tasks (UX Restructuring Phases 3-6)
+- Phase 3: "Me" Page — Merge Progress + Settings into one cohesive page
+- Phase 4: "Manage" Hub — Merge Admin + Teacher Dashboard + Attendance + Security Log into unified management page
+- Phase 5: Global Search (CMD+K) — Replace standalone Search page with floating command palette
+- Phase 6: Polish & Consistency — Standardize cards, spacing, animations
 
 ## Future/Backlog
-- P3: QR code invite share sheet
+- P2: Input Validation & Moderation (max char limits, XSS sanitization, rate limiting)
 - P3: Video progress tracking
-- Rate limiting on auth endpoints
+- P4: Rate limiting on auth endpoints
+- P4: Push notifications/prompts for new lessons or chat messages
