@@ -86,6 +86,7 @@ async def create_course(data: CourseCreate, user: dict = Depends(require_teacher
         'thumbnail_url': data.thumbnail_url,
         'is_published': data.is_published,
         'unlock_type': data.unlock_type,
+        'course_type': data.course_type,
         'teacher_id': user['id'],
         'teacher_name': user['name'],
         'group_id': course_group_id,
@@ -153,7 +154,7 @@ async def get_courses(user: dict = Depends(require_approved)):
         {'$project': {
             '_id': 0,
             'id': 1, 'title': 1, 'description': 1, 'thumbnail_url': 1,
-            'is_published': 1, 'unlock_type': 1, 'teacher_id': 1,
+            'is_published': 1, 'unlock_type': 1, 'course_type': 1, 'teacher_id': 1,
             'teacher_name': 1, 'created_at': 1,
             'lesson_count': {'$ifNull': [{'$arrayElemAt': ['$lesson_stats.count', 0]}, 0]},
             'total_lessons': {'$ifNull': [{'$arrayElemAt': ['$lesson_stats.count', 0]}, 0]},
@@ -221,7 +222,7 @@ async def get_course(course_id: str, user: dict = Depends(require_approved)):
         {'$project': {
             '_id': 0,
             'id': 1, 'title': 1, 'description': 1, 'thumbnail_url': 1,
-            'is_published': 1, 'unlock_type': 1, 'teacher_id': 1,
+            'is_published': 1, 'unlock_type': 1, 'course_type': 1, 'teacher_id': 1,
             'teacher_name': 1, 'created_at': 1,
             'lesson_count': {'$ifNull': [{'$arrayElemAt': ['$lesson_stats.count', 0]}, 0]},
             'total_lessons': {'$ifNull': [{'$arrayElemAt': ['$lesson_stats.count', 0]}, 0]},

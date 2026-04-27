@@ -4,79 +4,44 @@
 Mobile-first Small Group Learning Platform for one church (v1), named "The Room".
 Value proposition: "A weekly discipleship hub: meet live, share resources, discuss, and follow up."
 
-## Roles & Responsibilities
-- **Platform Admin** (`kirah092804@gmail.com`): Full platform access globally.
-- **Teacher**: Admin access restricted to their assigned group(s).
-- **Member**: Assigned to groups via invite code.
-- **Guest**: Read-only demo access.
-
-## Information Architecture (Final — 4/27/2026)
-### Navigation: 4 Core Tabs
+## Navigation: 4 Core Tabs
 | Tab | Route | Content | Visibility |
 |---|---|---|---|
 | Home | /dashboard | "This Week" hero + course grid | Everyone |
 | Connect | /connect | Group Chat + Direct Messages (tabs) | Everyone |
-| Me | /progress | My progress, streak, course completion | Everyone |
-| Manage | /manage | Members, Attendance, Security (tabs) | Teachers/Admins only |
+| My Progress | /progress | Streak, lessons, course completion | Everyone |
+| Manage Group | /manage | Members, Attendance, Zoom, Security (tabs) | Teachers/Admins only |
 
-### Global Features
-- **CMD+K Search** — Floating command palette accessible from header or Ctrl+K/Cmd+K. Debounced search across courses, lessons, discussions.
-- **Bottom Tab Bar** (Mobile) — 3-4 tabs, replaces old horizontal scrolling nav
-- **Avatar Dropdown** — Settings, Security Log (admin, links to /manage?tab=security), Sign Out
+## Course Types (Added 4/27/2026)
+| Type | Lesson Tabs | Description |
+|---|---|---|
+| Scheduled | Live Room, Lesson, Discussion | Regular live meetings over Zoom or in-app video |
+| Self-Paced | Lesson, Discussion | Students watch recordings at their own speed |
+| Hybrid | Live Room, Lesson, Discussion | Mix of live sessions and self-paced content |
 
-### Route Redirects
-- /chat → /connect
-- /messages → /connect?tab=direct
-- /admin → /manage
-- /teacher-dashboard → /manage
-- /attendance → /manage?tab=attendance
-- /security-log → /manage?tab=security
+### Lesson Tab Definitions
+- **Live Room** (was "NOW") — Join live Daily.co/Zoom video. Only shown for scheduled/hybrid courses.
+- **Lesson** (was "NEXT") — Core content: recording/replay, resources, discussion prompts. Always the default active tab.
+- **Discussion** (was "AFTER") — Comment thread for the lesson.
 
-## Design System (Finalized 4/27/2026)
-### Page Headers
-Every page uses the overline+title pattern:
-- Overline: `text-xs tracking-widest uppercase font-semibold text-muted-foreground` (Manrope)
-- Title: `text-3xl sm:text-4xl font-bold tracking-tight` (Fraunces)
-- Examples: "GOOD AFTERNOON" / "Teacher", "COMMUNITY" / "Connect", "MY JOURNEY" / "Progress", "ADMINISTRATION" / "Manage"
-
-### Tab Switcher
-All tabbed pages use `.pill-tabs` + `.pill-tab` + `.pill-tab-active` CSS classes (muted background, white active tab with shadow).
-
-### Cards
-`.card-organic` — border-radius 1.25rem, subtle shadow, white bg, hover lift.
-
-### Animations
-- `animate-fade-in` on all page sections with staggered `animationDelay`
-- `stagger-children` for grid/list items
-- Button active feedback via global `scale(0.97)` transform
-
-### Typography
-- Headings: Fraunces, serif
-- Body: Manrope, sans-serif
-
-## Input Validation & Moderation
-- All user text inputs pass through `sanitize_text()` (HTML/script tags stripped, max length enforced)
-- Chat rate limiting: 10 msgs/30s per user (HTTP 429)
-- Frontend: maxLength attributes + visual character counters at 80%+ usage
-
-## Architecture
-- **Backend**: FastAPI, MongoDB (motor), WebSockets, JWT
-- **Frontend**: React, Tailwind CSS, Shadcn UI, Service Workers
-- **Key Patterns**: Embedded prop pattern for page composition, optimistic UI, offline caching
+## Manage Group Hub
+- **Members** — Pending approvals, member list, move/remove users (Admin)
+- **Attendance** — Attendance reports and analytics
+- **Zoom** — Zoom Integration (connect/disconnect, auto-import recordings) — moved from Settings
+- **Security** — Security audit log (Admin only)
 
 ## Completed Work
 - All core features (landing, guest mode, courses, lessons, chat, messages, progress, admin, attendance, security log, video, zoom, notifications)
-- UX Restructuring Phase 1+2: 4-tab nav, bottom tab bar, Connect page (4/25/2026)
-- Input Validation & Moderation: XSS sanitization, max char limits, chat rate limiting (4/25/2026)
-- UX Restructuring Phase 4: Unified Manage Hub (4/27/2026)
-- UX Restructuring Phase 5: CMD+K Global Search (4/27/2026)
-- A11y Fix: DialogTitle in SearchCommand CommandDialog (4/27/2026)
-- Design Consistency Pass: Standardized page headers, pill-tabs, card-organic, animations, page-container (4/27/2026)
-
-## Upcoming
-- Phase 3: Merge Progress + Settings → unified "Me" page
+- UX Restructuring: 4-tab nav, bottom tab bar, Connect page, Manage hub, CMD+K search (4/25-27/2026)
+- Input Validation: XSS sanitization, char limits, rate limiting (4/25/2026)
+- Design Consistency: Standardized headers, pill-tabs, card-organic, animations (4/27/2026)
+- QA Audit: Guest WS fix, JWT rotation, health endpoint, test data cleanup (4/27/2026)
+- Tab Renames: Me→My Progress, Manage→Manage Group, NOW→Live Room, NEXT→Lesson, AFTER→Discussion (4/27/2026)
+- Course Types: course_type field (scheduled/self_paced/hybrid), context-aware lesson tabs (4/27/2026)
+- Zoom relocated from Settings to Manage Group (4/27/2026)
 
 ## Backlog
+- Phase 3: Merge Progress + Settings → unified "My Progress" page
 - Video progress tracking
 - Rate limiting on auth endpoints
-- Push notifications for new lessons/messages
+- Push notifications
