@@ -170,6 +170,111 @@
 .card-hover { transition: all 0.3s ease; }
 .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(74, 103, 65, 0.12); }
 
+/* Organic card — the signature card style for The Room */
+.card-organic {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border) / 0.6);
+    border-radius: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-organic:hover {
+    box-shadow: 0 4px 20px rgba(74, 93, 58, 0.08);
+}
+
+/* Pill tab switcher — reusable across Connect, Manage, Progress */
+.pill-tabs {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    background: hsl(var(--muted) / 0.6);
+    border-radius: 0.75rem;
+    overflow-x: auto;
+}
+.pill-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    color: hsl(var(--muted-foreground));
+}
+.pill-tab:hover { color: hsl(var(--foreground)); }
+.pill-tab-active {
+    background: hsl(var(--card));
+    color: hsl(var(--foreground));
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.dark .pill-tab-active {
+    background: hsl(120 10% 18%);
+}
+
+/* Chat bubble styles */
+.chat-bubble {
+    padding: 0.625rem 0.875rem;
+    border-radius: 1.25rem;
+    max-width: 100%;
+    word-break: break-word;
+}
+.chat-bubble-own {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-bottom-right-radius: 0.375rem;
+}
+.chat-bubble-other {
+    background: hsl(var(--muted) / 0.7);
+    color: hsl(var(--foreground));
+    border-bottom-left-radius: 0.375rem;
+}
+
+/* Lesson detail tab underline */
+.lesson-tab {
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+.lesson-tab-active {
+    color: hsl(var(--foreground));
+    border-bottom-color: hsl(var(--primary));
+}
+.lesson-tab-inactive {
+    color: hsl(var(--muted-foreground));
+}
+.lesson-tab-inactive:hover {
+    color: hsl(var(--foreground));
+}
+
+/* Primary button style */
+.btn-primary {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-radius: 9999px;
+    font-weight: 500;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+.btn-primary:hover {
+    background: hsl(var(--primary) / 0.9);
+}
+
+/* Page container — consistent horizontal padding */
+.page-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+@media (min-width: 768px) {
+    .page-container {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
 /* Button press effect — apply globally to all interactive buttons */
 .btn-press:active { transform: scale(0.95); }
 

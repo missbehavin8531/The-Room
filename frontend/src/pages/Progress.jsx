@@ -64,7 +64,7 @@ const ProgressPage = () => {
                 {/* Header */}
                 <div className="space-y-1 animate-fade-in">
                     <p className="text-xs tracking-widest uppercase font-semibold text-muted-foreground" style={{ fontFamily: "'Manrope', sans-serif" }}>
-                        Dashboard
+                        My Journey
                     </p>
                     <h1 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Fraunces', serif" }}>
                         Progress
@@ -73,23 +73,17 @@ const ProgressPage = () => {
 
                 {/* Tabs (Teacher/Admin only) */}
                 {isTeacherOrAdmin && (
-                    <div className="flex gap-6 border-b border-border/50 animate-fade-in" style={{ animationDelay: '0.05s' }}>
+                    <div className="pill-tabs animate-fade-in" style={{ animationDelay: '0.05s' }}>
                         <button
                             onClick={() => setTab('my')}
-                            className={cn(
-                                "lesson-tab",
-                                tab === 'my' ? "lesson-tab-active" : "lesson-tab-inactive"
-                            )}
+                            className={cn("pill-tab", tab === 'my' && "pill-tab-active")}
                             data-testid="tab-my-progress"
                         >
                             My Progress
                         </button>
                         <button
                             onClick={() => setTab('students')}
-                            className={cn(
-                                "lesson-tab",
-                                tab === 'students' ? "lesson-tab-active" : "lesson-tab-inactive"
-                            )}
+                            className={cn("pill-tab", tab === 'students' && "pill-tab-active")}
                             data-testid="tab-student-progress"
                         >
                             Students

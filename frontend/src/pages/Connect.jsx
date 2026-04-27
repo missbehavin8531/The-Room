@@ -15,24 +15,22 @@ export default function Connect() {
 
     return (
         <Layout>
-            <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-9rem)] md:h-[calc(100vh-6rem)]" data-testid="connect-page">
+            <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-12rem)] md:h-[calc(100vh-6rem)] page-container" data-testid="connect-page">
                 {/* Header */}
-                <div className="flex items-center justify-between pt-4 pb-2">
-                    <h1 className="text-xl font-bold" style={{ fontFamily: "'Fraunces', serif" }}>
+                <div className="space-y-1 pt-6 pb-3 animate-fade-in">
+                    <p className="text-xs tracking-widest uppercase font-semibold text-muted-foreground" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                        Community
+                    </p>
+                    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Fraunces', serif" }}>
                         Connect
                     </h1>
                 </div>
 
                 {/* Tab Switcher */}
-                <div className="flex gap-1 p-1 bg-muted/60 rounded-xl mb-3 shrink-0" data-testid="connect-tabs">
+                <div className="pill-tabs mb-3 shrink-0 animate-fade-in" style={{ animationDelay: '0.05s' }} data-testid="connect-tabs">
                     <button
                         onClick={function() { setTab('chat'); }}
-                        className={cn(
-                            "flex items-center justify-center gap-1.5 flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200",
-                            tab === 'chat'
-                                ? "bg-white dark:bg-gray-800 shadow-sm text-foreground"
-                                : "text-muted-foreground hover:text-foreground"
-                        )}
+                        className={cn("pill-tab flex-1", tab === 'chat' && "pill-tab-active")}
                         data-testid="connect-tab-chat"
                     >
                         <MessageCircle className="w-3.5 h-3.5" />
@@ -40,12 +38,7 @@ export default function Connect() {
                     </button>
                     <button
                         onClick={function() { setTab('direct'); }}
-                        className={cn(
-                            "flex items-center justify-center gap-1.5 flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200",
-                            tab === 'direct'
-                                ? "bg-white dark:bg-gray-800 shadow-sm text-foreground"
-                                : "text-muted-foreground hover:text-foreground"
-                        )}
+                        className={cn("pill-tab flex-1", tab === 'direct' && "pill-tab-active")}
                         data-testid="connect-tab-direct"
                     >
                         <Mail className="w-3.5 h-3.5" />
@@ -54,7 +47,7 @@ export default function Connect() {
                 </div>
 
                 {/* Tab Content */}
-                <div className="flex-grow overflow-hidden min-h-0">
+                <div className="flex-grow overflow-hidden min-h-0 animate-fade-in" style={{ animationDelay: '0.1s' }}>
                     {tab === 'chat' && <Chat embedded />}
                     {tab === 'direct' && <Messages embedded />}
                 </div>
