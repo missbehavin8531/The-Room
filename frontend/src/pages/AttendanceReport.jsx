@@ -17,7 +17,7 @@ import {
     Users, Video, Play, CheckCircle, TrendingUp, Calendar, RotateCcw, Trash2
 } from 'lucide-react';
 
-function AttendanceReport() {
+function AttendanceReport({ embedded }) {
     var authData = useAuth();
     var isTeacherOrAdmin = authData.isTeacherOrAdmin;
     var navigate = useNavigate();
@@ -120,19 +120,20 @@ function AttendanceReport() {
     }
 
     if (loading) {
-        return (
-            <Layout>
-                <div className="max-w-6xl mx-auto space-y-4">
-                    <Skeleton className="h-32 w-full" />
-                    <Skeleton className="h-64 w-full" />
-                </div>
-            </Layout>
+        var loadingSkeleton = (
+            <div className="max-w-6xl mx-auto space-y-4">
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-64 w-full" />
+            </div>
         );
+        if (embedded) return loadingSkeleton;
+        return <Layout>{loadingSkeleton}</Layout>;
     }
 
-    return (
-        <Layout>
+    var attendanceContent = (
+        <>
             <div className="max-w-6xl mx-auto" data-testid="attendance-report-page">
+                {!embedded && (
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                     <h1 className="text-3xl font-serif font-bold flex items-center gap-3">
                         <Calendar className="w-8 h-8" />
@@ -148,6 +149,7 @@ function AttendanceReport() {
                         Reset {selectedCourse !== 'all' ? 'Course' : 'All'} Attendance
                     </Button>
                 </div>
+                )}
 
                 {summary && (
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
@@ -304,8 +306,11 @@ function AttendanceReport() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </Layout>
+        </>
     );
+
+    if (embedded) return attendanceContent;
+    return <Layout>{attendanceContent}</Layout>;
 }
 
 export default AttendanceReport;

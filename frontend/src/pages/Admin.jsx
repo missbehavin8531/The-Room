@@ -34,7 +34,7 @@ const getRoleBadge = (role) => {
     );
 };
 
-export const Admin = () => {
+export const Admin = ({ embedded }) => {
     const { user, isAdmin, isTeacherOrAdmin } = useAuth();
     const [users, setUsers] = useState([]);
     const [pendingUsers, setPendingUsers] = useState([]);
@@ -285,39 +285,40 @@ export const Admin = () => {
     };
 
     if (loading) {
-        return (
-            <Layout>
-                <div className="page-container py-6">
-                    <Skeleton className="h-8 w-48 mb-6" />
-                    <div className="grid md:grid-cols-4 gap-4 mb-6">
-                        <Skeleton className="h-24 rounded-xl" />
-                        <Skeleton className="h-24 rounded-xl" />
-                        <Skeleton className="h-24 rounded-xl" />
-                        <Skeleton className="h-24 rounded-xl" />
-                    </div>
+        var loadingSkeleton = (
+            <div className="page-container py-6">
+                <Skeleton className="h-8 w-48 mb-6" />
+                <div className="grid md:grid-cols-4 gap-4 mb-6">
+                    <Skeleton className="h-24 rounded-xl" />
+                    <Skeleton className="h-24 rounded-xl" />
+                    <Skeleton className="h-24 rounded-xl" />
+                    <Skeleton className="h-24 rounded-xl" />
                 </div>
-            </Layout>
+            </div>
         );
+        if (embedded) return loadingSkeleton;
+        return <Layout>{loadingSkeleton}</Layout>;
     }
 
     const otherUsers = users.filter(u => u.id !== user?.id);
     const topCommenters = participation?.top_commenters || [];
     const topChatters = participation?.top_chatters || [];
 
-    return (
-        <Layout>
-            <div className="page-container py-6 space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-serif font-bold flex items-center gap-2">
-                            <Shield className="w-6 h-6 text-primary" />Admin Panel
-                        </h1>
-                        <p className="text-muted-foreground text-sm">Manage users, moderate content, and view analytics</p>
-                    </div>
-                    <Button onClick={() => setShowCleanupDialog(true)} variant="destructive" size="sm" data-testid="cleanup-test-data-btn">
-                        <Trash2 className="w-4 h-4 mr-2" />Delete All Members
-                    </Button>
+    var adminContent = (
+        <div className="page-container py-6 space-y-6">
+            {!embedded && (
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-serif font-bold flex items-center gap-2">
+                        <Shield className="w-6 h-6 text-primary" />Admin Panel
+                    </h1>
+                    <p className="text-muted-foreground text-sm">Manage users, moderate content, and view analytics</p>
                 </div>
+                <Button onClick={() => setShowCleanupDialog(true)} variant="destructive" size="sm" data-testid="cleanup-test-data-btn">
+                    <Trash2 className="w-4 h-4 mr-2" />Delete All Members
+                </Button>
+            </div>
+            )}
 
                 {analytics && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -850,8 +851,11 @@ export const Admin = () => {
                     </AlertDialogContent>
                 </AlertDialog>
             </div>
-        </Layout>
     );
+
+    if (embedded) return adminContent;
+    return <Layout>{adminContent}</Layout>;
 };
 
 export default Admin;
+

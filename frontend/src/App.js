@@ -16,6 +16,7 @@ import TeacherResponses from './pages/TeacherResponses';
 import Chat from './pages/Chat';
 import Messages from './pages/Messages';
 import Connect from './pages/Connect';
+import ManagePage from './pages/ManagePage';
 import Admin from './pages/Admin';
 import Progress from './pages/Progress';
 import Settings from './pages/Settings';
@@ -252,17 +253,21 @@ function AppRoutes() {
                 path="/admin"
                 element={
                     <ProtectedRoute requireAdmin>
-                        <Admin />
+                        <Navigate to="/manage" replace />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/manage"
+                element={
+                    <ProtectedRoute requireTeacher>
+                        <ManagePage />
                     </ProtectedRoute>
                 }
             />
             <Route
                 path="/teacher-dashboard"
-                element={
-                    <ProtectedRoute requireTeacher>
-                        <TeacherDashboard />
-                    </ProtectedRoute>
-                }
+                element={<Navigate to="/manage" replace />}
             />
             <Route
                 path="/settings"
@@ -274,11 +279,7 @@ function AppRoutes() {
             />
             <Route
                 path="/attendance"
-                element={
-                    <ProtectedRoute requireTeacher>
-                        <AttendanceReport />
-                    </ProtectedRoute>
-                }
+                element={<Navigate to="/manage?tab=attendance" replace />}
             />
             <Route
                 path="/search"

@@ -15,7 +15,7 @@ import {
 
 const getInitials = (name) => name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
 
-export const TeacherDashboard = () => {
+export const TeacherDashboard = ({ embedded }) => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [group, setGroup] = useState(null);
@@ -72,47 +72,36 @@ export const TeacherDashboard = () => {
     };
 
     if (loading) {
-        return (
-            <Layout>
-                <div className="page-container py-6 space-y-6">
-                    <div className="animate-pulse space-y-1">
-                        <div className="h-7 w-48 bg-muted rounded-xl" />
-                        <div className="h-4 w-64 bg-muted/60 rounded" />
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                        {[...Array(3)].map((_, i) => (
-                            <div key={i} className="animate-pulse space-y-3 p-4 bg-muted/30 rounded-2xl" style={{ animationDelay: `${i * 100}ms` }}>
-                                <div className="h-10 w-10 bg-muted rounded-xl" />
-                                <div className="h-5 w-20 bg-muted rounded" />
-                                <div className="h-3 w-16 bg-muted/60 rounded" />
-                            </div>
-                        ))}
-                    </div>
-                    <div className="space-y-3">
-                        <div className="h-6 w-32 bg-muted rounded animate-pulse" />
-                        {[...Array(3)].map((_, i) => (
-                            <div key={i} className="animate-pulse flex items-center gap-3 p-3 bg-muted/30 rounded-xl" style={{ animationDelay: `${i * 80}ms` }}>
-                                <div className="h-10 w-10 bg-muted rounded-full" />
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-4 w-32 bg-muted rounded" />
-                                    <div className="h-3 w-48 bg-muted/60 rounded" />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+        var loadingSkeleton = (
+            <div className="page-container py-6 space-y-6">
+                <div className="animate-pulse space-y-1">
+                    <div className="h-7 w-48 bg-muted rounded-xl" />
+                    <div className="h-4 w-64 bg-muted/60 rounded" />
                 </div>
-            </Layout>
+                <div className="grid grid-cols-3 gap-3">
+                    {[...Array(3)].map((_, i) => (
+                        <div key={i} className="animate-pulse space-y-3 p-4 bg-muted/30 rounded-2xl" style={{ animationDelay: `${i * 100}ms` }}>
+                            <div className="h-10 w-10 bg-muted rounded-xl" />
+                            <div className="h-5 w-20 bg-muted rounded" />
+                            <div className="h-3 w-16 bg-muted/60 rounded" />
+                        </div>
+                    ))}
+                </div>
+            </div>
         );
+        if (embedded) return loadingSkeleton;
+        return <Layout>{loadingSkeleton}</Layout>;
     }
 
-    return (
-        <Layout>
-            <div className="space-y-6 max-w-4xl mx-auto" data-testid="teacher-dashboard">
-                {/* Header */}
+    var teacherContent = (
+        <div className="space-y-6 max-w-4xl mx-auto" data-testid="teacher-dashboard">
+            {/* Header */}
+            {!embedded && (
                 <div>
                     <h1 className="text-2xl font-serif font-bold">My Group</h1>
                     {group && <p className="text-muted-foreground">{group.name}</p>}
                 </div>
+            )}
 
                 {/* Stats Row */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -342,8 +331,10 @@ export const TeacherDashboard = () => {
                     </CardContent>
                 </Card>
             </div>
-        </Layout>
     );
+
+    if (embedded) return teacherContent;
+    return <Layout>{teacherContent}</Layout>;
 };
 
 export default TeacherDashboard;

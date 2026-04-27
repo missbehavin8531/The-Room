@@ -24,6 +24,7 @@ import {
 } from './ui/dropdown-menu';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { toast } from 'sonner';
+import { SearchCommand } from './SearchCommand';
 
 function isPathActive(matchPaths, pathname) {
     return matchPaths.some(function(p) {
@@ -44,6 +45,19 @@ export var Layout = function Layout(props) {
     var location = useLocation();
     var navigate = useNavigate();
     var [isOffline, setIsOffline] = useState(!navigator.onLine);
+    var [searchOpen, setSearchOpen] = useState(false);
+
+    // CMD+K keyboard shortcut for search
+    useEffect(function() {
+        function handleKeyDown(e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                setSearchOpen(true);
+            }
+        }
+        document.addEventListener('keydown', handleKeyDown);
+        return function() { document.removeEventListener('keydown', handleKeyDown); };
+    }, []);
 
     // Offline/online detection + background sync replay
     useEffect(function() {
@@ -112,10 +126,10 @@ export var Layout = function Layout(props) {
 
     if (isTeacherOrAdmin) {
         navItems.push({
-            path: isAdmin ? '/admin' : '/teacher-dashboard',
+            path: '/manage',
             icon: Shield,
             label: 'Manage',
-            match: ['/admin', '/teacher-dashboard', '/attendance', '/security-log']
+            match: ['/manage', '/admin', '/teacher-dashboard', '/attendance', '/security-log']
         });
     }
 
@@ -173,7 +187,7 @@ export var Layout = function Layout(props) {
             </DropdownMenuItem>
             {isAdmin && (
                 <DropdownMenuItem asChild>
-                    <Link to="/security-log" className="flex items-center">
+                    <Link to="/manage?tab=security" className="flex items-center">
                         <ShieldAlert className="w-4 h-4 mr-2" />Security Log
                     </Link>
                 </DropdownMenuItem>
@@ -228,7 +242,7 @@ export var Layout = function Layout(props) {
                                 variant="ghost"
                                 size="icon"
                                 className="rounded-full"
-                                onClick={function() { navigate('/search'); }}
+                                onClick={function() { setSearchOpen(true); }}
                                 data-testid="header-search-btn"
                             >
                                 <SearchIcon className="w-4 h-4" />
@@ -272,7 +286,7 @@ export var Layout = function Layout(props) {
                             variant="ghost"
                             size="icon"
                             className="w-9 h-9 rounded-full"
-                            onClick={function() { navigate('/search'); }}
+                            onClick={function() { setSearchOpen(true); }}
                             data-testid="mobile-search-btn"
                         >
                             <SearchIcon className="w-4 h-4" />
@@ -351,6 +365,9 @@ export var Layout = function Layout(props) {
                     })}
                 </div>
             </nav>
+
+            {/* CMD+K Search Overlay */}
+            <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
         </div>
     );
 };

@@ -33,7 +33,7 @@ function formatTimeAgo(isoString) {
     return d.toLocaleDateString();
 }
 
-export default function SecurityLog() {
+export default function SecurityLog({ embedded }) {
     const [logs, setLogs] = useState([]);
     const [summary, setSummary] = useState({});
     const [total, setTotal] = useState(0);
@@ -65,18 +65,19 @@ export default function SecurityLog() {
 
     const allEventTypes = Object.keys(EVENT_CONFIG);
 
-    return (
-        <Layout>
-            <div className="page-container py-6 space-y-6 max-w-2xl mx-auto" data-testid="security-log-page">
-                {/* Header */}
-                <div className="space-y-1 animate-fade-in">
-                    <p className="text-xs tracking-widest uppercase font-semibold text-muted-foreground" style={{ fontFamily: "'Manrope', sans-serif" }}>
-                        Admin
-                    </p>
-                    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Fraunces', serif" }}>
-                        Security Log
-                    </h1>
-                </div>
+    var securityContent = (
+        <div className="page-container py-6 space-y-6 max-w-2xl mx-auto" data-testid="security-log-page">
+            {/* Header */}
+            {!embedded && (
+            <div className="space-y-1 animate-fade-in">
+                <p className="text-xs tracking-widest uppercase font-semibold text-muted-foreground" style={{ fontFamily: "'Manrope', sans-serif" }}>
+                    Admin
+                </p>
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Fraunces', serif" }}>
+                    Security Log
+                </h1>
+            </div>
+            )}
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-3 gap-2 animate-fade-in" style={{ animationDelay: '0.05s' }}>
@@ -210,6 +211,8 @@ export default function SecurityLog() {
                     </div>
                 )}
             </div>
-        </Layout>
     );
+
+    if (embedded) return securityContent;
+    return <Layout>{securityContent}</Layout>;
 }
