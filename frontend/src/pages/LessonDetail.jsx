@@ -71,12 +71,21 @@ const StatusDropdownItems = ({ onSelect }) => (
     </>
 );
 
-// Tab definitions for Now/Next/After flow
-const LESSON_TABS = [
-    { key: 'now', label: 'NOW', subtitle: 'Join Live', icon: Video, color: 'bg-blue-500' },
-    { key: 'next', label: 'NEXT', subtitle: 'Watch Replay', icon: Play, color: 'bg-purple-500' },
-    { key: 'after', label: 'AFTER', subtitle: 'Engage', icon: BookOpen, color: 'bg-green-500' },
-];
+// Tab definitions — context-aware based on course_type
+function getLessonTabs(courseType) {
+    if (courseType === 'self_paced') {
+        return [
+            { key: 'lesson', label: 'Lesson', subtitle: 'Content', icon: Play, color: 'bg-purple-500' },
+            { key: 'discussion', label: 'Discussion', subtitle: 'Engage', icon: BookOpen, color: 'bg-green-500' },
+        ];
+    }
+    // scheduled or hybrid
+    return [
+        { key: 'live', label: 'Live Room', subtitle: 'Join Live', icon: Video, color: 'bg-blue-500' },
+        { key: 'lesson', label: 'Lesson', subtitle: 'Content', icon: Play, color: 'bg-purple-500' },
+        { key: 'discussion', label: 'Discussion', subtitle: 'Engage', icon: BookOpen, color: 'bg-green-500' },
+    ];
+}
 
 const getResourceIcon = (fileType) => {
     switch (fileType) {
@@ -94,7 +103,7 @@ export const LessonDetail = () => {
     const isGuest = user?.role === 'guest';
     const [lesson, setLesson] = useState(null);
     const [course, setCourse] = useState(null);
-    const [activeTab, setActiveTab] = useState('now');
+    const [activeTab, setActiveTab] = useState('lesson');
     const [loading, setLoading] = useState(true);
     
     // Discussion state
@@ -138,16 +147,16 @@ export const LessonDetail = () => {
         fetchLessonData();
     }, [lessonId]);
     
-    // Fetch video room status when on NOW tab
+    // Fetch video room status when on Live tab
     useEffect(() => {
-        if (activeTab === 'now') {
+        if (activeTab === 'live') {
             fetchRoomStatus();
         }
     }, [activeTab, lessonId]);
     
-    // Fetch recordings when on NEXT tab
+    // Fetch recordings when on Lesson tab
     useEffect(() => {
-        if (activeTab === 'next' && lessonId) {
+        if (activeTab === 'lesson' && lessonId) {
             fetchRecordings();
         }
     }, [activeTab, lessonId]);
@@ -618,9 +627,9 @@ export const LessonDetail = () => {
                     <p className="text-muted-foreground text-sm md:text-base">{lesson.description}</p>
                 </div>
 
-                {/* NOW / NEXT / AFTER Tab Navigation — Underline style */}
+                {/* Lesson Tab Navigation — Context-aware */}
                 <div className="flex gap-0 border-b border-border animate-fade-in" style={{ animationDelay: '0.05s' }}>
-                    {LESSON_TABS.map((tab) => {
+                    {getLessonTabs(course?.course_type).map((tab) => {
                         const isActive = activeTab === tab.key;
                         return (
                             <button
@@ -638,8 +647,8 @@ export const LessonDetail = () => {
                     })}
                 </div>
 
-                {/* ============ NOW TAB: Join Live Video Room ============ */}
-                {activeTab === 'now' && (
+                {/* ============ LIVE ROOM TAB: Join Live Video Room ============ */}
+                {activeTab === 'live' && (
                     <div className="space-y-4 animate-fade-in">
                         {/* In-App Video Room - show if hosting_method is 'in_app' or 'both' */}
                         {(lesson.hosting_method === 'in_app' || lesson.hosting_method === 'both' || !lesson.hosting_method) && (
@@ -750,7 +759,8 @@ export const LessonDetail = () => {
                 )}
 
                 {/* ============ NEXT TAB: Watch Replay + Teacher Notes ============ */}
-                {activeTab === 'next' && (
+                {/* ============ LESSON TAB: Content, Replay, Resources ============ */}
+                {activeTab === 'lesson' && (
                     <div className="space-y-4 animate-fade-in">
                         {/* Teacher Upload Controls */}
                         {isTeacherOrAdmin && (
@@ -1116,7 +1126,8 @@ export const LessonDetail = () => {
                 )}
 
                 {/* ============ AFTER TAB: Resources, Discussion, Reading Plan, Attendance ============ */}
-                {activeTab === 'after' && (
+                {/* ============ DISCUSSION TAB ============ */}
+                {activeTab === 'discussion' && (
                     <div className="space-y-6 animate-fade-in">
                         {/* Resources/Slides Section */}
                         <div className="space-y-3">

@@ -121,14 +121,14 @@ export var Layout = function Layout(props) {
     var navItems = [
         { path: '/dashboard', icon: BookOpen, label: 'Home', match: ['/', '/dashboard', '/courses', '/lessons'] },
         { path: '/connect', icon: MessageCircle, label: 'Connect', match: ['/connect'] },
-        { path: '/progress', icon: TrendingUp, label: 'Me', match: ['/progress', '/settings'] },
+        { path: '/progress', icon: TrendingUp, label: 'My Progress', match: ['/progress', '/settings'] },
     ];
 
     if (isTeacherOrAdmin) {
         navItems.push({
             path: '/manage',
             icon: Shield,
-            label: 'Manage',
+            label: 'Manage Group',
             match: ['/manage', '/admin', '/teacher-dashboard', '/attendance', '/security-log']
         });
     }

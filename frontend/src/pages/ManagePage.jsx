@@ -6,8 +6,9 @@ import { Admin } from './Admin';
 import { TeacherDashboard } from './TeacherDashboard';
 import AttendanceReport from './AttendanceReport';
 import SecurityLog from './SecurityLog';
+import ZoomIntegration from '../components/ZoomIntegration';
 import { cn } from '../lib/utils';
-import { Shield, Users, Calendar, ShieldAlert, Share2 } from 'lucide-react';
+import { Shield, Users, Calendar, ShieldAlert, Share2, Video } from 'lucide-react';
 
 export default function ManagePage() {
     var { isAdmin, isTeacher } = useAuth();
@@ -18,12 +19,14 @@ export default function ManagePage() {
         tabs = [
             { id: 'admin', label: 'Members', icon: Users },
             { id: 'attendance', label: 'Attendance', icon: Calendar },
+            { id: 'zoom', label: 'Zoom', icon: Video },
             { id: 'security', label: 'Security', icon: ShieldAlert },
         ];
     } else if (isTeacher) {
         tabs = [
             { id: 'group', label: 'My Group', icon: Share2 },
             { id: 'attendance', label: 'Attendance', icon: Calendar },
+            { id: 'zoom', label: 'Zoom', icon: Video },
         ];
     }
 
@@ -42,7 +45,7 @@ export default function ManagePage() {
                         {isAdmin ? 'Administration' : 'My Group'}
                     </p>
                     <h1 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ fontFamily: "'Fraunces', serif" }}>
-                        Manage
+                        Manage Group
                     </h1>
                 </div>
 
@@ -69,6 +72,7 @@ export default function ManagePage() {
                     {activeTab === 'admin' && isAdmin && <Admin embedded />}
                     {activeTab === 'group' && !isAdmin && <TeacherDashboard embedded />}
                     {activeTab === 'attendance' && <AttendanceReport embedded />}
+                    {activeTab === 'zoom' && <ZoomIntegration />}
                     {activeTab === 'security' && isAdmin && <SecurityLog embedded />}
                 </div>
             </div>

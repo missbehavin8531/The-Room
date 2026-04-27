@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import {
     ArrowLeft, ArrowRight, Check, BookOpen, 
-    Loader2, FileText, Users, X, Sparkles, Calendar, ListOrdered
+    Loader2, FileText, Users, X, Sparkles, Calendar, ListOrdered, Video, BookMarked
 } from 'lucide-react';
 
 const STEPS = [
@@ -28,6 +28,7 @@ export const CourseWizard = ({ onClose, onSuccess }) => {
         thumbnail_url: '',
         is_published: false,
         unlock_type: 'sequential',
+        course_type: 'scheduled',
     });
     
     const updateField = (field, value) => {
@@ -150,6 +151,40 @@ export const CourseWizard = ({ onClose, onSuccess }) => {
                         </div>
                         
                         <div className="space-y-3">
+                            <Label>Course Type</Label>
+                            <div className="grid gap-3">
+                                {[
+                                    { value: 'scheduled', icon: Calendar, title: 'Scheduled', desc: 'Regular live meetings over Zoom or in-app video. Lessons have a "Live Room" tab.' },
+                                    { value: 'self_paced', icon: BookMarked, title: 'Self-Paced', desc: 'Students watch recordings and complete at their own speed. No live sessions.' },
+                                    { value: 'hybrid', icon: Video, title: 'Hybrid', desc: 'Mix of live sessions and self-paced content. Live Room shown when configured.' },
+                                ].map(function(opt) {
+                                    var selected = course.course_type === opt.value;
+                                    return (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => updateField('course_type', opt.value)}
+                                            className={cn(
+                                                "p-4 rounded-xl border-2 transition-all text-left flex items-start gap-4",
+                                                selected ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-muted hover:border-primary/50"
+                                            )}
+                                            data-testid={"course-type-" + opt.value}
+                                        >
+                                            <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0", selected ? "bg-primary text-primary-foreground" : "bg-muted")}>
+                                                <opt.icon className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="font-medium">{opt.title}</p>
+                                                <p className="text-sm text-muted-foreground mt-1">{opt.desc}</p>
+                                            </div>
+                                            {selected && <Check className="w-5 h-5 text-primary flex-shrink-0" />}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
                             <Label>Lesson Unlock Mode</Label>
                             <div className="grid gap-3">
                                 <button
@@ -253,6 +288,16 @@ export const CourseWizard = ({ onClose, onSuccess }) => {
                                         <p className="text-sm text-muted-foreground">Unlock Mode</p>
                                         <p className="font-medium">
                                             {course.unlock_type === 'scheduled' ? 'Scheduled' : 'Sequential'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-3">
+                                    <Video className="w-5 h-5 text-muted-foreground mt-0.5" />
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Course Type</p>
+                                        <p className="font-medium">
+                                            {course.course_type === 'self_paced' ? 'Self-Paced' : course.course_type === 'hybrid' ? 'Hybrid' : 'Scheduled'}
                                         </p>
                                     </div>
                                 </div>

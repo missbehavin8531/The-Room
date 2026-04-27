@@ -63,6 +63,7 @@ class CourseBase(BaseModel):
     thumbnail_url: Optional[str] = None
     is_published: bool = False
     unlock_type: str = "sequential"
+    course_type: str = "scheduled"  # scheduled, self_paced, hybrid
 
 class CourseCreate(CourseBase):
     pass
@@ -73,6 +74,7 @@ class CourseUpdate(BaseModel):
     thumbnail_url: Optional[str] = None
     is_published: Optional[bool] = None
     unlock_type: Optional[str] = None
+    course_type: Optional[str] = None
 
 class CourseResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -82,6 +84,7 @@ class CourseResponse(BaseModel):
     thumbnail_url: Optional[str] = None
     is_published: bool = False
     unlock_type: str = "sequential"
+    course_type: str = "scheduled"
     teacher_id: str
     teacher_name: str
     created_at: str

@@ -1,0 +1,86 @@
+{
+  "summary": "Iteration 43 tested nav label renames (My Progress/Manage Group), Zoom relocation to Manage Group page, lesson tab renames (Live Room/Lesson/Discussion), course_type field plumbing (scheduled/self_paced/hybrid), and CourseWizard UI. Frontend changes all verified working. CRITICAL backend bug found: course_type is NOT persisted by POST /api/courses and NOT returned by GET /api/courses or GET /api/courses/{id} because create_course() omits it from the insert dict and both aggregation $project stages do not project course_type. All courses therefore appear as scheduled regardless of user choice, breaking the self_paced (2-tab) and hybrid lesson-tab contextual behavior end-to-end.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/courses",
+        "issue": "course_type from request body is not saved to DB. create_course() in /app/backend/routes/courses.py (lines 82-93) builds the insert document with title/description/thumbnail_url/is_published/unlock_type/teacher_* but omits data.course_type. As a result the POST response and persisted document default to 'scheduled' regardless of what the client sent. Confirmed via pytest: payload {course_type:'self_paced'} returns course_type='scheduled'.",
+        "priority": "CRITICAL"
+      },
+      {
+        "endpoint": "GET /api/courses",
+        "issue": "Aggregation $project stage in get_courses() (lines 153-163) does not project the course_type field, so it is always absent from the aggregation output and CourseResponse defaults fill in 'scheduled'. Confirmed via pytest — newly updated course_type is not reflected in list.",
+        "priority": "CRITICAL"
+      },
+      {
+        "endpoint": "GET /api/courses/{course_id}",
+        "issue": "Same $project omission in get_course() (lines 221-231). Even though PUT /api/courses/{id} persists course_type (update uses model_dump $set), a subsequent GET returns the Pydantic default 'scheduled'. Confirmed by test_update_course_type failing: course updated to self_paced, GET returns scheduled.",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Course creation with course_type (Course Wizard)",
+        "issue": "CourseWizard UI collects course_type correctly and sends it in the POST body, but backend drops it (see backend critical bugs). Net result: self-paced/hybrid selection has no effect on persisted data; lesson detail always shows 3 tabs (Live Room/Lesson/Discussion) because course.course_type is always 'scheduled'.",
+        "affected_selectors": ["CourseWizard course_type option cards"]
+      }
+    ],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Admin login (kirah092804@gmail.com) successful",
+    "Desktop nav shows 4 tabs with testids: nav-home (Home), nav-connect (Connect), nav-my progress (My Progress), nav-manage group (Manage Group) — renames applied",
+    "Mobile viewport not re-tested this iteration (iteration 42 already verified bottom-nav with 4 tabs; label rename applies through same navItems array)",
+    "/manage page h1 = 'Manage Group' (page title renamed)",
+    "Manage Group admin tabs present: manage-tab-admin (Members), manage-tab-attendance (Attendance), manage-tab-zoom (Zoom), manage-tab-security (Security) — 4 tabs as spec'd",
+    "Manage Group > Zoom tab renders ZoomIntegration component with 'Zoom Integration' / 'Not Configured' card and connect/disconnect UX scaffold",
+    "Settings page no longer contains any Zoom Integration section (grep of Settings.jsx shows 0 'Zoom'/'zoom' occurrences; settings body innerText contains no 'Zoom')",
+    "Lesson detail for existing (course_type='scheduled') course shows 3 tabs with testids tab-live (Live Room), tab-lesson (Lesson), tab-discussion (Discussion)",
+    "Default activeTab = 'lesson' (LessonDetail.jsx line 106: useState('lesson'))",
+    "getLessonTabs(courseType) correctly branches: self_paced → [lesson, discussion], scheduled/hybrid → [live, lesson, discussion]",
+    "CourseWizard has Course Type selector with 3 options: scheduled, self_paced, hybrid (CourseWizard.jsx lines 154-167); initial state sends course_type='scheduled' by default",
+    "GET /api/courses returns course_type field on every course (defaulted to 'scheduled' via Pydantic) — test_get_courses_returns_course_type PASSED",
+    "Default course_type = 'scheduled' when not specified in POST — test_default_course_type_is_scheduled PASSED"
+  ],
+  "failed_tests": [
+    "test_create_course_with_self_paced: POST returns course_type='scheduled' (expected self_paced) — insert dict missing the field",
+    "test_create_course_with_hybrid: same root cause",
+    "test_update_course_type: PUT $set persists the value but GET /api/courses/{id} aggregation doesn't project course_type, so it re-defaults to 'scheduled' in response"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_course_type.py",
+    "/app/test_reports/pytest/iteration_43_course_type.xml"
+  ],
+  "action_items": [
+    "Fix /app/backend/routes/courses.py create_course(): add 'course_type': data.course_type to the course insert dict (line ~93)",
+    "Fix /app/backend/routes/courses.py get_courses() $project stage (line ~153): add course_type: 1",
+    "Fix /app/backend/routes/courses.py get_course() $project stage (line ~221): add course_type: 1",
+    "(Optional hardening) Validate data.course_type against {'scheduled','self_paced','hybrid'} in create_course / update_course to reject invalid values with 400",
+    "After the fix, re-run /app/backend/tests/test_course_type.py — all 5 tests should pass. Then verify in UI that a newly created self_paced course shows only 2 tabs (Lesson | Discussion) in lesson detail."
+  ],
+  "critical_code_review_comments": [
+    "routes/courses.py create_course() and both GET aggregations are out of sync with the CourseBase/CourseResponse models. Any field added to the model but not mirrored in the insert dict + $project will silently default — this is the class of bug caught here. Consider dumping CourseCreate via model_dump() into the insert to avoid future drift: course = {**data.model_dump(), 'id': ..., 'teacher_id': ..., ...}.",
+    "Same pattern risk exists for unlock_type and is_published; they happen to be mirrored today but aren't enforced structurally. A small helper projecting all known Course fields would reduce duplication across get_courses / get_course.",
+    "LessonDetail.jsx: getLessonTabs depends on course?.course_type; once backend returns the correct value, the contextual (2 vs 3 tabs) behavior will start working automatically — no frontend change needed.",
+    "Layout.jsx testids use spaces ('nav-my progress', 'nav-manage group'). They work but conventional testids use kebab/no-space. Consider toLowerCase().replace(/ /g,'-') for cleaner selectors in future tests."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_course_type.py (new)"
+  ],
+  "success_rate": {
+    "backend": "40% (2/5 course_type pytest — 3 critical failures due to missing insert + $project)",
+    "frontend": "100% (all UI rename + Zoom relocation + lesson tab rename + CourseWizard selector verified; self_paced end-to-end blocked by backend)"
+  },
+  "test_credentials": {
+    "admin": "kirah092804@gmail.com / sZ3Og1s$f&ki"
+  },
+  "seed_data_creation": "None (test file creates + deletes TEST_* courses)",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 43: Frontend changes for nav renames, Zoom relocation, lesson tab renames, and CourseWizard course_type selector are all in place and verified. Backend has a single root-cause bug across 3 endpoints: create_course doesn't save course_type, and both GET aggregations don't project it. After the main agent patches routes/courses.py, re-run pytest /app/backend/tests/test_course_type.py (expect 5/5 pass) and then UI-verify that creating a self_paced course via CourseWizard results in a lesson detail with only 2 tabs (Lesson | Discussion, no Live Room). Existing scheduled courses continue to show 3 tabs.",
+  "rca of the issue": "RCA: course_type was added to Pydantic models (CourseBase/CourseCreate/CourseUpdate/CourseResponse) but not propagated through the persistence layer. (1) create_course() builds the insert dict field-by-field and simply forgot to include data.course_type. (2) get_courses / get_course use MongoDB aggregation with explicit $project stages that list each returned field individually; course_type was never added to these projections. Because CourseResponse has a Pydantic default of 'scheduled', the missing field is silently defaulted on the way out — which hides the bug in basic 200-response checks but breaks functional behavior. Reproduction: POST /api/courses {title:'x', description:'x', course_type:'self_paced'} → response/GET returns course_type='scheduled'. Mitigation: add 'course_type': data.course_type to the insert dict and 'course_type': 1 to both $project stages. Ideally switch to model_dump() to avoid future drift."
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="5" time="1.806" timestamp="2026-04-27T16:40:54.174072+00:00" hostname="agent-env-5bcbc21a-8c93-4f46-9423-9f1d64ede92f"><testcase classname="backend.tests.test_course_type.TestCourseType" name="test_get_courses_returns_course_type" time="0.590" /><testcase classname="backend.tests.test_course_type.TestCourseType" name="test_create_course_with_self_paced" time="0.117"><failure message="AssertionError: POST response returned course_type=scheduled (expected self_paced)&#10;assert 'scheduled' == 'self_paced'&#10;  &#10;  - self_paced&#10;  + scheduled">backend/tests/test_course_type.py:68: in test_create_course_with_self_paced
+    assert created.get("course_type") == "self_paced", \
+E   AssertionError: POST response returned course_type=scheduled (expected self_paced)
+E   assert 'scheduled' == 'self_paced'
+E     
+E     - self_paced
+E     + scheduled</failure></testcase><testcase classname="backend.tests.test_course_type.TestCourseType" name="test_create_course_with_hybrid" time="0.269"><failure message="AssertionError: hybrid not persisted: got scheduled&#10;assert 'scheduled' == 'hybrid'&#10;  &#10;  - hybrid&#10;  + scheduled">backend/tests/test_course_type.py:98: in test_create_course_with_hybrid
+    assert g.json().get("course_type") == "hybrid", \
+E   AssertionError: hybrid not persisted: got scheduled
+E   assert 'scheduled' == 'hybrid'
+E     
+E     - hybrid
+E     + scheduled</failure></testcase><testcase classname="backend.tests.test_course_type.TestCourseType" name="test_update_course_type" time="0.382"><failure message="AssertionError: update didn't persist: scheduled&#10;assert 'scheduled' == 'self_paced'&#10;  &#10;  - self_paced&#10;  + scheduled">backend/tests/test_course_type.py:112: in test_update_course_type
+    assert g.json().get("course_type") == "self_paced", \
+E   AssertionError: update didn't persist: scheduled
+E   assert 'scheduled' == 'self_paced'
+E     
+E     - self_paced
+E     + scheduled</failure></testcase><testcase classname="backend.tests.test_course_type.TestCourseType" name="test_default_course_type_is_scheduled" time="0.372" /></testsuite></testsuites>
