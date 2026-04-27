@@ -101,7 +101,7 @@ export const Chat = ({ embedded }) => {
     const wsUrl = getWsUrl();
     const { status: wsStatus, onlineCount, send: wsSend } = useWebSocket(wsUrl, {
         onMessage: handleWsMessage,
-        enabled: !!wsUrl,
+        enabled: !!wsUrl && !isGuest,
     });
 
     const isConnected = wsStatus === 'connected';
