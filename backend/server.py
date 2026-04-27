@@ -65,6 +65,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint for deployment monitoring."""
+    try:
+        await client.admin.command('ping')
+        return {"status": "healthy", "database": "connected"}
+    except Exception:
+        return {"status": "degraded", "database": "disconnected"}
+
+
 @app.on_event("startup")
 async def startup_migrate_courses():
     """Auto-fix courses with orphaned group_ids on every startup."""
