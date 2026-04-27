@@ -20,11 +20,11 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 | Manage | /manage | Members, Attendance, Security (tabs) | Teachers/Admins only |
 
 ### Global Features
-- **CMD+K Search** — Floating command palette (replaces standalone Search page). Searches courses, lessons, discussions with debounced results.
+- **CMD+K Search** — Floating command palette accessible from header or Ctrl+K/Cmd+K. Debounced search across courses, lessons, discussions.
 - **Bottom Tab Bar** (Mobile) — 3-4 tabs, replaces old horizontal scrolling nav
-- **Avatar Dropdown** — Settings, Security Log (admin), Sign Out
+- **Avatar Dropdown** — Settings, Security Log (admin, links to /manage?tab=security), Sign Out
 
-### Route Redirects (Legacy URLs)
+### Route Redirects
 - /chat → /connect
 - /messages → /connect?tab=direct
 - /admin → /manage
@@ -32,18 +32,32 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 - /attendance → /manage?tab=attendance
 - /security-log → /manage?tab=security
 
-## Input Validation & Moderation
-| Field | Max Length |
-|---|---|
-| Chat messages | 1000 |
-| Direct messages | 2000 |
-| Comments/Prompt replies | 2000 |
-| Course/Lesson title | 200 |
-| Course/Lesson description | 2000 |
-| User/Group name | 100 |
+## Design System (Finalized 4/27/2026)
+### Page Headers
+Every page uses the overline+title pattern:
+- Overline: `text-xs tracking-widest uppercase font-semibold text-muted-foreground` (Manrope)
+- Title: `text-3xl sm:text-4xl font-bold tracking-tight` (Fraunces)
+- Examples: "GOOD AFTERNOON" / "Teacher", "COMMUNITY" / "Connect", "MY JOURNEY" / "Progress", "ADMINISTRATION" / "Manage"
 
-- XSS: All inputs sanitized (HTML/script tags stripped)
-- Rate Limiting: Chat 10 msgs/30s per user (HTTP 429)
+### Tab Switcher
+All tabbed pages use `.pill-tabs` + `.pill-tab` + `.pill-tab-active` CSS classes (muted background, white active tab with shadow).
+
+### Cards
+`.card-organic` — border-radius 1.25rem, subtle shadow, white bg, hover lift.
+
+### Animations
+- `animate-fade-in` on all page sections with staggered `animationDelay`
+- `stagger-children` for grid/list items
+- Button active feedback via global `scale(0.97)` transform
+
+### Typography
+- Headings: Fraunces, serif
+- Body: Manrope, sans-serif
+
+## Input Validation & Moderation
+- All user text inputs pass through `sanitize_text()` (HTML/script tags stripped, max length enforced)
+- Chat rate limiting: 10 msgs/30s per user (HTTP 429)
+- Frontend: maxLength attributes + visual character counters at 80%+ usage
 
 ## Architecture
 - **Backend**: FastAPI, MongoDB (motor), WebSockets, JWT
@@ -52,14 +66,15 @@ Value proposition: "A weekly discipleship hub: meet live, share resources, discu
 
 ## Completed Work
 - All core features (landing, guest mode, courses, lessons, chat, messages, progress, admin, attendance, security log, video, zoom, notifications)
-- UX Restructuring Phase 1-2: 4-tab nav, bottom tab bar, Connect page (4/25/2026)
-- Input Validation & Moderation (4/25/2026)
+- UX Restructuring Phase 1+2: 4-tab nav, bottom tab bar, Connect page (4/25/2026)
+- Input Validation & Moderation: XSS sanitization, max char limits, chat rate limiting (4/25/2026)
 - UX Restructuring Phase 4: Unified Manage Hub (4/27/2026)
 - UX Restructuring Phase 5: CMD+K Global Search (4/27/2026)
+- A11y Fix: DialogTitle in SearchCommand CommandDialog (4/27/2026)
+- Design Consistency Pass: Standardized page headers, pill-tabs, card-organic, animations, page-container (4/27/2026)
 
 ## Upcoming
 - Phase 3: Merge Progress + Settings → unified "Me" page
-- Phase 6: Design consistency pass (standardize cards, spacing, animations)
 
 ## Backlog
 - Video progress tracking
