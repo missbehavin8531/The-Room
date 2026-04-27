@@ -291,11 +291,7 @@ function AppRoutes() {
             />
             <Route
                 path="/security-log"
-                element={
-                    <ProtectedRoute requireAdmin>
-                        <SecurityLog />
-                    </ProtectedRoute>
-                }
+                element={<Navigate to="/manage?tab=security" replace />}
             />
 
             {/* Catch all - redirect to home */}
