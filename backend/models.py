@@ -53,6 +53,7 @@ class UserResponse(BaseModel):
     group_ids: List[str] = []
     group_name: Optional[str] = None
     needs_group_setup: bool = False
+    theme: str = "system"
 
 
 # ============== COURSE MODELS ==============

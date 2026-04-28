@@ -49,10 +49,7 @@ export const LessonWizard = ({ courseId, courseName, onClose, onSuccess }) => {
             case 'basics':
                 return lesson.title.trim() && lesson.description.trim();
             case 'hosting':
-                if (lesson.hosting_method === 'zoom') {
-                    return lesson.zoom_link.trim().length > 0;
-                }
-                return true;
+                return true; // Zoom link is always optional
             case 'recording':
                 if (lesson.recording_source === 'youtube' || lesson.recording_source === 'external') {
                     return true; // Recording URL is optional

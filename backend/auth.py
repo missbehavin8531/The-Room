@@ -198,7 +198,8 @@ async def get_me(user: dict = Depends(get_current_user)):
         group_id=group_id,
         group_ids=group_ids,
         group_name=group_name,
-        needs_group_setup=needs_group_setup
+        needs_group_setup=needs_group_setup,
+        theme=user.get('theme', 'system')
     )
 
 @router.get("/auth/onboarding-status")
@@ -256,6 +257,18 @@ async def change_password(data: ChangePasswordRequest, user: dict = Depends(get_
         raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
     await db.users.update_one({'id': user['id']}, {'$set': {'password': hash_password(data.new_password)}})
     return {'message': 'Password changed successfully'}
+
+
+class UpdateThemeRequest(BaseModel):
+    theme: str  # light, dark, system
+
+@router.put("/auth/update-theme")
+async def update_theme(data: UpdateThemeRequest, user: dict = Depends(get_current_user)):
+    if data.theme not in ('light', 'dark', 'system'):
+        raise HTTPException(status_code=400, detail="Invalid theme. Must be light, dark, or system.")
+    await db.users.update_one({'id': user['id']}, {'$set': {'theme': data.theme}})
+    return {'message': 'Theme updated', 'theme': data.theme}
+
 
 
 # ============== PASSWORD RESET ==============

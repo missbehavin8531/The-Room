@@ -2,21 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Sun, Moon, Monitor } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { profileAPI } from '../lib/api';
 
 const THEME_KEY = 'theroom-theme';
 
 function ThemeToggle() {
+    const { user } = useAuth();
     const [theme, setTheme] = useState('system');
 
     useEffect(() => {
-        const saved = localStorage.getItem(THEME_KEY);
-        if (saved) {
-            setTheme(saved);
-            applyTheme(saved);
+        // Priority: user profile theme > localStorage > system
+        if (user?.theme && user.theme !== 'system') {
+            setTheme(user.theme);
+            applyTheme(user.theme);
+            localStorage.setItem(THEME_KEY, user.theme);
         } else {
-            applyTheme('system');
+            const saved = localStorage.getItem(THEME_KEY);
+            if (saved) {
+                setTheme(saved);
+                applyTheme(saved);
+            } else {
+                applyTheme('system');
+            }
         }
-    }, []);
+    }, [user?.theme]);
 
     const applyTheme = (newTheme) => {
         const root = document.documentElement;
@@ -39,6 +49,10 @@ function ThemeToggle() {
         setTheme(newTheme);
         localStorage.setItem(THEME_KEY, newTheme);
         applyTheme(newTheme);
+        // Persist to profile (fire-and-forget)
+        if (user && user.role !== 'guest') {
+            profileAPI.updateTheme(newTheme).catch(() => {});
+        }
     };
 
     // Listen for system theme changes
@@ -63,7 +77,7 @@ function ThemeToggle() {
             </CardHeader>
             <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                    Choose your preferred color theme
+                    Choose your preferred color theme. Saved to your profile.
                 </p>
                 <div className="flex gap-2">
                     <Button

@@ -235,6 +235,7 @@ export const attendanceReportsAPI = {
 export const profileAPI = {
     updateName: (name) => api.put('/auth/update-name', { name }),
     changePassword: (currentPassword, newPassword) => api.put('/auth/change-password', { current_password: currentPassword, new_password: newPassword }),
+    updateTheme: (theme) => api.put('/auth/update-theme', { theme }),
 };
 
 // Certificates API

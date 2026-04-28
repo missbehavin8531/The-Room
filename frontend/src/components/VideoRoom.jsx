@@ -476,7 +476,7 @@ export const VideoRoom = ({ lessonId, onClose }) => {
         };
     }, [callObject]);
 
-    // Idle state - show join button
+    // Idle state - show join button with permission guidance
     if (status === 'idle') {
         return (
             <Card className="card-organic overflow-hidden">
@@ -485,8 +485,13 @@ export const VideoRoom = ({ lessonId, onClose }) => {
                         <Video className="w-10 h-10 text-white" />
                     </div>
                     <h2 className="text-xl font-serif font-bold mb-2">Join Video Room</h2>
-                    <p className="text-muted-foreground mb-6">
+                    <p className="text-muted-foreground mb-4">
                         Connect with your group face-to-face in our video room
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-6 flex items-center justify-center gap-1.5">
+                        <Mic className="w-3 h-3" />
+                        <Video className="w-3 h-3" />
+                        You'll be asked to allow camera & microphone access
                     </p>
                     <Button
                         onClick={joinRoom}
@@ -520,12 +525,25 @@ export const VideoRoom = ({ lessonId, onClose }) => {
 
     // Error state
     if (status === 'error') {
+        var isPermissionError = error && (error.includes('denied') || error.includes('camera') || error.includes('mic'));
         return (
             <Card className="card-organic overflow-hidden border-destructive">
                 <CardContent className="p-6 text-center">
                     <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-destructive mb-2">Connection Error</h3>
+                    <h3 className="text-lg font-medium text-destructive mb-2">
+                        {isPermissionError ? 'Permission Required' : 'Connection Error'}
+                    </h3>
                     <p className="text-muted-foreground mb-4">{error}</p>
+                    {isPermissionError && (
+                        <div className="p-3 bg-muted/50 rounded-lg mb-4 text-left text-sm text-muted-foreground">
+                            <p className="font-medium mb-1">How to fix:</p>
+                            <ol className="list-decimal pl-4 space-y-1">
+                                <li>Click the camera/lock icon in your browser's address bar</li>
+                                <li>Allow camera and microphone access</li>
+                                <li>Click "Try Again" below</li>
+                            </ol>
+                        </div>
+                    )}
                     <div className="flex gap-2 justify-center">
                         <Button onClick={joinRoom} variant="default">
                             Try Again
