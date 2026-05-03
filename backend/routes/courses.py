@@ -100,9 +100,19 @@ async def get_courses(user: dict = Depends(require_approved)):
     user_id = user['id']
     is_teacher = user['role'] in ['teacher', 'admin']
     
+    # Scope courses to user's group(s)
+    group_ids = user.get('group_ids', [])
+    group_id = group_ids[0] if group_ids else user.get('group_id')
+    
     match_stage = {}
     if not is_teacher:
         match_stage['is_published'] = True
+    
+    # Filter by user's groups — users only see courses from their own group(s)
+    if group_ids:
+        match_stage['group_id'] = {'$in': group_ids}
+    elif group_id:
+        match_stage['group_id'] = group_id
     
     pipeline = [
         {'$match': match_stage},
@@ -239,6 +249,15 @@ async def get_course(course_id: str, user: dict = Depends(require_approved)):
     course = courses[0]
     if not is_teacher and not course.get('is_published', False):
         raise HTTPException(status_code=404, detail="Course not found")
+    
+    # Verify user has access to this course's group
+    course_raw = await db.courses.find_one({'id': course_id}, {'_id': 0, 'group_id': 1})
+    if course_raw:
+        course_group = course_raw.get('group_id')
+        user_group_ids = user.get('group_ids', [])
+        user_group_id = user.get('group_id')
+        if course_group and course_group not in user_group_ids and course_group != user_group_id:
+            raise HTTPException(status_code=404, detail="Course not found")
     
     return CourseResponse(**course)
 

@@ -21,27 +21,27 @@ router = APIRouter(prefix="/api")
 async def search(q: str = Query(..., min_length=1), user: dict = Depends(require_approved)):
     query_regex = {'$regex': q, '$options': 'i'}
     is_teacher = user['role'] in ['teacher', 'admin']
-    group_id = user.get('group_id')
+    group_ids = user.get('group_ids', [])
+    group_id = group_ids[0] if group_ids else user.get('group_id')
     
     course_query = {'$or': [{'title': query_regex}, {'description': query_regex}]}
     if not is_teacher:
         course_query['is_published'] = True
-    if group_id:
+    if group_ids:
+        course_query['group_id'] = {'$in': group_ids}
+    elif group_id:
         course_query['group_id'] = group_id
     courses = await db.courses.find(course_query, {'_id': 0}).limit(10).to_list(10)
     
-    # Get course_ids for this group to scope lessons
-    group_course_ids = [c['id'] for c in courses] if group_id else None
+    # Get all course_ids in user's group(s) to scope lessons
+    group_filter = {'group_id': {'$in': group_ids}} if group_ids else ({'group_id': group_id} if group_id else {})
+    all_group_courses = await db.courses.find(group_filter, {'_id': 0, 'id': 1}).to_list(1000)
+    all_group_course_ids = [c['id'] for c in all_group_courses]
     
     lesson_query = {'$or': [{'title': query_regex}, {'description': query_regex}]}
     if not is_teacher:
         lesson_query['is_published'] = True
-    if group_course_ids is not None:
-        all_group_courses = await db.courses.find(
-            {'group_id': group_id} if group_id else {},
-            {'_id': 0, 'id': 1}
-        ).to_list(1000)
-        all_group_course_ids = [c['id'] for c in all_group_courses]
+    if all_group_course_ids:
         lesson_query['course_id'] = {'$in': all_group_course_ids}
     lessons = await db.lessons.find(lesson_query, {'_id': 0}).limit(10).to_list(10)
     

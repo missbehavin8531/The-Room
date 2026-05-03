@@ -100,7 +100,9 @@ async def get_chat_messages(limit: int = 100, user: dict = Depends(require_appro
     query = {}
     if user['role'] not in ['teacher', 'admin']:
         query['is_hidden'] = False
-    group_id = user.get('group_id')
+    # Scope chat to user's group
+    group_ids = user.get('group_ids', [])
+    group_id = group_ids[0] if group_ids else user.get('group_id')
     if group_id:
         query['group_id'] = group_id
     messages = await db.chat_messages.find(query, {'_id': 0}).sort('created_at', -1).limit(limit).to_list(limit)
