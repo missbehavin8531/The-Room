@@ -253,7 +253,7 @@ export const feedbackAPI = {
 // Notifications API
 export const notificationsAPI = {
     sendLessonReminders: () => api.post('/notifications/send-lesson-reminders'),
-    sendInviteEmail: (emails, groupName, inviteCode) => api.post('/send-invite-email', { emails, group_name: groupName, invite_code: inviteCode }),
+    sendInviteEmail: (emails, groupName, inviteCode) => api.post('/send-invite-email', { emails, group_name: groupName, invite_code: inviteCode, app_url: window.location.origin }),
 };
 
 // Seed API

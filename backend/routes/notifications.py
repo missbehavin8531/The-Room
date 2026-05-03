@@ -287,6 +287,7 @@ class EmailInviteRequest(BaseModel):
     emails: TypingList[EmailStr]
     group_name: str
     invite_code: str
+    app_url: str = ""
 
 @router.post("/send-invite-email")
 async def send_invite_email(data: EmailInviteRequest, request: Request, background_tasks: BackgroundTasks, user: dict = Depends(require_teacher_or_admin)):
@@ -295,10 +296,14 @@ async def send_invite_email(data: EmailInviteRequest, request: Request, backgrou
     if len(data.emails) > 20:
         raise HTTPException(status_code=400, detail="Maximum 20 emails at a time")
     
-    # Build invite link using request host
-    scheme = request.headers.get("x-forwarded-proto", "https")
-    host = request.headers.get("host", "")
-    base_url = f"{scheme}://{host}" if host else ""
+    # Use app_url from frontend (most reliable — it's window.location.origin)
+    # Fallback to request host if not provided
+    if data.app_url:
+        base_url = data.app_url.rstrip("/")
+    else:
+        scheme = request.headers.get("x-forwarded-proto", "https")
+        host = request.headers.get("host", "")
+        base_url = f"{scheme}://{host}" if host else ""
     invite_link = f"{base_url}/register?code={data.invite_code}"
     
     sender_name = user.get('name', 'Your Teacher')
