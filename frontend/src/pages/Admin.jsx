@@ -6,19 +6,23 @@ import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { usersAPI, analyticsAPI, groupsAPI } from '../lib/api';
+import { usersAPI, analyticsAPI, groupsAPI, notificationsAPI } from '../lib/api';
 import api from '../lib/api';
 import { formatDate, getInitials, cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { 
     Shield, Users, BookOpen, MessageSquare, CheckCircle,
     UserCheck, UserX, Clock, Volume2, VolumeX, Trash2, AlertTriangle,
-    Copy, RefreshCw, UserPlus, Loader2, Plus, ChevronDown, ChevronUp, Edit3, X, ArrowRightLeft
+    Copy, RefreshCw, UserPlus, Loader2, Plus, ChevronDown, ChevronUp, Edit3, X, ArrowRightLeft, Mail, Send
 } from 'lucide-react';
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '../components/ui/alert-dialog';
+import {
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger
+} from '../components/ui/dialog';
+import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
 const getRoleBadge = (role) => {
@@ -33,6 +37,62 @@ const getRoleBadge = (role) => {
         </span>
     );
 };
+
+// Email Invite for Admin Group tab
+function AdminEmailInvite({ group }) {
+    var [open, setOpen] = useState(false);
+    var [emails, setEmails] = useState(['']);
+    var [sending, setSending] = useState(false);
+
+    async function handleSend() {
+        var valid = emails.filter(e => e.trim() && e.includes('@'));
+        if (valid.length === 0) { toast.error('Enter at least one valid email'); return; }
+        setSending(true);
+        try {
+            var res = await notificationsAPI.sendInviteEmail(valid, group.name, group.invite_code);
+            toast.success(res.data.message);
+            setOpen(false);
+            setEmails(['']);
+        } catch (err) {
+            toast.error(err.response?.data?.detail || 'Failed to send');
+        } finally { setSending(false); }
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="w-full gap-1.5" data-testid={`email-invite-${group.id}`}>
+                    <Mail className="w-3.5 h-3.5 text-green-600" /> Email Invite
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+                <DialogHeader><DialogTitle>Invite to {group.name}</DialogTitle></DialogHeader>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {emails.map((email, idx) => (
+                        <div key={idx} className="flex gap-2">
+                            <Input type="email" placeholder="email@example.com" value={email}
+                                onChange={(e) => setEmails(prev => prev.map((v, i) => i === idx ? e.target.value : v))} />
+                            {emails.length > 1 && (
+                                <Button variant="ghost" size="icon" onClick={() => setEmails(prev => prev.filter((_, i) => i !== idx))}>
+                                    <X className="w-4 h-4" />
+                                </Button>
+                            )}
+                        </div>
+                    ))}
+                </div>
+                {emails.length < 20 && (
+                    <Button variant="outline" size="sm" onClick={() => setEmails(prev => [...prev, ''])} className="w-full">
+                        <Plus className="w-4 h-4 mr-1" /> Add Another
+                    </Button>
+                )}
+                <Button onClick={handleSend} disabled={sending} className="w-full btn-primary">
+                    {sending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
+                    {sending ? 'Sending...' : 'Send Invite'}
+                </Button>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 export const Admin = ({ embedded }) => {
     const { user, isAdmin, isTeacherOrAdmin } = useAuth();
@@ -683,6 +743,8 @@ export const Admin = ({ embedded }) => {
                                                 </Button>
                                             </div>
                                         </div>
+                                        {/* Email Invite */}
+                                        <AdminEmailInvite group={g} />
 
                                         {/* Expanded members list */}
                                         {isExpanded && (

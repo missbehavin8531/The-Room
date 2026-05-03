@@ -1,19 +1,107 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { usersAPI, groupsAPI, analyticsAPI } from '../lib/api';
+import { usersAPI, groupsAPI, analyticsAPI, notificationsAPI } from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { toast } from 'sonner';
 import Layout from '../components/Layout';
 import { QRCodeSVG } from 'qrcode.react';
 import {
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger
+} from '../components/ui/dialog';
+import {
     Users, BookOpen, UserCheck, UserX, Copy, RefreshCw,
     CheckCircle, Clock, Loader2, Volume2, VolumeX,
-    Share2, Mail, Link as LinkIcon, ClipboardCopy, Download, QrCode
+    Share2, Mail, Link as LinkIcon, ClipboardCopy, Download, QrCode,
+    Send, Plus, X
 } from 'lucide-react';
 
 const getInitials = (name) => name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
+
+// Email Invite Component
+function EmailInviteButton({ group }) {
+    var [open, setOpen] = useState(false);
+    var [emails, setEmails] = useState(['']);
+    var [sending, setSending] = useState(false);
+
+    function addField() {
+        if (emails.length < 20) setEmails(prev => [...prev, '']);
+    }
+    function removeField(idx) {
+        setEmails(prev => prev.filter((_, i) => i !== idx));
+    }
+    function updateEmail(idx, val) {
+        setEmails(prev => prev.map((e, i) => i === idx ? val : e));
+    }
+
+    async function handleSend() {
+        var valid = emails.filter(e => e.trim() && e.includes('@'));
+        if (valid.length === 0) {
+            toast.error('Enter at least one valid email address');
+            return;
+        }
+        setSending(true);
+        try {
+            var res = await notificationsAPI.sendInviteEmail(valid, group.name, group.invite_code);
+            toast.success(res.data.message);
+            setOpen(false);
+            setEmails(['']);
+        } catch (err) {
+            toast.error(err.response?.data?.detail || 'Failed to send invite emails');
+        } finally {
+            setSending(false);
+        }
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" className="w-full justify-start" data-testid="send-invite-email">
+                    <Mail className="w-4 h-4 mr-2 text-green-600" /> Send Email Invite
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Send Email Invite</DialogTitle>
+                </DialogHeader>
+                <p className="text-sm text-muted-foreground">
+                    Send an invite to join <strong>{group.name}</strong> directly to their inbox.
+                </p>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {emails.map(function(email, idx) {
+                        return (
+                            <div key={idx} className="flex gap-2">
+                                <Input
+                                    type="email"
+                                    placeholder="email@example.com"
+                                    value={email}
+                                    onChange={function(e) { updateEmail(idx, e.target.value); }}
+                                    data-testid={"invite-email-" + idx}
+                                />
+                                {emails.length > 1 && (
+                                    <Button variant="ghost" size="icon" onClick={function() { removeField(idx); }}>
+                                        <X className="w-4 h-4" />
+                                    </Button>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+                {emails.length < 20 && (
+                    <Button variant="outline" size="sm" onClick={addField} className="w-full">
+                        <Plus className="w-4 h-4 mr-1" /> Add Another
+                    </Button>
+                )}
+                <Button onClick={handleSend} disabled={sending} className="w-full btn-primary" data-testid="send-invite-submit">
+                    {sending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
+                    {sending ? 'Sending...' : 'Send Invite' + (emails.filter(e => e.includes('@')).length > 1 ? 's' : '')}
+                </Button>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 export const TeacherDashboard = ({ embedded }) => {
     const { user } = useAuth();
@@ -177,21 +265,7 @@ export const TeacherDashboard = ({ embedded }) => {
                                         >
                                             <LinkIcon className="w-4 h-4 mr-2 text-blue-500" /> Copy Link
                                         </Button>
-                                        <Button
-                                            variant="outline"
-                                            className="w-full justify-start"
-                                            onClick={() => {
-                                                var link = window.location.origin + '/register?code=' + group.invite_code;
-                                                var subject = encodeURIComponent('Join Our Sunday School Group on The Room');
-                                                var body = encodeURIComponent(
-                                                    "Hi there,\n\nYou're invited to join our Sunday school group! We use an app called The Room to share lessons, resources, and stay connected throughout the week.\n\nHere's how to join:\n\n1. Click this link: " + link + "\n2. Enter your name\n3. The invite code " + group.invite_code + " will be pre-filled for you\n4. Create your account with your email and a password\n\nOnce you're in, I'll approve your account and you'll have access to all our lessons, discussions, and resources.\n\nSee you in class!"
-                                                );
-                                                window.open('mailto:?subject=' + subject + '&body=' + body);
-                                            }}
-                                            data-testid="send-invite-email"
-                                        >
-                                            <Mail className="w-4 h-4 mr-2 text-green-600" /> Send Email
-                                        </Button>
+                                        <EmailInviteButton group={group} />
                                         <Button
                                             variant="outline"
                                             className="w-full justify-start"

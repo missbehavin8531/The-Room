@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Query, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Depends, Query, BackgroundTasks, Request
 from typing import Optional
 import json
 import logging
@@ -275,3 +275,64 @@ async def send_reading_reminders(background_tasks: BackgroundTasks, user: dict =
         notifications_sent += 1
     
     return {'message': f'Sent {notifications_sent} reading reminders'}
+
+
+
+# ============== EMAIL INVITE ==============
+
+from pydantic import BaseModel, EmailStr
+from typing import List as TypingList
+
+class EmailInviteRequest(BaseModel):
+    emails: TypingList[EmailStr]
+    group_name: str
+    invite_code: str
+
+@router.post("/send-invite-email")
+async def send_invite_email(data: EmailInviteRequest, request: Request, background_tasks: BackgroundTasks, user: dict = Depends(require_teacher_or_admin)):
+    if not data.emails:
+        raise HTTPException(status_code=400, detail="At least one email is required")
+    if len(data.emails) > 20:
+        raise HTTPException(status_code=400, detail="Maximum 20 emails at a time")
+    
+    # Build invite link using request host
+    scheme = request.headers.get("x-forwarded-proto", "https")
+    host = request.headers.get("host", "")
+    base_url = f"{scheme}://{host}" if host else ""
+    invite_link = f"{base_url}/register?code={data.invite_code}"
+    
+    sender_name = user.get('name', 'Your Teacher')
+    
+    sent_count = 0
+    for email_addr in data.emails:
+        content = f"""
+        <h2 style="color: #333; margin-top: 0;">You're Invited to Join {data.group_name}!</h2>
+        <p style="color: #555; line-height: 1.6;">
+            Hi there,
+        </p>
+        <p style="color: #555; line-height: 1.6;">
+            <strong>{sender_name}</strong> has invited you to join <strong>{data.group_name}</strong> on The Room 
+            — a platform for small group learning where you can watch lessons, join live sessions, and participate in discussions.
+        </p>
+        <div style="background-color: #f9f9f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+            <p style="margin: 0 0 5px 0; color: #666; font-size: 14px;">Your Invite Code</p>
+            <p style="margin: 0; color: #333; font-weight: 700; font-size: 28px; letter-spacing: 4px; font-family: monospace;">{data.invite_code}</p>
+        </div>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{invite_link}" style="display: inline-block; background-color: #4a5d4a; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                Join Now
+            </a>
+        </div>
+        <p style="color: #888; font-size: 13px; line-height: 1.6;">
+            After signing up, {sender_name} will approve your account and you'll have full access to courses, discussions, and live sessions.
+        </p>
+        """
+        background_tasks.add_task(
+            email_service.send_email,
+            email_addr,
+            f"You're invited to join {data.group_name} on The Room",
+            email_service.get_base_template(content)
+        )
+        sent_count += 1
+    
+    return {'message': f'Invite email{"s" if sent_count > 1 else ""} sent to {sent_count} recipient{"s" if sent_count > 1 else ""}', 'sent_count': sent_count}
