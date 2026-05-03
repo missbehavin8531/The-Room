@@ -21,22 +21,16 @@ ZOOM_WEBHOOK_SECRET = os.environ.get("ZOOM_WEBHOOK_SECRET_TOKEN", "")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "")
 
 
-def _redirect_uri(request: Request = None):
+def _redirect_uri(request: Request):
     """Build the OAuth redirect URI dynamically from the request host."""
-    if request:
-        # Use the actual request host for correct domain across environments
-        scheme = request.headers.get("x-forwarded-proto", "https")
-        host = request.headers.get("host", "")
-        if host:
-            return f"{scheme}://{host}/api/zoom/callback"
-    # Fallback to env vars
-    base = FRONTEND_URL.rstrip("/") if FRONTEND_URL else ""
-    if not base:
-        base = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
-    return f"{base}/api/zoom/callback"
+    scheme = request.headers.get("x-forwarded-proto", "https")
+    host = request.headers.get("host", "")
+    if not host:
+        raise HTTPException(status_code=500, detail="Cannot determine host for OAuth redirect")
+    return f"{scheme}://{host}/api/zoom/callback"
 
 
-def _zoom_service(request: Request = None):
+def _zoom_service(request: Request):
     return ZoomService(ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, _redirect_uri(request), ZOOM_WEBHOOK_SECRET)
 
 
