@@ -142,17 +142,17 @@ export const Admin = ({ embedded }) => {
                 const groupRes = await groupsAPI.getMy();
                 setGroup(groupRes.data);
                 setEditGroupName(groupRes.data.name);
-            } catch {}
+            } catch (e) { console.error('Failed to fetch group:', e); }
 
             try {
                 const allGroupsRes = await groupsAPI.getAll();
                 setAllGroups(allGroupsRes.data);
-            } catch {}
+            } catch (e) { console.error('Failed to fetch all groups:', e); }
 
             try {
                 const unassignedRes = await usersAPI.getUnassigned();
                 setUnassignedUsers(unassignedRes.data);
-            } catch {}
+            } catch (e) { console.error('Failed to fetch unassigned users:', e); }
         } catch (error) {
             console.error('Failed to fetch admin data:', error);
         } finally {
@@ -210,7 +210,7 @@ export const Admin = ({ embedded }) => {
             toast.success('Group name updated');
             setEditingGroupId(null);
             fetchData();
-        } catch { toast.error('Failed to update'); }
+        } catch (e) { console.error('Failed to update:', e); toast.error('Failed to update'); }
     };
 
     const toggleGroupMembers = async (groupId) => {
@@ -223,7 +223,8 @@ export const Admin = ({ embedded }) => {
             try {
                 const res = await groupsAPI.getMembers(groupId);
                 setGroupMembers(prev => ({ ...prev, [groupId]: res.data }));
-            } catch {
+            } catch (e) {
+                console.error('Failed:', e);
                 toast.error('Failed to load members');
             }
         }
@@ -738,7 +739,7 @@ export const Admin = ({ embedded }) => {
                                                     <Copy className="w-3.5 h-3.5" />
                                                 </Button>
                                                 <Button size="icon" variant="ghost" className="h-7 w-7" onClick={async () => {
-                                                    try { const res = await groupsAPI.regenerateCode(g.id); fetchData(); toast.success('New code generated'); } catch { toast.error('Failed'); }
+                                                    try { const res = await groupsAPI.regenerateCode(g.id); fetchData(); toast.success('New code generated'); } catch (e) { console.error(e); toast.error('Failed'); }
                                                 }} data-testid={`regen-code-${g.id}`}>
                                                     <RefreshCw className="w-3.5 h-3.5" />
                                                 </Button>

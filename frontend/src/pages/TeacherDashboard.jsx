@@ -124,7 +124,7 @@ export const TeacherDashboard = ({ embedded }) => {
                     lessons: analyticsRes.data.total_lessons,
                     attendance: analyticsRes.data.attendance_records
                 });
-            } catch {}
+            } catch (e) { console.error('Failed to fetch analytics:', e); }
         } catch (error) {
             console.error('Failed to fetch dashboard:', error);
         } finally {

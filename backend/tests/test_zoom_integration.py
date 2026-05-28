@@ -124,7 +124,7 @@ class TestZoomWebhook:
     def test_webhook_handles_crc_challenge(self):
         """POST /api/zoom/webhook handles Zoom CRC challenge (endpoint.url_validation)"""
         # Zoom sends this event to validate the webhook URL
-        plain_token = "test_plain_token_12345"
+        plain_token = os.environ.get("ZOOM_TEST_TOKEN", "test_plain_token_12345")
         payload = {
             "event": "endpoint.url_validation",
             "payload": {
