@@ -7,7 +7,7 @@ import { formatFileSize } from '../lib/utils';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 function getAuthUrl(resourceId) {
-    var token = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
     return BACKEND_URL + '/api/resources/' + resourceId + '/download?token=' + token;
 }
 

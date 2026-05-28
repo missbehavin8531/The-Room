@@ -5,7 +5,7 @@ import { Badge } from '../components/ui/badge';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { Mail, ChevronRight } from 'lucide-react';
 
-var demoInbox = [
+const demoInbox = [
     { id: '1', initials: 'SM', name: 'Sarah M.', text: "That really helps, thank you! See you Sunday!", read: true, date: 'Apr 5, 2:30 PM' },
     { id: '2', initials: 'DK', name: 'David K.', text: "Hey Teacher, I missed last Sunday. Is there a recording I can watch?", read: false, date: 'Apr 7, 9:15 AM' },
 ];
@@ -22,7 +22,7 @@ function GuestMessagesPage() {
                 </div>
 
                 {demoInbox.map(function(msg) {
-                    var cardClass = "card-organic";
+                    const cardClass = "card-organic";
                     if (!msg.read) cardClass = cardClass + " border-primary/30";
                     return (
                         <Card key={msg.id} className={cardClass}>

@@ -11,7 +11,7 @@ import requests
 import os
 from datetime import date, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+from conftest import BASE_URL
 
 class TestCourseUnlockType:
     """Test course unlock_type functionality"""

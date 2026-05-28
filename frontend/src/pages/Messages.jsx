@@ -50,7 +50,7 @@ export const Messages = ({ embedded }) => {
 
     useEffect(() => {
         if (!isGuest) fetchData();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchData = async () => {
         try {
@@ -139,7 +139,7 @@ export const Messages = ({ embedded }) => {
         );
     }
 
-    var messagesContent = (
+    const messagesContent = (
         <div className={embedded ? "space-y-4 h-full flex flex-col" : "page-container py-6 space-y-6"}>
             {/* Header */}
             <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4", embedded && "flex-row items-center")}>

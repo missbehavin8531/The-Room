@@ -14,7 +14,7 @@ import requests
 import os
 import io
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://room-preview-5.preview.emergentagent.com').rstrip('/')
+from conftest import BASE_URL
 
 
 class TestVideoUploadLinkAPI:

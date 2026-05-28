@@ -525,7 +525,7 @@ export const VideoRoom = ({ lessonId, onClose }) => {
 
     // Error state
     if (status === 'error') {
-        var isPermissionError = error && (error.includes('denied') || error.includes('camera') || error.includes('mic'));
+        const isPermissionError = error && (error.includes('denied') || error.includes('camera') || error.includes('mic'));
         return (
             <Card className="card-organic overflow-hidden border-destructive">
                 <CardContent className="p-6 text-center">

@@ -10,7 +10,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+from conftest import BASE_URL
 
 # Test credentials from the review request
 ADMIN_GROUP_A = {

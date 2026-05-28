@@ -8,13 +8,9 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+from conftest import BASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD, TEACHER_PASSWORD
 
 # Test credentials
-ADMIN_EMAIL = "kirah092804@gmail.com"
-ADMIN_PASSWORD = "sZ3Og1s$f&ki"
-TEACHER_EMAIL = "newteacher@test.com"
-TEACHER_PASSWORD = "teacher123"
 
 
 class TestAdminLogin:

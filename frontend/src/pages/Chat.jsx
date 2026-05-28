@@ -50,7 +50,7 @@ export const Chat = ({ embedded }) => {
             const viewport = el.querySelector('[data-radix-scroll-area-viewport]') || el;
             viewport.scrollTop = viewport.scrollHeight;
         }
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // WebSocket message handler
     const handleWsMessage = useCallback((data) => {
@@ -109,7 +109,7 @@ export const Chat = ({ embedded }) => {
     // Fetch initial messages via REST
     useEffect(() => {
         fetchMessages();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Fallback polling only when WS is disconnected
     useEffect(() => {
@@ -295,7 +295,7 @@ export const Chat = ({ embedded }) => {
         }
     };
 
-    var chatContent = (
+    const chatContent = (
         <div className={embedded ? "flex flex-col h-full" : "page-container py-6 h-[calc(100vh-10rem)] md:h-[calc(100vh-6rem)] flex flex-col"}>
             {/* Header — hidden when embedded in Connect */}
             {!embedded && (

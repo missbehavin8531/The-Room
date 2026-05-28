@@ -145,21 +145,21 @@ export const LessonDetail = () => {
 
     useEffect(() => {
         fetchLessonData();
-    }, [lessonId]);
+    }, [lessonId]); // eslint-disable-line react-hooks/exhaustive-deps
     
     // Fetch video room status when on Live tab
     useEffect(() => {
         if (activeTab === 'live') {
             fetchRoomStatus();
         }
-    }, [activeTab, lessonId]);
+    }, [activeTab, lessonId]); // eslint-disable-line react-hooks/exhaustive-deps
     
     // Fetch recordings when on Lesson tab
     useEffect(() => {
         if (activeTab === 'lesson' && lessonId) {
             fetchRecordings();
         }
-    }, [activeTab, lessonId]);
+    }, [activeTab, lessonId]); // eslint-disable-line react-hooks/exhaustive-deps
     
     const fetchRoomStatus = async () => {
         try {

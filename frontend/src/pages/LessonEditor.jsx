@@ -58,7 +58,7 @@ export const LessonEditor = () => {
             return;
         }
         fetchLessonData();
-    }, [lessonId, isTeacherOrAdmin]);
+    }, [lessonId, isTeacherOrAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchLessonData = async () => {
         try {

@@ -22,32 +22,23 @@ const getInitials = (name) => name ? name.split(' ').map(n => n[0]).join('').toU
 
 // Email Invite Component
 function EmailInviteButton({ group }) {
-    var [open, setOpen] = useState(false);
-    var [emails, setEmails] = useState(['']);
-    var [sending, setSending] = useState(false);
-
-    function addField() {
-        if (emails.length < 20) setEmails(prev => [...prev, '']);
-    }
-    function removeField(idx) {
-        setEmails(prev => prev.filter((_, i) => i !== idx));
-    }
-    function updateEmail(idx, val) {
-        setEmails(prev => prev.map((e, i) => i === idx ? val : e));
-    }
+    const [open, setOpen] = useState(false);
+    const [fields, setFields] = useState([{ id: 1, email: '' }]);
+    const nextId = useRef(2);
+    const [sending, setSending] = useState(false);
 
     async function handleSend() {
-        var valid = emails.filter(e => e.trim() && e.includes('@'));
+        const valid = fields.map(f => f.email).filter(e => e.trim() && e.includes('@'));
         if (valid.length === 0) {
             toast.error('Enter at least one valid email address');
             return;
         }
         setSending(true);
         try {
-            var res = await notificationsAPI.sendInviteEmail(valid, group.name, group.invite_code);
+            const res = await notificationsAPI.sendInviteEmail(valid, group.name, group.invite_code);
             toast.success(res.data.message);
             setOpen(false);
-            setEmails(['']);
+            setFields([{ id: 1, email: '' }]);
         } catch (err) {
             toast.error(err.response?.data?.detail || 'Failed to send invite emails');
         } finally {
@@ -70,18 +61,18 @@ function EmailInviteButton({ group }) {
                     Send an invite to join <strong>{group.name}</strong> directly to their inbox.
                 </p>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {emails.map(function(email, idx) {
+                    {fields.map(function(field) {
                         return (
-                            <div key={idx} className="flex gap-2">
+                            <div key={field.id} className="flex gap-2">
                                 <Input
                                     type="email"
                                     placeholder="email@example.com"
-                                    value={email}
-                                    onChange={function(e) { updateEmail(idx, e.target.value); }}
-                                    data-testid={"invite-email-" + idx}
+                                    value={field.email}
+                                    onChange={function(e) { setFields(prev => prev.map(f => f.id === field.id ? { ...f, email: e.target.value } : f)); }}
+                                    data-testid={"invite-email-" + field.id}
                                 />
-                                {emails.length > 1 && (
-                                    <Button variant="ghost" size="icon" onClick={function() { removeField(idx); }}>
+                                {fields.length > 1 && (
+                                    <Button variant="ghost" size="icon" onClick={function() { setFields(prev => prev.filter(f => f.id !== field.id)); }}>
                                         <X className="w-4 h-4" />
                                     </Button>
                                 )}
@@ -89,14 +80,14 @@ function EmailInviteButton({ group }) {
                         );
                     })}
                 </div>
-                {emails.length < 20 && (
-                    <Button variant="outline" size="sm" onClick={addField} className="w-full">
+                {fields.length < 20 && (
+                    <Button variant="outline" size="sm" onClick={function() { setFields(prev => [...prev, { id: nextId.current++, email: '' }]); }} className="w-full">
                         <Plus className="w-4 h-4 mr-1" /> Add Another
                     </Button>
                 )}
                 <Button onClick={handleSend} disabled={sending} className="w-full btn-primary" data-testid="send-invite-submit">
                     {sending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
-                    {sending ? 'Sending...' : 'Send Invite' + (emails.filter(e => e.includes('@')).length > 1 ? 's' : '')}
+                    {sending ? 'Sending...' : 'Send Invite' + (fields.filter(f => f.email.includes('@')).length > 1 ? 's' : '')}
                 </Button>
             </DialogContent>
         </Dialog>
@@ -113,7 +104,7 @@ export const TeacherDashboard = ({ embedded }) => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchData = async () => {
         try {
@@ -160,7 +151,7 @@ export const TeacherDashboard = ({ embedded }) => {
     };
 
     if (loading) {
-        var loadingSkeleton = (
+        const loadingSkeleton = (
             <div className="page-container py-6 space-y-6">
                 <div className="animate-pulse space-y-1">
                     <div className="h-7 w-48 bg-muted rounded-xl" />
@@ -181,7 +172,7 @@ export const TeacherDashboard = ({ embedded }) => {
         return <Layout>{loadingSkeleton}</Layout>;
     }
 
-    var teacherContent = (
+    const teacherContent = (
         <div className="space-y-6 max-w-4xl mx-auto" data-testid="teacher-dashboard">
             {/* Header */}
             {!embedded && (
@@ -257,7 +248,7 @@ export const TeacherDashboard = ({ embedded }) => {
                                             variant="outline"
                                             className="w-full justify-start"
                                             onClick={() => {
-                                                var link = window.location.origin + '/register?code=' + group.invite_code;
+                                                const link = window.location.origin + '/register?code=' + group.invite_code;
                                                 navigator.clipboard.writeText(link);
                                                 toast.success('Registration link copied!');
                                             }}
@@ -270,8 +261,8 @@ export const TeacherDashboard = ({ embedded }) => {
                                             variant="outline"
                                             className="w-full justify-start"
                                             onClick={() => {
-                                                var link = window.location.origin + '/register?code=' + group.invite_code;
-                                                var template = "Hi there,\n\nYou're invited to join our Sunday school group! We use an app called The Room to share lessons, resources, and stay connected throughout the week.\n\nHere's how to join:\n\n1. Click this link: " + link + "\n2. Enter your name\n3. The invite code " + group.invite_code + " will be pre-filled for you\n4. Create your account with your email and a password\n\nOnce you're in, I'll approve your account and you'll have access to all our lessons, discussions, and resources.\n\nSee you in class!";
+                                                const link = window.location.origin + '/register?code=' + group.invite_code;
+                                                const template = "Hi there,\n\nYou're invited to join our Sunday school group! We use an app called The Room to share lessons, resources, and stay connected throughout the week.\n\nHere's how to join:\n\n1. Click this link: " + link + "\n2. Enter your name\n3. The invite code " + group.invite_code + " will be pre-filled for you\n4. Create your account with your email and a password\n\nOnce you're in, I'll approve your account and you'll have access to all our lessons, discussions, and resources.\n\nSee you in class!";
                                                 navigator.clipboard.writeText(template);
                                                 toast.success('Email template copied!');
                                             }}

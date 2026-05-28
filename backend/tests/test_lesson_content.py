@@ -9,7 +9,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+from conftest import BASE_URL
 
 # Expected 15 lessons across 5 courses
 EXPECTED_LESSONS = {
@@ -266,7 +266,7 @@ class TestLessonFlowIsLogical:
             # Sort by order field
             sorted_lessons = sorted(lessons, key=lambda x: x.get('order', 0))
             
-            # Check order is 0, 1, 2
+            # Check order == 0, 1, 2
             for i, lesson in enumerate(sorted_lessons):
                 if lesson.get('order', i) != i:
                     order_issues.append(f"{course['title']}: {lesson['title']} has order={lesson.get('order')}, expected {i}")
@@ -349,7 +349,7 @@ class TestTotalLessonCount:
             print(f"  - {course['title']}: {len(lessons)} lessons")
         
         assert total_lessons == 15, f"Expected 15 lessons, got {total_lessons}"
-        print(f"PASS: Total lesson count is 15")
+        print(f"PASS: Total lesson count == 15")
 
 
 if __name__ == '__main__':

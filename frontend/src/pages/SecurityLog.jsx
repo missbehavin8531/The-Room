@@ -42,7 +42,7 @@ export default function SecurityLog({ embedded }) {
     const [page, setPage] = useState(0);
     const LIMIT = 30;
 
-    useEffect(() => { loadData(); }, [filter, page]);
+    useEffect(() => { loadData(); }, [filter, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const loadData = async () => {
         setLoading(true);
@@ -65,7 +65,7 @@ export default function SecurityLog({ embedded }) {
 
     const allEventTypes = Object.keys(EVENT_CONFIG);
 
-    var securityContent = (
+    const securityContent = (
         <div className="page-container py-6 space-y-6 max-w-2xl mx-auto" data-testid="security-log-page">
             {/* Header */}
             {!embedded && (

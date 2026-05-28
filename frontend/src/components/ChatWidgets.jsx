@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '../lib/utils';
 import { SmilePlus, Eye, EyeOff, Trash2, Pencil } from 'lucide-react';
 
-var REACTION_EMOJIS = ['👍', '❤️', '😂', '🙏', '🔥', '👏'];
+const REACTION_EMOJIS = ['👍', '❤️', '😂', '🙏', '🔥', '👏'];
 
 export function ChatReactions({ reactions, messageId, isOwn, isGuest, onReact }) {
     if (!reactions || reactions.length === 0) return null;
@@ -101,10 +101,10 @@ export function ChatActionBar({ messageId, isOwn, isGuest, isSending, isTeacherO
 
 export function ReadReceipts({ receipts, currentUserId }) {
     if (!receipts || receipts.length === 0) return null;
-    var others = receipts.filter(function(r) { return r.user_id !== currentUserId; });
+    const others = receipts.filter(function(r) { return r.user_id !== currentUserId; });
     if (others.length === 0) return null;
-    var names = others.slice(0, 5).map(function(r) { return r.user_name; }).join(', ');
-    var extra = others.length > 5 ? ' +' + (others.length - 5) + ' more' : '';
+    const names = others.slice(0, 5).map(function(r) { return r.user_name; }).join(', ');
+    const extra = others.length > 5 ? ' +' + (others.length - 5) + ' more' : '';
     return (
         <div className="px-4 py-1 flex items-center gap-1 text-[10px] text-muted-foreground" data-testid="read-receipts">
             <Eye className="w-3 h-3" />

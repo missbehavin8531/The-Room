@@ -8,20 +8,7 @@ import requests
 from pathlib import Path
 
 # Load REACT_APP_BACKEND_URL from frontend/.env
-def _load_backend_url():
-    val = os.environ.get('REACT_APP_BACKEND_URL', '')
-    if val:
-        return val.rstrip('/')
-    env_file = Path(__file__).resolve().parents[2] / 'frontend' / '.env'
-    if env_file.exists():
-        for line in env_file.read_text().splitlines():
-            if line.startswith('REACT_APP_BACKEND_URL='):
-                return line.split('=', 1)[1].strip().rstrip('/')
-    return ''
-
-BASE_URL = _load_backend_url()
-ADMIN_EMAIL = "kirah092804@gmail.com"
-ADMIN_PASSWORD = "sZ3Og1s$f&ki"
+from conftest import BASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD
 
 
 @pytest.fixture(scope="module")

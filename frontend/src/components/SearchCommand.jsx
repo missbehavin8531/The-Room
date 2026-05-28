@@ -12,14 +12,14 @@ import {
 import { BookOpen, FileText, MessageCircle } from 'lucide-react';
 
 export function SearchCommand({ open, onOpenChange }) {
-    var [query, setQuery] = useState('');
-    var [results, setResults] = useState(null);
-    var [loading, setLoading] = useState(false);
-    var navigate = useNavigate();
-    var debounceRef = React.useRef(null);
+    const [query, setQuery] = useState('');
+    const [results, setResults] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    const debounceRef = React.useRef(null);
 
     // Debounced search
-    var doSearch = useCallback(function(q) {
+    const doSearch = useCallback(function(q) {
         if (!q || q.length < 2) {
             setResults(null);
             return;
@@ -58,10 +58,10 @@ export function SearchCommand({ open, onOpenChange }) {
         else if (type === 'discussion') navigate('/lessons/' + id);
     }
 
-    var courses = results?.courses || [];
-    var lessons = results?.lessons || [];
-    var discussions = results?.discussions || [];
-    var hasResults = courses.length > 0 || lessons.length > 0 || discussions.length > 0;
+    const courses = results?.courses || [];
+    const lessons = results?.lessons || [];
+    const discussions = results?.discussions || [];
+    const hasResults = courses.length > 0 || lessons.length > 0 || discussions.length > 0;
 
     return (
         <CommandDialog open={open} onOpenChange={onOpenChange}>

@@ -32,7 +32,7 @@ export const CourseDetail = () => {
     const [showCourseEditor, setShowCourseEditor] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-    useEffect(() => { fetchCourseData(); }, [courseId]);
+    useEffect(() => { fetchCourseData(); }, [courseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchCourseData = async () => {
         try {

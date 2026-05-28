@@ -10,26 +10,7 @@ import uuid
 import pytest
 import requests
 
-def _load_backend_url():
-    url = os.environ.get('REACT_APP_BACKEND_URL')
-    if not url:
-        try:
-            with open('/app/frontend/.env', 'r') as f:
-                for line in f:
-                    if line.startswith('REACT_APP_BACKEND_URL='):
-                        url = line.split('=', 1)[1].strip()
-                        break
-        except FileNotFoundError:
-            pass
-    if not url:
-        raise RuntimeError("REACT_APP_BACKEND_URL not configured")
-    return url.rstrip('/')
-
-
-BASE_URL = _load_backend_url()
-
-ADMIN_EMAIL = "kirah092804@gmail.com"
-ADMIN_PASSWORD = "sZ3Og1s$f&ki"
+from conftest import BASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD
 
 
 # ------------------ Fixtures ------------------

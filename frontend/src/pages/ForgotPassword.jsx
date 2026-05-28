@@ -8,29 +8,29 @@ import { ArrowLeft, Loader2, Mail, KeyRound, Check } from 'lucide-react';
 import api from '../lib/api';
 
 function ForgotPassword() {
-    var stepState = useState('email');
-    var step = stepState[0];
-    var setStep = stepState[1];
+    const stepState = useState('email');
+    const step = stepState[0];
+    const setStep = stepState[1];
 
-    var emailState = useState('');
-    var email = emailState[0];
-    var setEmail = emailState[1];
+    const emailState = useState('');
+    const email = emailState[0];
+    const setEmail = emailState[1];
 
-    var tokenState = useState('');
-    var token = tokenState[0];
-    var setToken = tokenState[1];
+    const tokenState = useState('');
+    const token = tokenState[0];
+    const setToken = tokenState[1];
 
-    var passwordState = useState('');
-    var password = passwordState[0];
-    var setPassword = passwordState[1];
+    const passwordState = useState('');
+    const password = passwordState[0];
+    const setPassword = passwordState[1];
 
-    var confirmState = useState('');
-    var confirmPassword = confirmState[0];
-    var setConfirmPassword = confirmState[1];
+    const confirmState = useState('');
+    const confirmPassword = confirmState[0];
+    const setConfirmPassword = confirmState[1];
 
-    var loadingState = useState(false);
-    var loading = loadingState[0];
-    var setLoading = loadingState[1];
+    const loadingState = useState(false);
+    const loading = loadingState[0];
+    const setLoading = loadingState[1];
 
     function handleRequestReset(e) {
         e.preventDefault();
@@ -41,7 +41,7 @@ function ForgotPassword() {
         setLoading(true);
         api.post('/auth/forgot-password', { email: email.trim() })
             .then(function(res) {
-                var data = res.data;
+                const data = res.data;
                 if (data.reset_token) {
                     setToken(data.reset_token);
                 }
@@ -78,7 +78,7 @@ function ForgotPassword() {
                 setLoading(false);
             })
             .catch(function(err) {
-                var msg = err.response && err.response.data && err.response.data.detail;
+                const msg = err.response && err.response.data && err.response.data.detail;
                 toast.error(msg || 'Failed to reset password');
                 setLoading(false);
             });

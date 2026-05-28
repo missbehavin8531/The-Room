@@ -23,7 +23,7 @@ export const Register = () => {
     useEffect(() => {
         const codeParam = searchParams.get('code');
         if (codeParam) setInviteCode(codeParam.toUpperCase());
-    }, [searchParams]);
+    }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleNext = async () => {
         if (step === 1 && !name.trim()) {

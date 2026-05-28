@@ -18,37 +18,37 @@ import {
 } from 'lucide-react';
 
 function AttendanceReport({ embedded }) {
-    var authData = useAuth();
-    var isTeacherOrAdmin = authData.isTeacherOrAdmin;
-    var navigate = useNavigate();
+    const authData = useAuth();
+    const isTeacherOrAdmin = authData.isTeacherOrAdmin;
+    const navigate = useNavigate();
 
-    var loadingState = useState(true);
-    var loading = loadingState[0];
-    var setLoading = loadingState[1];
+    const loadingState = useState(true);
+    const loading = loadingState[0];
+    const setLoading = loadingState[1];
 
-    var summaryState = useState(null);
-    var summary = summaryState[0];
-    var setSummary = summaryState[1];
+    const summaryState = useState(null);
+    const summary = summaryState[0];
+    const setSummary = summaryState[1];
 
-    var reportState = useState([]);
-    var report = reportState[0];
-    var setReport = reportState[1];
+    const reportState = useState([]);
+    const report = reportState[0];
+    const setReport = reportState[1];
 
-    var coursesState = useState([]);
-    var courses = coursesState[0];
-    var setCourses = coursesState[1];
+    const coursesState = useState([]);
+    const courses = coursesState[0];
+    const setCourses = coursesState[1];
 
-    var courseState = useState('all');
-    var selectedCourse = courseState[0];
-    var setSelectedCourse = courseState[1];
+    const courseState = useState('all');
+    const selectedCourse = courseState[0];
+    const setSelectedCourse = courseState[1];
 
-    var resetDialogState = useState(false);
-    var showResetDialog = resetDialogState[0];
-    var setShowResetDialog = resetDialogState[1];
+    const resetDialogState = useState(false);
+    const showResetDialog = resetDialogState[0];
+    const setShowResetDialog = resetDialogState[1];
 
-    var deleteUserState = useState(null);
-    var deleteUserId = deleteUserState[0];
-    var setDeleteUserId = deleteUserState[1];
+    const deleteUserState = useState(null);
+    const deleteUserId = deleteUserState[0];
+    const setDeleteUserId = deleteUserState[1];
 
     useEffect(function() {
         if (!isTeacherOrAdmin) {
@@ -56,7 +56,7 @@ function AttendanceReport({ embedded }) {
             return;
         }
         loadData();
-    }, [isTeacherOrAdmin]);
+    }, [isTeacherOrAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(function() {
         if (selectedCourse !== 'all') {
@@ -64,7 +64,7 @@ function AttendanceReport({ embedded }) {
         } else {
             loadReport(null);
         }
-    }, [selectedCourse]);
+    }, [selectedCourse]); // eslint-disable-line react-hooks/exhaustive-deps
 
     function loadData() {
         Promise.all([
@@ -92,7 +92,7 @@ function AttendanceReport({ embedded }) {
     }
 
     function handleResetAttendance() {
-        var courseId = selectedCourse !== 'all' ? selectedCourse : undefined;
+        const courseId = selectedCourse !== 'all' ? selectedCourse : undefined;
         attendanceReportsAPI.reset(courseId)
             .then(function(res) {
                 toast.success(res.data.message);
@@ -120,7 +120,7 @@ function AttendanceReport({ embedded }) {
     }
 
     if (loading) {
-        var loadingSkeleton = (
+        const loadingSkeleton = (
             <div className="max-w-6xl mx-auto space-y-4">
                 <Skeleton className="h-32 w-full" />
                 <Skeleton className="h-64 w-full" />
@@ -130,7 +130,7 @@ function AttendanceReport({ embedded }) {
         return <Layout>{loadingSkeleton}</Layout>;
     }
 
-    var attendanceContent = (
+    const attendanceContent = (
         <>
             <div className="max-w-6xl mx-auto" data-testid="attendance-report-page">
                 {!embedded && (

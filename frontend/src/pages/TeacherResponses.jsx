@@ -44,7 +44,7 @@ export const TeacherResponses = () => {
             return;
         }
         fetchData();
-    }, [lessonId, isTeacherOrAdmin]);
+    }, [lessonId, isTeacherOrAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchData = async () => {
         try {

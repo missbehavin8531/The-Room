@@ -13,21 +13,21 @@ import { Settings as SettingsIcon, User, KeyRound, Loader2, Users } from 'lucide
 import { useSearchParams } from 'react-router-dom';
 
 function Settings() {
-    var auth = useAuth();
-    var currentUser = auth.user;
-    var refreshUser = auth.refreshUser;
-    var isGuest = currentUser?.role === 'guest';
+    const auth = useAuth();
+    const currentUser = auth.user;
+    const refreshUser = auth.refreshUser;
+    const isGuest = currentUser?.role === 'guest';
 
-    var [name, setName] = useState(currentUser ? currentUser.name : '');
-    var [savingName, setSavingName] = useState(false);
+    const [name, setName] = useState(currentUser ? currentUser.name : '');
+    const [savingName, setSavingName] = useState(false);
 
-    var [currentPw, setCurrentPw] = useState('');
-    var [newPw, setNewPw] = useState('');
-    var [confirmPw, setConfirmPw] = useState('');
-    var [savingPw, setSavingPw] = useState(false);
+    const [currentPw, setCurrentPw] = useState('');
+    const [newPw, setNewPw] = useState('');
+    const [confirmPw, setConfirmPw] = useState('');
+    const [savingPw, setSavingPw] = useState(false);
 
-    var [joinCode, setJoinCode] = useState('');
-    var [joiningGroup, setJoiningGroup] = useState(false);
+    const [joinCode, setJoinCode] = useState('');
+    const [joiningGroup, setJoiningGroup] = useState(false);
 
     function handleNameSave(e) {
         e.preventDefault();
@@ -42,7 +42,7 @@ function Settings() {
                 setSavingName(false);
             })
             .catch(function(err) {
-                var msg = err.response && err.response.data && err.response.data.detail;
+                const msg = err.response && err.response.data && err.response.data.detail;
                 toast.error(msg || 'Failed to update name');
                 setSavingName(false);
             });
@@ -72,7 +72,7 @@ function Settings() {
                 setSavingPw(false);
             })
             .catch(function(err) {
-                var msg = err.response && err.response.data && err.response.data.detail;
+                const msg = err.response && err.response.data && err.response.data.detail;
                 toast.error(msg || 'Failed to change password');
                 setSavingPw(false);
             });
@@ -93,7 +93,7 @@ function Settings() {
                 if (refreshUser) refreshUser();
             })
             .catch(function(err) {
-                var msg = err.response && err.response.data && err.response.data.detail;
+                const msg = err.response && err.response.data && err.response.data.detail;
                 toast.error(msg || 'Failed to join group');
                 setJoiningGroup(false);
             });

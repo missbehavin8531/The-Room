@@ -11,11 +11,9 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+from conftest import BASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD
 
 # Test credentials
-ADMIN_EMAIL = "kirah092804@gmail.com"
-ADMIN_PASSWORD = "sZ3Og1s$f&ki"
 
 
 class TestAuthAndSetup:

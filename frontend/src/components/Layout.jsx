@@ -34,18 +34,18 @@ function isPathActive(matchPaths, pathname) {
 }
 
 export var Layout = function Layout(props) {
-    var children = props.children;
-    var auth = useAuth();
-    var user = auth.user;
-    var logout = auth.logout;
-    var isApproved = auth.isApproved;
-    var isTeacherOrAdmin = auth.isTeacherOrAdmin;
-    var isAdmin = auth.isAdmin;
-    var isGuest = auth.isGuest;
-    var location = useLocation();
-    var navigate = useNavigate();
-    var [isOffline, setIsOffline] = useState(!navigator.onLine);
-    var [searchOpen, setSearchOpen] = useState(false);
+    const children = props.children;
+    const auth = useAuth();
+    const user = auth.user;
+    const logout = auth.logout;
+    const isApproved = auth.isApproved;
+    const isTeacherOrAdmin = auth.isTeacherOrAdmin;
+    const isAdmin = auth.isAdmin;
+    const isGuest = auth.isGuest;
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [isOffline, setIsOffline] = useState(!navigator.onLine);
+    const [searchOpen, setSearchOpen] = useState(false);
 
     // CMD+K keyboard shortcut for search
     useEffect(function() {
@@ -96,9 +96,9 @@ export var Layout = function Layout(props) {
     useEffect(function() {
         if (!user || isGuest) return;
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            var token = localStorage.getItem('token');
+            const token = localStorage.getItem('token');
             if (!token) return;
-            var backendUrl = process.env.REACT_APP_BACKEND_URL;
+            const backendUrl = process.env.REACT_APP_BACKEND_URL;
             navigator.serviceWorker.controller.postMessage({
                 type: 'CACHE_API',
                 urls: [
@@ -118,7 +118,7 @@ export var Layout = function Layout(props) {
     }
 
     // Build navigation — 4 core tabs
-    var navItems = [
+    const navItems = [
         { path: '/dashboard', icon: BookOpen, label: 'Home', match: ['/', '/dashboard', '/courses', '/lessons'] },
         { path: '/connect', icon: MessageCircle, label: 'Connect', match: ['/connect'] },
         { path: '/progress', icon: TrendingUp, label: 'My Progress', match: ['/progress', '/settings'] },
@@ -165,7 +165,7 @@ export var Layout = function Layout(props) {
     }
 
     // Shared dropdown content for both mobile and desktop
-    var dropdownContent = (
+    const dropdownContent = (
         <>
             <div className="px-3 py-2">
                 <p className="text-sm font-medium">{user && user.name}</p>
@@ -217,7 +217,7 @@ export var Layout = function Layout(props) {
 
                         <nav className="flex items-center gap-1" data-testid="desktop-nav">
                             {navItems.map(function(item) {
-                                var active = isPathActive(item.match, location.pathname);
+                                const active = isPathActive(item.match, location.pathname);
                                 return (
                                     <Link
                                         key={item.label}
@@ -345,7 +345,7 @@ export var Layout = function Layout(props) {
             >
                 <div className="flex items-center justify-around h-16">
                     {navItems.map(function(item) {
-                        var active = isPathActive(item.match, location.pathname);
+                        const active = isPathActive(item.match, location.pathname);
                         return (
                             <Link
                                 key={item.label}

@@ -9,19 +9,19 @@ import { useNavigate } from 'react-router-dom';
 import { Search as SearchIcon, BookOpen, FileText, MessageCircle, Loader2 } from 'lucide-react';
 
 function SearchPage() {
-    var query = useState('');
-    var searchText = query[0];
-    var setSearchText = query[1];
+    const query = useState('');
+    const searchText = query[0];
+    const setSearchText = query[1];
 
-    var resultsState = useState(null);
-    var results = resultsState[0];
-    var setResults = resultsState[1];
+    const resultsState = useState(null);
+    const results = resultsState[0];
+    const setResults = resultsState[1];
 
-    var loadState = useState(false);
-    var loading = loadState[0];
-    var setLoading = loadState[1];
+    const loadState = useState(false);
+    const loading = loadState[0];
+    const setLoading = loadState[1];
 
-    var navigate = useNavigate();
+    const navigate = useNavigate();
 
     function handleSearch() {
         if (!searchText.trim()) return;
@@ -50,9 +50,9 @@ function SearchPage() {
         navigate('/lessons/' + id);
     }
 
-    var courseResults = [];
-    var lessonResults = [];
-    var discussionResults = [];
+    let courseResults = [];
+    let lessonResults = [];
+    let discussionResults = [];
 
     if (results) {
         courseResults = results.courses || [];
@@ -60,8 +60,8 @@ function SearchPage() {
         discussionResults = results.discussions || [];
     }
 
-    var hasResults = courseResults.length > 0 || lessonResults.length > 0 || discussionResults.length > 0;
-    var totalCount = courseResults.length + lessonResults.length + discussionResults.length;
+    const hasResults = courseResults.length > 0 || lessonResults.length > 0 || discussionResults.length > 0;
+    const totalCount = courseResults.length + lessonResults.length + discussionResults.length;
 
     return (
         <Layout>

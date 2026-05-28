@@ -30,7 +30,7 @@ export const Dashboard = () => {
     const [showLessonWizard, setShowLessonWizard] = useState(false);
     const [newCourseForLesson, setNewCourseForLesson] = useState(null);
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { fetchData(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchData = async () => {
         try {

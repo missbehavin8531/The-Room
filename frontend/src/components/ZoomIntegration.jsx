@@ -8,13 +8,13 @@ import { toast } from 'sonner';
 import { Video, Loader2, ExternalLink, CheckCircle, XCircle } from 'lucide-react';
 
 export default function ZoomIntegration() {
-    var [searchParams, setSearchParams] = useSearchParams();
-    var [zoomStatus, setZoomStatus] = useState(null);
-    var [zoomLoading, setZoomLoading] = useState(false);
-    var [zoomConnecting, setZoomConnecting] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [zoomStatus, setZoomStatus] = useState(null);
+    const [zoomLoading, setZoomLoading] = useState(false);
+    const [zoomConnecting, setZoomConnecting] = useState(false);
 
     useEffect(function() {
-        var zoomResult = searchParams.get('zoom');
+        const zoomResult = searchParams.get('zoom');
         if (zoomResult === 'connected') {
             toast.success('Zoom account connected successfully!');
             setSearchParams({});
@@ -43,7 +43,7 @@ export default function ZoomIntegration() {
                 if (res.data.authorization_url) window.location.href = res.data.authorization_url;
             })
             .catch(function(err) {
-                var msg = err.response?.data?.detail;
+                const msg = err.response?.data?.detail;
                 toast.error(msg || 'Failed to start Zoom connection');
                 setZoomConnecting(false);
             });

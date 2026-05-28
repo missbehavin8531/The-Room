@@ -11,10 +11,10 @@ import { cn } from '../lib/utils';
 import { Shield, Users, Calendar, ShieldAlert, Share2, Video } from 'lucide-react';
 
 export default function ManagePage() {
-    var { isAdmin, isTeacher } = useAuth();
-    var [searchParams] = useSearchParams();
+    const { isAdmin, isTeacher } = useAuth();
+    const [searchParams] = useSearchParams();
 
-    var tabs = [];
+    let tabs = [];
     if (isAdmin) {
         tabs = [
             { id: 'admin', label: 'Members', icon: Users },
@@ -30,11 +30,11 @@ export default function ManagePage() {
         ];
     }
 
-    var initialTab = searchParams.get('tab') || tabs[0]?.id || 'admin';
+    const initialTab = searchParams.get('tab') || tabs[0]?.id || 'admin';
     if (!tabs.find(function(t) { return t.id === initialTab; })) {
         initialTab = tabs[0]?.id || 'admin';
     }
-    var [activeTab, setActiveTab] = useState(initialTab);
+    const [activeTab, setActiveTab] = useState(initialTab);
 
     return (
         <Layout>
@@ -52,7 +52,7 @@ export default function ManagePage() {
                 {/* Tab Switcher */}
                 <div className="pill-tabs animate-fade-in" style={{ animationDelay: '0.05s' }} data-testid="manage-tabs">
                     {tabs.map(function(tab) {
-                        var active = activeTab === tab.id;
+                        const active = activeTab === tab.id;
                         return (
                             <button
                                 key={tab.id}

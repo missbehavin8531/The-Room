@@ -21,7 +21,7 @@ const ProgressPage = () => {
     const [loading, setLoading] = useState(true);
     const [tab, setTab] = useState('my');
 
-    useEffect(() => { if (!isGuest) loadData(); }, []);
+    useEffect(() => { if (!isGuest) loadData(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const loadData = async () => {
         try {

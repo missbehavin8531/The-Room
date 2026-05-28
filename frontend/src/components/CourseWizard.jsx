@@ -158,7 +158,7 @@ export const CourseWizard = ({ onClose, onSuccess }) => {
                                     { value: 'self_paced', icon: BookMarked, title: 'Self-Paced', desc: 'Students watch recordings and complete at their own speed. No live sessions.' },
                                     { value: 'hybrid', icon: Video, title: 'Hybrid', desc: 'Mix of live sessions and self-paced content. Live Room shown when configured.' },
                                 ].map(function(opt) {
-                                    var selected = course.course_type === opt.value;
+                                    const selected = course.course_type === opt.value;
                                     return (
                                         <button
                                             key={opt.value}

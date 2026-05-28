@@ -15,13 +15,9 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+from conftest import BASE_URL, TEACHER_PASSWORD, MEMBER_PASSWORD
 
 # Test credentials
-TEACHER_EMAIL = "teacher@sundayschool.com"
-TEACHER_PASSWORD = "teacher123"
-MEMBER_EMAIL = "member@sundayschool.com"
-MEMBER_PASSWORD = "member123"
 
 
 @pytest.fixture(scope="module")

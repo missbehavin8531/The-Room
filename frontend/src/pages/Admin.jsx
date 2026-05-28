@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -40,19 +40,20 @@ const getRoleBadge = (role) => {
 
 // Email Invite for Admin Group tab
 function AdminEmailInvite({ group }) {
-    var [open, setOpen] = useState(false);
-    var [emails, setEmails] = useState(['']);
-    var [sending, setSending] = useState(false);
+    const [open, setOpen] = useState(false);
+    const [fields, setFields] = useState([{ id: 1, email: '' }]);
+    const nextId = useRef(2);
+    const [sending, setSending] = useState(false);
 
     async function handleSend() {
-        var valid = emails.filter(e => e.trim() && e.includes('@'));
+        const valid = fields.map(f => f.email).filter(e => e.trim() && e.includes('@'));
         if (valid.length === 0) { toast.error('Enter at least one valid email'); return; }
         setSending(true);
         try {
-            var res = await notificationsAPI.sendInviteEmail(valid, group.name, group.invite_code);
+            const res = await notificationsAPI.sendInviteEmail(valid, group.name, group.invite_code);
             toast.success(res.data.message);
             setOpen(false);
-            setEmails(['']);
+            setFields([{ id: 1, email: '' }]);
         } catch (err) {
             toast.error(err.response?.data?.detail || 'Failed to send');
         } finally { setSending(false); }
@@ -68,20 +69,20 @@ function AdminEmailInvite({ group }) {
             <DialogContent className="max-w-md">
                 <DialogHeader><DialogTitle>Invite to {group.name}</DialogTitle></DialogHeader>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {emails.map((email, idx) => (
-                        <div key={idx} className="flex gap-2">
-                            <Input type="email" placeholder="email@example.com" value={email}
-                                onChange={(e) => setEmails(prev => prev.map((v, i) => i === idx ? e.target.value : v))} />
-                            {emails.length > 1 && (
-                                <Button variant="ghost" size="icon" onClick={() => setEmails(prev => prev.filter((_, i) => i !== idx))}>
+                    {fields.map((field) => (
+                        <div key={field.id} className="flex gap-2">
+                            <Input type="email" placeholder="email@example.com" value={field.email}
+                                onChange={(e) => setFields(prev => prev.map(f => f.id === field.id ? { ...f, email: e.target.value } : f))} />
+                            {fields.length > 1 && (
+                                <Button variant="ghost" size="icon" onClick={() => setFields(prev => prev.filter(f => f.id !== field.id))}>
                                     <X className="w-4 h-4" />
                                 </Button>
                             )}
                         </div>
                     ))}
                 </div>
-                {emails.length < 20 && (
-                    <Button variant="outline" size="sm" onClick={() => setEmails(prev => [...prev, ''])} className="w-full">
+                {fields.length < 20 && (
+                    <Button variant="outline" size="sm" onClick={() => setFields(prev => [...prev, { id: nextId.current++, email: '' }])} className="w-full">
                         <Plus className="w-4 h-4 mr-1" /> Add Another
                     </Button>
                 )}
@@ -345,7 +346,7 @@ export const Admin = ({ embedded }) => {
     };
 
     if (loading) {
-        var loadingSkeleton = (
+        const loadingSkeleton = (
             <div className="page-container py-6">
                 <Skeleton className="h-8 w-48 mb-6" />
                 <div className="grid md:grid-cols-4 gap-4 mb-6">
@@ -364,7 +365,7 @@ export const Admin = ({ embedded }) => {
     const topCommenters = participation?.top_commenters || [];
     const topChatters = participation?.top_chatters || [];
 
-    var adminContent = (
+    const adminContent = (
         <div className="page-container py-6 space-y-6">
             {!embedded && (
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

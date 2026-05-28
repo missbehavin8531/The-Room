@@ -4,7 +4,7 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Flame, BookOpen, CheckCircle } from 'lucide-react';
 
-var demoCourses = [
+const demoCourses = [
     { id: '1', title: 'Introduction to the Gospel', total: 3, done: 3, pct: 100 },
     { id: '2', title: 'Introduction to Finance Basics', total: 3, done: 1, pct: 33 },
     { id: '3', title: 'Introduction to Mindfulness', total: 3, done: 1, pct: 33 },

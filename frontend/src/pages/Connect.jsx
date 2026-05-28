@@ -8,10 +8,10 @@ import { cn } from '../lib/utils';
 import { MessageCircle, Mail } from 'lucide-react';
 
 export default function Connect() {
-    var [searchParams] = useSearchParams();
-    var initialTab = searchParams.get('tab') === 'direct' ? 'direct' : 'chat';
-    var [tab, setTab] = useState(initialTab);
-    var { isGuest } = useAuth();
+    const [searchParams] = useSearchParams();
+    const initialTab = searchParams.get('tab') === 'direct' ? 'direct' : 'chat';
+    const [tab, setTab] = useState(initialTab);
+    const { isGuest } = useAuth();
 
     return (
         <Layout>
